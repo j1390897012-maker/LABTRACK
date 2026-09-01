@@ -1,0 +1,22 @@
+[project]
+name = "labtrack"
+version = "0.1.0"
+description = "Sistema de gestión y trazabilidad de préstamos de equipo de laboratorio mediante RFID."
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "--cov=app --cov-report=term-missing --cov-fail-under=80"
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+
