@@ -1,11 +1,8 @@
-
----
-
 # Product Backlog – LABTRACK
 
 ## Descripción del producto
 
-Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de laboratorio, con identificación física mediante RFID.
+Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de laboratorio, con identificación física mediante RFID para estudiantes y códigos QR para equipos.
 
 ---
 
@@ -41,6 +38,8 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Then** el sistema muestra un mensaje de error indicando que el código ya existe.
 
+---
+
 ## US-02: Identificar estudiante vía RFID
 
 **Story Points:** 5
@@ -49,7 +48,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **quiero** identificar a un estudiante acercando su tarjeta RFID,
 
-**para** abrir un pedido de préstamo a su nombre sin escribir datos manualmente.
+**para** abrir o continuar una sesión de préstamo a su nombre sin escribir sus datos manualmente.
 
 **Escenario:** Identificar a un estudiante registrado
 
@@ -57,7 +56,11 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **When** el ESP32 lee su tarjeta y envía el UID a la API,
 
-**Then** el sistema abre un pedido activo a nombre de Alberto,
+**Then** el sistema identifica a Alberto,
+
+**And** abre una sesión nueva si no existe una activa,
+
+**And** continúa la sesión existente si ya tiene una activa,
 
 **And** muestra sus equipos actuales en préstamo.
 
@@ -71,25 +74,27 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Then** el sistema informa que la tarjeta no está registrada,
 
-**And** no abre ningún pedido.
+**And** no abre ninguna sesión.
 
-## US-03: Agregar equipo a un pedido vía RFID
+---
+
+## US-03: Agregar equipo a una sesión vía QR
 
 **Story Points:** 5
 
 **Como** encargado del laboratorio,
 
-**quiero** escanear el tag RFID de un equipo,
+**quiero** escanear el código QR de un equipo,
 
-**para** agregarlo automáticamente al pedido abierto del estudiante.
+**para** agregarlo automáticamente a la sesión abierta del estudiante.
 
-**Escenario:** Agregar un equipo disponible al pedido
+**Escenario:** Agregar un equipo disponible a la sesión
 
-**Given** existe un pedido abierto para "Alberto" y un equipo "OSC-0307" con estado "Disponible",
+**Given** existe una sesión abierta para "Alberto" y un equipo "OSC-0307" con estado "Disponible",
 
-**When** el ESP32 lee el tag de "OSC-0307",
+**When** el ESP32-S3 lee el QR de "OSC-0307",
 
-**Then** el sistema agrega el equipo al pedido de Alberto,
+**Then** el sistema agrega el equipo a la sesión de Alberto,
 
 **And** muestra los accesorios correspondientes al tipo de equipo.
 
@@ -99,11 +104,13 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Given** el equipo "OSC-0307" tiene estado "Prestado",
 
-**When** el encargado intenta agregarlo a un nuevo pedido,
+**When** el encargado intenta agregarlo a una nueva sesión,
 
 **Then** el sistema muestra un mensaje de error indicando que el equipo no está disponible.
 
-## US-04: Registrar accesorios del pedido
+---
+
+## US-04: Registrar accesorios del préstamo
 
 **Story Points:** 3
 
@@ -115,7 +122,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Escenario:** Registrar accesorios correctamente
 
-**Given** un equipo "OSC-0307" fue agregado al pedido de Alberto,
+**Given** un equipo "OSC-0307" fue agregado a la sesión de Alberto,
 
 **When** el encargado indica que se lleva 2 puntas de osciloscopio,
 
@@ -125,59 +132,65 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Escenario:** Registrar una cantidad de accesorios inválida
 
-**Given** un equipo fue agregado al pedido,
+**Given** un equipo fue agregado a la sesión,
 
 **When** el encargado introduce una cantidad negativa de accesorios,
 
 **Then** el sistema muestra un mensaje indicando que el valor no es válido.
 
-## US-05: Cerrar un pedido de préstamo
+---
+
+## US-05: Cerrar entrega de préstamo
 
 **Story Points:** 3
 
 **Como** encargado del laboratorio,
 
-**quiero** cerrar el pedido activo de un estudiante,
+**quiero** cerrar la entrega de una sesión de préstamo,
 
-**para** que los equipos queden marcados como prestados.
+**para** que los equipos queden marcados como prestados y la operación de entrega quede registrada.
 
-**Escenario:** Cerrar un pedido con equipos
+**Escenario:** Cerrar una sesión con equipos
 
-**Given** un pedido abierto de Alberto contiene al menos un equipo,
+**Given** una sesión abierta de Alberto contiene al menos un equipo,
 
-**When** el encargado cierra el pedido,
+**When** el encargado cierra la entrega,
 
 **Then** el sistema marca los equipos incluidos como "Prestado",
 
-**And** el pedido deja de estar activo.
+**And** finaliza la etapa de entrega.
 
 ---
 
-**Escenario:** Cerrar un pedido vacío
+**Escenario:** Cerrar una sesión vacía
 
-**Given** un pedido abierto de Alberto no tiene ningún equipo agregado,
+**Given** una sesión abierta de Alberto no tiene ningún equipo agregado,
 
-**When** el encargado intenta cerrarlo,
+**When** el encargado intenta cerrar la entrega,
 
-**Then** el sistema muestra un mensaje indicando que el pedido está vacío.
+**Then** el sistema muestra un mensaje indicando que la sesión está vacía.
 
-## US-06: Iniciar devolución vía RFID
+---
+
+## US-06: Iniciar devolución vía QR
 
 **Story Points:** 5
 
 **Como** encargado del laboratorio,
 
-**quiero** escanear el tag de un equipo para iniciar su devolución,
+**quiero** escanear el código QR de un equipo,
 
-**para** que el sistema identifique automáticamente quién lo tiene.
+**para** iniciar su devolución y conocer automáticamente quién lo tiene.
 
 **Escenario:** Iniciar devolución de un equipo prestado
 
 **Given** el equipo "OSC-0307" está prestado a Alberto,
 
-**When** el ESP32 lee el tag del equipo,
+**When** el ESP32-S3 lee el QR del equipo,
 
-**Then** el sistema muestra la pantalla de devolución con los datos de Alberto y los accesorios que se llevó.
+**Then** el sistema muestra la pantalla de devolución con los datos de Alberto,
+
+**And** muestra los accesorios que se registraron en el préstamo.
 
 ---
 
@@ -188,6 +201,8 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 **When** el encargado intenta iniciar una devolución con ese equipo,
 
 **Then** el sistema informa que el equipo no tiene un préstamo activo.
+
+---
 
 ## US-07: Confirmar entrega de accesorios en devolución
 
@@ -217,6 +232,8 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Then** el sistema registra el faltante en el historial de la devolución.
 
+---
+
 ## US-08: Registrar falla al devolver un equipo
 
 **Story Points:** 3
@@ -225,7 +242,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **quiero** registrar una falla al momento de la devolución,
 
-**para** dejar el equipo marcado como "En revisión".
+**para** dejar el equipo marcado como "En revisión" y conservar el incidente en su historial.
 
 **Escenario:** Registrar una falla
 
@@ -247,21 +264,25 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Then** el sistema marca el equipo con estado "Disponible".
 
-## US-09: Enrolar una tarjeta RFID nueva
+---
+
+## US-09: Enrolar una tarjeta RFID de estudiante
 
 **Story Points:** 3
 
 **Como** encargado del laboratorio,
 
-**quiero** asociar una tarjeta RFID nueva a un estudiante o equipo,
+**quiero** asociar una tarjeta RFID a un estudiante previamente registrado,
 
-**para** poder identificarlos en escaneos futuros.
+**para** poder identificarlo mediante su credencial en escaneos futuros.
 
 **Escenario:** Enrolar tarjeta correctamente
 
-**Given** el sistema recibe un UID que no está asociado a nadie,
+**Given** existe un estudiante registrado en LABTRACK,
 
-**When** el encargado lo asocia al estudiante "Alberto",
+**And** el sistema recibe un UID RFID que no está asociado a ningún estudiante,
+
+**When** el encargado asocia el UID al estudiante "Alberto",
 
 **Then** el sistema guarda la asociación,
 
@@ -277,6 +298,8 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Then** el sistema muestra un mensaje de error indicando que la tarjeta ya está en uso.
 
+---
+
 ## US-10: Consultar historial de un equipo
 
 **Story Points:** 2
@@ -285,7 +308,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **quiero** consultar la ficha e historial de un equipo,
 
-**para** conocer su estado y fallas registradas.
+**para** conocer su estado, préstamos y fallas registradas.
 
 **Escenario:** Consultar historial de un equipo con movimientos
 
@@ -304,6 +327,8 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 **When** el encargado intenta consultarlo,
 
 **Then** el sistema informa que el equipo no fue encontrado.
+
+---
 
 ## US-11: Consultar historial de un estudiante
 
@@ -333,7 +358,9 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Then** el sistema muestra que no hay movimientos registrados.
 
-## US-12: Registro manual de respaldo (sin RFID)
+---
+
+## US-12: Registro manual de respaldo
 
 **Story Points:** 5
 
@@ -341,15 +368,15 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **quiero** registrar un préstamo o devolución manualmente desde la web,
 
-**para** seguir operando si el lector RFID falla.
+**para** seguir operando si algún dispositivo o mecanismo de identificación física no está disponible.
 
 **Escenario:** Registrar préstamo manual
 
-**Given** el lector RFID no está disponible,
+**Given** el mecanismo de identificación física no está disponible,
 
 **When** el encargado selecciona manualmente al estudiante y el equipo desde la web,
 
-**Then** el sistema procesa el préstamo igual que si hubiera sido leído por RFID.
+**Then** el sistema procesa el préstamo utilizando la misma lógica de negocio que el flujo normal.
 
 ---
 
@@ -363,3 +390,54 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 ---
 
+## US-13: Registrar un estudiante
+
+**Story Points:** 3
+
+**Como** encargado del laboratorio,
+
+**quiero** registrar los datos de un estudiante,
+
+**para** que pueda ser identificado y utilizar LABTRACK.
+
+**Escenario:** Registrar estudiante correctamente
+
+**Given** el sistema está disponible para registrar estudiantes,
+
+**When** el encargado registra el nombre "Alberto" y una matrícula válida,
+
+**Then** el sistema crea el registro del estudiante,
+
+**And** el estudiante queda disponible para posteriormente asociarle una tarjeta RFID.
+
+---
+
+**Escenario:** Registrar un estudiante con matrícula repetida
+
+**Given** ya existe un estudiante registrado con una matrícula determinada,
+
+**When** el encargado intenta registrar otro estudiante con la misma matrícula,
+
+**Then** el sistema muestra un mensaje de error indicando que la matrícula ya está registrada.
+
+---
+
+# Resumen del backlog
+
+| US    | Descripción                     | SP | Responsable |
+| ----- | ------------------------------- | -: | ----------- |
+| US-01 | Registrar equipo                |  3 | Alberto     |
+| US-02 | Identificar estudiante vía RFID |  5 | Alexander   |
+| US-03 | Agregar equipo vía QR           |  5 | Alberto     |
+| US-04 | Registrar accesorios            |  3 | Alexander   |
+| US-05 | Cerrar entrega de préstamo      |  3 | Alberto     |
+| US-06 | Iniciar devolución vía QR       |  5 | Alejandro   |
+| US-07 | Confirmar accesorios devueltos  |  3 | Alejandro   |
+| US-08 | Registrar falla                 |  3 | Alejandro   |
+| US-09 | Enrolar RFID de estudiante      |  3 | Alejandro   |
+| US-10 | Historial de equipo             |  2 | Alexander   |
+| US-11 | Historial de estudiante         |  2 | Alexander   |
+| US-12 | Registro manual de respaldo     |  5 | Equipo      |
+| US-13 | Registrar estudiante            |  3 | Alexander   |
+
+**Total: 45 Story Points**
