@@ -1,14 +1,25 @@
 # Borrador del contrato de API — LABTRACK
 
-> **Estado:** Borrador — Compuerta 1
-> **Versión:** 0.1
-> **Propósito:** Definir las operaciones principales de la API del MVP antes de su implementación.
+> **Estado:** *Borrador — Compuerta 1*
+> **Versión:** *0.3*
+> **Propósito:** *Definir las operaciones principales de la API del MVP antes de su implementación.*
 
-## 1. Objetivo
+---
+
+# 1. Objetivo
 
 LABTRACK contará con una API REST para gestionar el préstamo, devolución y seguimiento de equipos de laboratorio.
 
-La API será utilizada principalmente por la interfaz web del encargado y por el dispositivo ESP32 encargado de leer las tarjetas y etiquetas RFID.
+La API será utilizada principalmente por la interfaz web del encargado y por el dispositivo ESP32-S3 encargado de capturar identificaciones físicas.
+
+LABTRACK utilizará dos mecanismos de identificación:
+
+* **RFID:** para identificar al estudiante mediante su credencial.
+* **QR:** para identificar al equipo mediante el código físico colocado en el equipo.
+
+El ESP32-S3 actúa únicamente como dispositivo de captura y comunicación. La lógica de negocio y las decisiones del sistema permanecen centralizadas en el backend.
+
+El registro inicial de estudiantes y equipos se realizará desde la interfaz web de administración.
 
 El contrato define las operaciones principales necesarias para implementar el flujo del MVP. Los schemas detallados, validaciones específicas y respuestas definitivas podrán ajustarse durante la etapa de construcción.
 
@@ -18,10 +29,36 @@ El contrato define las operaciones principales necesarias para implementar el fl
 
 | Método | Endpoint                          | Descripción                                              | US relacionada |
 | ------ | --------------------------------- | -------------------------------------------------------- | -------------- |
-| `POST` | `/api/estudiantes`                | Registrar un estudiante con nombre y matrícula.          | —              |
-| `GET`  | `/api/estudiantes/{id}`           | Consultar los datos de un estudiante.                    | —              |
+| `POST` | `/api/estudiantes`                | Registrar un estudiante con nombre y matrícula.          | US-13          |
+| `GET`  | `/api/estudiantes/{id}`           | Consultar los datos de un estudiante.                    | US-11          |
 | `GET`  | `/api/estudiantes/{id}/historial` | Consultar el historial de préstamos del estudiante.      | US-11          |
 | `GET`  | `/api/estudiantes/{id}/actuales`  | Consultar los equipos que tiene actualmente en préstamo. | US-11          |
+
+La matrícula será única dentro del sistema.
+
+Un estudiante puede existir en LABTRACK sin tener todavía una tarjeta RFID asociada.
+
+### Ejemplo de registro
+
+```json
+{
+  "nombre": "Alberto",
+  "matricula": "S22012345"
+}
+```
+
+### Ejemplo de respuesta
+
+```json
+{
+  "id": 15,
+  "nombre": "Alberto",
+  "matricula": "S22012345",
+  "uid_rfid": null
+}
+```
+
+La tarjeta RFID se asociará posteriormente mediante el proceso de enrolamiento.
 
 ---
 
@@ -40,55 +77,190 @@ Estados principales de un equipo:
 * `Prestado`
 * `En revisión`
 
+El código del equipo será único. Este mismo código será utilizado como valor codificado en su código QR.
+
+Ejemplo:
+
+```text
+Equipo:
+
+codigo = OSC-0307
+
+QR:
+
+OSC-0307
+```
+
+El QR no almacenará el ID interno de la base de datos.
+
 ---
 
-# 4. RFID e identificación
+# 4. Identificación física
 
-El ESP32 enviará a la API el UID de la tarjeta o etiqueta RFID detectada.
+LABTRACK utiliza dos mecanismos de identificación física.
 
-La API será responsable de determinar si el UID corresponde a un estudiante o a un equipo y de ejecutar la acción correspondiente según el contexto actual.
+## Identificación de estudiante
 
-| Método | Endpoint            | Descripción                                                | US relacionada      |
-| ------ | ------------------- | ---------------------------------------------------------- | ------------------- |
-| `POST` | `/api/rfid/scan`    | Recibir un UID leído por el ESP32 y resolver su identidad. | US-02, US-03, US-06 |
-| `POST` | `/api/rfid/enrolar` | Asociar un UID RFID a un estudiante o equipo.              | US-09               |
+```text
+Credencial RFID
+      ↓
+   ESP32-S3
+      ↓
+   UID RFID
+      ↓
+    Backend
+      ↓
+   Estudiante
+```
 
-### POST `/api/rfid/scan`
+## Identificación de equipo
 
-#### Request
+```text
+QR del equipo
+      ↓
+Cámara ESP32-S3
+      ↓
+Código del equipo
+      ↓
+    Backend
+      ↓
+    Equipo
+```
+
+El ESP32-S3 no contiene lógica de negocio. Su función es capturar el identificador correspondiente y enviarlo al backend mediante HTTP.
+
+---
+
+# 5. Endpoint de identificación
+
+## POST `/api/identificaciones/scan`
+
+Recibe una identificación física y permite que el backend determine cómo continuar el flujo según el contexto actual.
+
+### Request RFID
 
 ```json
 {
-  "uid": "A1B2C3D4",
+  "tipo": "rfid",
+  "valor": "A1B2C3D4",
   "lector_id": "esp32-mesa-1"
 }
 ```
 
-#### Ejemplo: RFID de estudiante
+### Request QR
 
-Cuando se escanea la credencial de un estudiante, el sistema identifica al estudiante y abre automáticamente un pedido activo para él.
+```json
+{
+  "tipo": "qr",
+  "valor": "OSC-0307",
+  "lector_id": "esp32-mesa-1"
+}
+```
+
+El campo `tipo` permite distinguir entre una identificación RFID y una identificación QR.
+
+La API será responsable de resolver el identificador y ejecutar la acción correspondiente.
+
+---
+
+# 6. Identificación de estudiante mediante RFID
+
+Cuando se escanea la credencial RFID de un estudiante, el backend:
+
+1. Busca el UID RFID.
+2. Si no está registrado, devuelve un error.
+3. Si está registrado, identifica al estudiante.
+4. Consulta si existe una sesión activa.
+5. Si no existe, abre una nueva sesión.
+6. Si existe, continúa la sesión existente.
+7. Devuelve la información necesaria para continuar el flujo.
+
+### Ejemplo de respuesta
 
 ```json
 {
   "tipo": "estudiante",
   "estudiante_id": 15,
   "nombre": "Alberto",
-  "accion": "pedido_abierto",
-  "pedido_id": 42,
+  "accion": "sesion_abierta",
+  "sesion_id": 42,
   "equipos_actuales": []
 }
 ```
 
-#### Ejemplo: RFID de equipo durante un pedido
+Si ya existe una sesión:
 
-Cuando existe un pedido activo para el estudiante y se escanea un equipo disponible, este se agrega automáticamente al pedido.
+```json
+{
+  "tipo": "estudiante",
+  "estudiante_id": 15,
+  "nombre": "Alberto",
+  "accion": "sesion_continuada",
+  "sesion_id": 42,
+  "equipos_actuales": [
+    "OSC-0307"
+  ]
+}
+```
+
+---
+
+# 7. Enrolamiento RFID de estudiante
+
+| Método | Endpoint                        | Descripción                                     | US relacionada |
+| ------ | ------------------------------- | ----------------------------------------------- | -------------- |
+| `POST` | `/api/identificaciones/enrolar` | Asociar un UID RFID a un estudiante registrado. | US-09          |
+
+El enrolamiento permitirá asociar una nueva credencial RFID con un estudiante previamente registrado.
+
+### Ejemplo
+
+```json
+{
+  "tipo": "rfid",
+  "valor": "A1B2C3D4",
+  "estudiante_id": 15
+}
+```
+
+El sistema deberá impedir que un mismo UID RFID sea asociado a más de un estudiante.
+
+El proceso de alta queda separado en dos operaciones:
+
+```text
+Registrar estudiante
+        ↓
+Crear estudiante
+        ↓
+Enrolar RFID
+        ↓
+Asociar UID al estudiante
+```
+
+Una tarjeta RFID no podrá utilizarse para identificar a un estudiante que no exista previamente en LABTRACK.
+
+---
+
+# 8. Identificación de equipo mediante QR
+
+Cuando existe una sesión activa y se escanea el QR de un equipo, el backend:
+
+1. Busca el código del equipo.
+2. Si no existe, devuelve un error.
+3. Consulta el estado actual del equipo.
+4. Si está `Disponible`, permite agregarlo al préstamo.
+5. Si está `Prestado`, inicia el flujo de devolución.
+6. Si está `En revisión`, muestra las fallas registradas y permite al encargado decidir si el equipo puede prestarse.
+
+### Ejemplo: equipo disponible
 
 ```json
 {
   "tipo": "equipo",
   "codigo": "OSC-0307",
-  "accion": "agregado_a_pedido",
-  "pedido_id": 42,
+  "estado": "disponible",
+  "accion": "agregado_a_sesion",
+  "sesion_id": 42,
   "accesorios_sugeridos": [
     {
       "nombre": "Puntas para osciloscopio",
@@ -98,46 +270,52 @@ Cuando existe un pedido activo para el estudiante y se escanea un equipo disponi
 }
 ```
 
-#### Ejemplo: RFID de equipo prestado
-
-Cuando se escanea un equipo que ya está prestado, la API identifica al estudiante que lo tiene y permite iniciar su devolución.
+### Ejemplo: equipo en revisión
 
 ```json
 {
   "tipo": "equipo",
   "codigo": "OSC-0307",
-  "accion": "devolucion_iniciada",
-  "pedido_id": 42,
-  "estudiante": {
-    "id": 15,
-    "nombre": "Alberto"
-  }
+  "estado": "en_revision",
+  "accion": "requiere_autorizacion",
+  "fallas": [
+    {
+      "descripcion": "Falso contacto en canal 1",
+      "estado": "pendiente"
+    }
+  ]
 }
 ```
 
----
-
-# 5. Pedidos de préstamo
-
-Un pedido representa la operación de entrega de uno o varios equipos a un estudiante.
-
-El flujo está diseñado para que el encargado pueda escanear varios equipos consecutivamente sin tener que confirmar cada uno individualmente.
-
-| Método | Endpoint                                           | Descripción                                                   | US relacionada |
-| ------ | -------------------------------------------------- | ------------------------------------------------------------- | -------------- |
-| `POST` | `/api/pedidos`                                     | Abrir un pedido para un estudiante mediante selección manual. | US-02, US-12   |
-| `POST` | `/api/pedidos/{id}/equipos`                        | Agregar manualmente un equipo a un pedido.                    | US-03, US-12   |
-| `PUT`  | `/api/pedidos/{id}/equipos/{equipo_id}/accesorios` | Registrar la cantidad de accesorios entregados con un equipo. | US-04          |
-| `POST` | `/api/pedidos/{id}/cerrar`                         | Cerrar el pedido y marcar los equipos como prestados.         | US-05          |
-| `GET`  | `/api/pedidos/activos?estudiante_id={id}`          | Consultar el pedido activo de un estudiante.                  | US-02          |
+El backend no decide automáticamente si se presta un equipo `En revisión`. La decisión corresponde al encargado.
 
 ---
 
-# 6. Accesorios
+# 9. Sesiones de préstamo
 
-Los accesorios se registran asociados al préstamo del equipo.
+Una sesión representa la operación de préstamo de un estudiante y puede contener uno o varios equipos.
 
-El sistema permitirá indicar cantidades diferentes dependiendo del tipo de equipo.
+El flujo está diseñado para que el encargado pueda escanear varios equipos consecutivamente sin tener que abrir una sesión nueva por cada equipo.
+
+| Método | Endpoint                                            | Descripción                                                | US relacionada |
+| ------ | --------------------------------------------------- | ---------------------------------------------------------- | -------------- |
+| `POST` | `/api/sesiones`                                     | Abrir manualmente una sesión para un estudiante.           | US-02, US-12   |
+| `GET`  | `/api/sesiones/activas?estudiante_id={id}`          | Consultar la sesión activa de un estudiante.               | US-02          |
+| `POST` | `/api/sesiones/{id}/equipos`                        | Agregar manualmente un equipo a una sesión.                | US-03, US-12   |
+| `PUT`  | `/api/sesiones/{id}/equipos/{equipo_id}/accesorios` | Registrar los accesorios prestados con un equipo.          | US-04          |
+| `POST` | `/api/sesiones/{id}/cerrar`                         | Finalizar la etapa de entrega de los equipos de la sesión. | US-05          |
+
+La sesión permanece activa mientras existan equipos pendientes de devolución.
+
+Una sesión se cierra cuando todos los equipos asociados han sido devueltos.
+
+---
+
+# 10. Accesorios
+
+Los accesorios se registran asociados al préstamo específico de un equipo.
+
+Los tipos de accesorios pueden estar relacionados con un tipo de equipo para proporcionar sugerencias al encargado.
 
 Ejemplos:
 
@@ -145,16 +323,59 @@ Ejemplos:
 * Generador → puntas o cables correspondientes.
 * Fuente → cables de alimentación o conexión.
 
-La cantidad será introducida por el encargado durante el proceso de préstamo.
+La cantidad será introducida o confirmada por el encargado durante el proceso de préstamo.
 
-Ejemplo:
+### Ejemplo
 
 ```json
 {
   "accesorios": [
     {
-      "nombre": "Puntas para osciloscopio",
+      "tipo_accesorio_id": 1,
       "cantidad": 2
+    }
+  ]
+}
+```
+
+Durante la devolución se conservará la cantidad originalmente prestada y se registrará la cantidad efectivamente devuelta.
+
+---
+
+# 11. Devoluciones
+
+| Método  | Endpoint                            | Descripción                                                | US relacionada |
+| ------- | ----------------------------------- | ---------------------------------------------------------- | -------------- |
+| `POST`  | `/api/devoluciones`                 | Iniciar la devolución de un equipo prestado.               | US-06, US-12   |
+| `PATCH` | `/api/devoluciones/{id}/accesorios` | Registrar los accesorios entregados y faltantes.           | US-07          |
+| `PATCH` | `/api/devoluciones/{id}/falla`      | Registrar si el equipo presenta una falla.                 | US-08          |
+| `POST`  | `/api/devoluciones/{id}/cerrar`     | Finalizar la devolución y actualizar el estado del equipo. | US-08          |
+
+La devolución normalmente se inicia escaneando el código QR del equipo.
+
+El sistema consulta automáticamente quién tiene actualmente el equipo y muestra al encargado:
+
+* estudiante;
+* equipo;
+* fecha del préstamo;
+* accesorios registrados.
+
+### Ejemplo
+
+```json
+{
+  "equipo": {
+    "codigo": "OSC-0307"
+  },
+  "estudiante": {
+    "id": 15,
+    "nombre": "Alberto"
+  },
+  "fecha_prestamo": "2026-09-02T10:30:00",
+  "accesorios": [
+    {
+      "nombre": "Puntas para osciloscopio",
+      "cantidad_prestada": 2
     }
   ]
 }
@@ -162,37 +383,15 @@ Ejemplo:
 
 ---
 
-# 7. Devoluciones
-
-| Método  | Endpoint                            | Descripción                                                | US relacionada |
-| ------- | ----------------------------------- | ---------------------------------------------------------- | -------------- |
-| `POST`  | `/api/devoluciones`                 | Iniciar la devolución de un equipo prestado.               | US-06, US-12   |
-| `PATCH` | `/api/devoluciones/{id}/accesorios` | Registrar los accesorios entregados y faltantes.           | US-07          |
-| `PATCH` | `/api/devoluciones/{id}/falla`      | Registrar si el equipo presentó alguna falla.              | US-08          |
-| `POST`  | `/api/devoluciones/{id}/cerrar`     | Finalizar la devolución y actualizar el estado del equipo. | US-08          |
-
-### POST `/api/devoluciones`
-
-La devolución puede iniciarse escaneando directamente el RFID del equipo.
-
-El sistema consulta quién tiene actualmente el equipo y muestra al encargado:
-
-* estudiante;
-* equipo;
-* fecha del préstamo;
-* accesorios registrados.
-
----
-
-# 8. Registro de fallas
+# 12. Registro de fallas
 
 Las fallas no tienen como objetivo determinar culpables.
 
 Su propósito es mantener un historial técnico del estado de los equipos y facilitar su revisión y mantenimiento.
 
-### PATCH `/api/devoluciones/{id}/falla`
+## PATCH `/api/devoluciones/{id}/falla`
 
-#### Request
+### Request
 
 ```json
 {
@@ -203,17 +402,50 @@ Su propósito es mantener un historial técnico del estado de los equipos y faci
 
 Si existe una falla:
 
-* se registra en el historial del equipo;
-* el equipo pasa a estado `En revisión`.
+* se registra como un nuevo registro en el historial del equipo;
+* el equipo pasa a estado `En revisión`;
+* la falla queda inicialmente como `pendiente`.
 
 Si no existe una falla:
 
 * la devolución continúa normalmente;
 * el equipo puede regresar a estado `Disponible`.
 
+Las fallas anteriores no se sobrescriben ni eliminan.
+
 ---
 
-# 9. Historial
+# 13. Resolución de fallas
+
+El encargado podrá marcar una falla como resuelta cuando haya sido reparada o cuando se haya verificado que el equipo funciona correctamente.
+
+## PATCH `/api/fallas/{id}`
+
+### Ejemplo
+
+```json
+{
+  "estado": "resuelta",
+  "observacion_resolucion": "Se verificó funcionamiento correcto."
+}
+```
+
+También podrá registrarse una reparación específica:
+
+```json
+{
+  "estado": "resuelta",
+  "observacion_resolucion": "Se reemplazó el conector del canal 1."
+}
+```
+
+Al resolver una falla, el sistema conservará el registro histórico de la incidencia.
+
+El estado general del equipo podrá regresar a `Disponible` cuando ya no existan fallas pendientes que requieran mantenerlo en revisión.
+
+---
+
+# 14. Historial
 
 LABTRACK conservará el historial de movimientos de estudiantes y equipos.
 
@@ -234,38 +466,46 @@ Debe permitir consultar:
 * préstamos anteriores;
 * devoluciones;
 * fallas registradas;
+* estado de las fallas;
 * cantidad de fallas acumuladas.
 
-El historial permitirá consultar la ficha de un equipo, por ejemplo:
+### Ejemplo
 
 ```text
 OSC-0307
 
 Estado: Disponible
+
 Fallas registradas: 2
 
 Historial de fallas:
+
 1. Falso contacto en canal 1
+   Estado: Resuelta
+
 2. Canal 2 sin señal
+   Estado: Pendiente
 ```
 
----
-
-# 10. Registro manual de respaldo
-
-El sistema contará con un mecanismo manual para continuar operando si el lector RFID no está disponible.
-
-| Método | Endpoint                    | Descripción                                              | US relacionada |
-| ------ | --------------------------- | -------------------------------------------------------- | -------------- |
-| `POST` | `/api/pedidos`              | Abrir un pedido seleccionando manualmente al estudiante. | US-12          |
-| `POST` | `/api/pedidos/{id}/equipos` | Agregar manualmente un equipo.                           | US-12          |
-| `POST` | `/api/devoluciones`         | Iniciar manualmente una devolución.                      | US-12          |
-
-El flujo manual utilizará la misma lógica de negocio que el flujo mediante RFID, evitando duplicar reglas en el sistema.
+El historial conserva las incidencias anteriores aunque hayan sido resueltas.
 
 ---
 
-# 11. Códigos de respuesta
+# 15. Registro manual de respaldo
+
+El sistema contará con un mecanismo manual para continuar operando si el dispositivo o mecanismo de identificación física no está disponible.
+
+| Método | Endpoint                     | Descripción                                               | US relacionada |
+| ------ | ---------------------------- | --------------------------------------------------------- | -------------- |
+| `POST` | `/api/sesiones`              | Abrir manualmente una sesión seleccionando al estudiante. | US-12          |
+| `POST` | `/api/sesiones/{id}/equipos` | Agregar manualmente un equipo.                            | US-12          |
+| `POST` | `/api/devoluciones`          | Iniciar manualmente una devolución.                       | US-12          |
+
+El flujo manual utilizará la misma lógica de negocio que el flujo mediante RFID y QR, evitando duplicar reglas en el sistema.
+
+---
+
+# 16. Códigos de respuesta
 
 La API utilizará códigos HTTP estándar.
 
@@ -280,9 +520,11 @@ La API utilizará códigos HTTP estándar.
 ### Ejemplos de conflictos (`409`)
 
 * Código de equipo ya registrado.
+* Matrícula de estudiante ya registrada.
 * UID RFID ya asociado.
 * Intentar prestar un equipo que ya está prestado.
 * Intentar devolver un equipo que no tiene un préstamo activo.
+* Intentar registrar una segunda sesión activa para el mismo estudiante cuando no corresponde.
 
 ### Ejemplos de datos inválidos (`422`)
 
@@ -292,51 +534,93 @@ La API utilizará códigos HTTP estándar.
 
 ---
 
-# 12. Flujo principal del MVP
+# 17. Flujo principal del MVP
 
 El contrato de API está diseñado alrededor del siguiente flujo:
 
 ```text
 1. Escanear credencial RFID
-        ↓
+           ↓
 2. Identificar estudiante
-        ↓
-3. Abrir automáticamente su pedido
-        ↓
-4. Escanear equipo RFID
-        ↓
-5. Agregar automáticamente el equipo
-        ↓
-6. Registrar accesorios
-        ↓
-7. Escanear otros equipos si es necesario
-        ↓
-8. Cerrar pedido
-        ↓
-9. Equipos → Prestado
+           ↓
+3. Abrir o continuar sesión
+           ↓
+4. Escanear QR del equipo
+           ↓
+5. Verificar estado del equipo
+           ↓
+6. Si está disponible → agregar al préstamo
+           ↓
+7. Si está en revisión → mostrar fallas y solicitar decisión
+           ↓
+8. Registrar accesorios
+           ↓
+9. Escanear otros equipos si es necesario
+           ↓
+10. Cerrar entrega
+           ↓
+11. Equipos → Prestado
 
 
         ... tiempo después ...
 
 
-10. Escanear equipo RFID
-        ↓
-11. Identificar estudiante que lo tiene
-        ↓
-12. Mostrar datos del préstamo
-        ↓
-13. Confirmar accesorios
-        ↓
-14. Registrar falla si existe
-        ↓
-15. Cerrar devolución
-        ↓
-16. Equipo → Disponible / En revisión
+12. Escanear QR del equipo
+           ↓
+13. Identificar automáticamente al estudiante
+           ↓
+14. Mostrar datos del préstamo
+           ↓
+15. Confirmar accesorios
+           ↓
+16. Registrar falla si existe
+           ↓
+17. Cerrar devolución
+           ↓
+18. Equipo → Disponible / En revisión
+           ↓
+19. ¿Quedan equipos pendientes?
+           │
+        ┌──┴──┐
+       SÍ     NO
+        │      │
+        ↓      ↓
+    Continuar  Cerrar sesión
+    devolución  y devolver
+                credencial
 ```
 
 ---
 
-# 13. Alcance del contrato
+# 18. Configuración inicial del laboratorio
+
+Antes de utilizar LABTRACK en la operación diaria, el encargado deberá realizar una configuración inicial.
+
+Esta configuración contempla:
+
+```text
+Registrar estudiantes
+        ↓
+Enrolar RFID de estudiantes
+
+Registrar equipos
+        ↓
+Asignar códigos QR a equipos
+
+Registrar tipos de equipo
+        ↓
+Registrar tipos de accesorios
+```
+
+Esta información constituye el catálogo inicial que utilizará LABTRACK durante la operación.
+
+El registro inicial podrá realizarse manualmente desde la interfaz web.
+
+En una implementación posterior, la carga de estudiantes o inventario podrá complementarse mediante importación de datos, por ejemplo desde archivos CSV proporcionados por la facultad.
+
+---
+
+# 19. Alcance del contrato
 
 Este documento representa el **borrador del contrato de API para la Compuerta 1**.
 
