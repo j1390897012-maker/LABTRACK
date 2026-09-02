@@ -33,6 +33,7 @@ def test_engine():
 
     # Limpiar después de todas las pruebas
     Base.metadata.drop_all(engine)
+    engine.dispose()
 
 
 @pytest.fixture(scope="function")
