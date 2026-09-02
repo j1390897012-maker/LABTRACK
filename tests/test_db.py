@@ -9,7 +9,7 @@ Cubre:
 
 import os
 from unittest.mock import patch
-
+import app.models
 from app.db import (
     Base,
     SessionLocal,
