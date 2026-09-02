@@ -9,6 +9,7 @@ Cubre:
 
 import os
 from unittest.mock import patch
+
 import app.models  # noqa: F401  # Necesario para llenar Base.metadata
 from app.db import (
     Base,
