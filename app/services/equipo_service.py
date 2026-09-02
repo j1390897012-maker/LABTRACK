@@ -10,6 +10,8 @@ y las validaciones de entrada. Su función principal aquí es:
   y del equipo físico al Repositorio.
 """
 
+from typing import Any
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -21,7 +23,7 @@ class EquipoService:
     def __init__(self) -> None:
         self.repo = EquipoRepository()
 
-    def registrar_equipo(self, db: Session, equipo_in: EquipoCreate) -> dict:
+    def registrar_equipo(self, db: Session, equipo_in: EquipoCreate) -> dict[str, Any]:
         # 1. Verificar si el código ya está registrado
         equipo_existente = self.repo.get_by_codigo(db, equipo_in.codigo)
         if equipo_existente:
