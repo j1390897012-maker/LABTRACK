@@ -6,7 +6,8 @@ Se encarga de orquestar las operaciones entre la base de datos (Repository)
 y las validaciones de entrada. Su función principal aquí es:
 - Comprobar que no existan equipos con códigos duplicados.
 - Si el código existe, lanza un error HTTP 409 (Conflicto).
-- Si no existe, delega la creación del tipo de equipo y del equipo físico al Repositorio.
+- Si no existe, delega la creación del tipo de equipo 
+  y del equipo físico al Repositorio.
 """
 
 from fastapi import HTTPException, status
@@ -14,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories.equipo_repository import EquipoRepository
 from app.schemas.equipo import EquipoCreate
+
 
 class EquipoService:
     def __init__(self) -> None:
@@ -26,7 +28,7 @@ class EquipoService:
             # Lanza un error HTTP 409 si se intenta registrar un código repetido
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, 
-                detail="El código ya existe"
+                detail="El dispositivo ya se encuentra registrado"
             )
 
         # 2. Buscar el tipo de equipo o crearlo si es nuevo
