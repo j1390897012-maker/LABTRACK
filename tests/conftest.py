@@ -4,7 +4,6 @@ Este archivo es cargado automáticamente por pytest.
 Proporciona fixtures reutilizables para toda la suite de tests.
 """
 
-import os
 from collections.abc import Generator
 
 import pytest

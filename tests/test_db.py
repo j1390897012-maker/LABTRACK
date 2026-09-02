@@ -10,9 +10,6 @@ Cubre:
 import os
 from unittest.mock import patch
 
-import pytest
-from sqlalchemy import text
-
 from app.db import (
     Base,
     SessionLocal,
@@ -84,10 +81,10 @@ class TestEngine:
         # Resetear el módulo para que use la URL real
         with patch.dict(os.environ, {}, clear=True):
             # Importar de nuevo para que tome la variable
-            import app.db
-
             # Recargar el módulo para que use la nueva variable
             from importlib import reload
+
+            import app.db
 
             reload(app.db)
 
@@ -105,7 +102,8 @@ class TestSessionLocal:
         session.close()
 
     def test_sessionlocal_usa_expire_on_commit_false(self) -> None:
-        """Debería tener expire_on_commit=False (para objetos usables fuera de la transacción)."""
+        """Debería tener expire_on_commit=False 
+        (para objetos usables fuera de la transacción)."""
         # Verificar que la sesión creada tiene la configuración correcta
         session = SessionLocal()
         assert session.expire_on_commit is False
