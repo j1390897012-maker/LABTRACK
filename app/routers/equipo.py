@@ -9,7 +9,7 @@ Implementa:
 - US-01: POST /api/equipos -> Registra un equipo nuevo en el sistema.
 """
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
@@ -25,5 +25,5 @@ equipo_service = EquipoService()
 def registrar_equipo(
     equipo_in: EquipoCreate, 
     db: Annotated[Session, Depends(get_db)]
-):
+) -> dict[str, Any]:
     return equipo_service.registrar_equipo(db, equipo_in)
