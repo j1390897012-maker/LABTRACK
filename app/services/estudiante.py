@@ -1,13 +1,3 @@
-# En esta Capa de Servicio (Service Layer) es donde ocurre la verdadera
-# toma de decisiones del sistema. Al mantener esta lógica separada de 
-# las rutas de internet, se está aplicando el principio de Responsabilidad
-# Única (Single Responsibility Principle de SOLID), lo que demuestra un 
-# diseño de software profesional.
-
-# El contrato de la API dice claramente que si intentamos registrar a un
-# estudiante con una matrícula repetida, el sistema debe arrojar un 
-# error 409 Conflict.
-
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -27,5 +17,10 @@ def crear_estudiante(db: Session, estudiante_in: EstudianteCreate) -> Estudiante
             detail="La matrícula ya está registrada en el sistema."
         )
     
-    nuevo_estudiante = repo.create(db=db, estudiante_in=estudiante_in)
+    # El servicio extrae los datos del schema y los pasa al repository
+    nuevo_estudiante = repo.create(
+        db=db, 
+        nombre=estudiante_in.nombre, 
+        matricula=estudiante_in.matricula
+    )
     return nuevo_estudiante

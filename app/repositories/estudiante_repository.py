@@ -4,7 +4,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Estudiante
-from app.schemas.estudiante import EstudianteCreate  # <-- Agregamos tu schema
 
 
 class EstudianteRepository:
@@ -19,12 +18,8 @@ class EstudianteRepository:
     def get_by_id(self, db: Session, estudiante_id: int) -> Estudiante | None:
         return db.get(Estudiante, estudiante_id)
 
-    def asignar_rfid(
-        self, 
-        db: Session, 
-        estudiante_id: int,
-        uid_rfid: str
-    ) -> Estudiante:
+    def asignar_rfid(self, db: Session, 
+        estudiante_id: int, uid_rfid: str) -> Estudiante:
         estudiante = db.get(Estudiante, estudiante_id)
         if not estudiante:
             raise ValueError(f"Estudiante con ID {estudiante_id} no encontrado")
@@ -33,11 +28,10 @@ class EstudianteRepository:
         db.refresh(estudiante)
         return estudiante
 
-    # --- MÉTODO AGREGADO PARA TU US-13 ---
-    def create(self, db: Session, estudiante_in: EstudianteCreate) -> Estudiante:
+    def create(self, db: Session, nombre: str, matricula: str) -> Estudiante:
         nuevo_estudiante = Estudiante(
-            nombre=estudiante_in.nombre,
-            matricula=estudiante_in.matricula
+            nombre=nombre,
+            matricula=matricula
         )
         db.add(nuevo_estudiante)
         db.commit()
