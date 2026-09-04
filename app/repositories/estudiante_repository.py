@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import Estudiante
+from app.models.labtrack import Estudiante
 
 
 class EstudianteRepository:
@@ -18,8 +18,8 @@ class EstudianteRepository:
     def get_by_id(self, db: Session, estudiante_id: int) -> Estudiante | None:
         return db.get(Estudiante, estudiante_id)
 
-    def asignar_rfid(self, db: Session, 
-        estudiante_id: int, uid_rfid: str) -> Estudiante:
+    def asignar_rfid(self, db: Session, estudiante_id: int,
+                      uid_rfid: str) -> Estudiante:
         estudiante = db.get(Estudiante, estudiante_id)
         if not estudiante:
             raise ValueError(f"Estudiante con ID {estudiante_id} no encontrado")
