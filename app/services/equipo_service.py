@@ -8,10 +8,13 @@ y las validaciones de entrada. Su función principal aquí es:
 - Si el código existe, lanza un error HTTP 409 (Conflicto).
 - Si no existe, delega la creación del tipo de equipo 
   y del equipo físico al Repositorio.
+- Genera y almacena un código QR con el código físico del equipo.
 """
 
+import os
 from typing import Any
 
+import qrcode
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -27,7 +30,6 @@ class EquipoService:
         # 1. Verificar si el código ya está registrado
         equipo_existente = self.repo.get_by_codigo(db, equipo_in.codigo)
         if equipo_existente:
-            # Lanza un error HTTP 409 si se intenta registrar un código repetido
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT, 
                 detail="El dispositivo ya se encuentra registrado"
@@ -41,10 +43,22 @@ class EquipoService:
         # 3. Crear el equipo físico
         nuevo_equipo = self.repo.create(db, equipo_in.codigo, tipo.id)
 
-        # 4. Devolver los datos formateados para que coincidan con EquipoOut
+        # 4. Generar el código QR
+        directorio_qr = "static/qrs"
+        os.makedirs(directorio_qr, exist_ok=True)
+        ruta_qr = f"{directorio_qr}/{nuevo_equipo.codigo}.png"
+        
+        qr = qrcode.make(nuevo_equipo.codigo)
+        
+        # Abrir el archivo en modo escritura binaria para satisfacer a MyPy
+        with open(ruta_qr, "wb") as f:
+            qr.save(f)
+
+        # 5. Devolver los datos
         return {
             "id": nuevo_equipo.id,
             "codigo": nuevo_equipo.codigo,
             "estado": nuevo_equipo.estado,
-            "tipo": tipo.nombre
+            "tipo": tipo.nombre,
+            "qr_path": ruta_qr
         }
