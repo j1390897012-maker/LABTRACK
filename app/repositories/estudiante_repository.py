@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import Estudiante
+from app.schemas.estudiante import EstudianteCreate  # <-- Agregamos tu schema
 
 
 class EstudianteRepository:
@@ -22,7 +23,8 @@ class EstudianteRepository:
         self, 
         db: Session, 
         estudiante_id: int,
-         uid_rfid: str) -> Estudiante:
+        uid_rfid: str
+    ) -> Estudiante:
         estudiante = db.get(Estudiante, estudiante_id)
         if not estudiante:
             raise ValueError(f"Estudiante con ID {estudiante_id} no encontrado")
@@ -30,3 +32,14 @@ class EstudianteRepository:
         db.commit()
         db.refresh(estudiante)
         return estudiante
+
+    # --- MÉTODO AGREGADO PARA TU US-13 ---
+    def create(self, db: Session, estudiante_in: EstudianteCreate) -> Estudiante:
+        nuevo_estudiante = Estudiante(
+            nombre=estudiante_in.nombre,
+            matricula=estudiante_in.matricula
+        )
+        db.add(nuevo_estudiante)
+        db.commit()
+        db.refresh(nuevo_estudiante)
+        return nuevo_estudiante

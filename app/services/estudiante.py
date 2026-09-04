@@ -12,33 +12,20 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models.labtrack import Estudiante
+from app.repositories.estudiante_repository import EstudianteRepository
 from app.schemas.estudiante import EstudianteCreate
 
+repo = EstudianteRepository()
 
 def crear_estudiante(db: Session, estudiante_in: EstudianteCreate) -> Estudiante:
-    # 1. Regla de negocio: Verificar si la matrícula ya existe
-
-    estudiante_existente = (
-        db.query(Estudiante)
-        .filter(Estudiante.matricula == estudiante_in.matricula)
-        .first()
-    )
-       
+    estudiante_existente = repo.get_by_matricula(db=db,
+    matricula=estudiante_in.matricula)
+    
     if estudiante_existente:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, 
             detail="La matrícula ya está registrada en el sistema."
         )
     
-    # 2. Construir el nuevo registro
-    nuevo_estudiante = Estudiante(
-        nombre=estudiante_in.nombre,
-        matricula=estudiante_in.matricula
-    )
-    
-    # 3. Transacción en la base de datos
-    db.add(nuevo_estudiante)
-    db.commit()
-    db.refresh(nuevo_estudiante)
-    
+    nuevo_estudiante = repo.create(db=db, estudiante_in=estudiante_in)
     return nuevo_estudiante
