@@ -1,17 +1,5 @@
-"""
-Servicio de Equipos (app/services/equipo_service.py)
-
-Contiene la lógica de negocio central de la US-01.
-Se encarga de orquestar las operaciones entre la base de datos (Repository) 
-y las validaciones de entrada. Su función principal aquí es:
-- Comprobar que no existan equipos con códigos duplicados.
-- Si el código existe, lanza un error HTTP 409 (Conflicto).
-- Si no existe, delega la creación del tipo de equipo 
-  y del equipo físico al Repositorio.
-- Genera y almacena un código QR con el código físico del equipo.
-"""
-
-import os
+import base64
+from io import BytesIO
 from typing import Any
 
 import qrcode
@@ -27,7 +15,7 @@ class EquipoService:
         self.repo = EquipoRepository()
 
     def registrar_equipo(self, db: Session, equipo_in: EquipoCreate) -> dict[str, Any]:
-        # 1. Verificar si el código ya está registrado
+        # 1. Verificar duplicados
         equipo_existente = self.repo.get_by_codigo(db, equipo_in.codigo)
         if equipo_existente:
             raise HTTPException(
@@ -35,24 +23,20 @@ class EquipoService:
                 detail="El dispositivo ya se encuentra registrado"
             )
 
-        # 2. Buscar el tipo de equipo o crearlo si es nuevo
+        # 2. Buscar o crear tipo
         tipo = self.repo.get_tipo_by_nombre(db, equipo_in.tipo)
         if not tipo:
             tipo = self.repo.create_tipo(db, equipo_in.tipo)
 
-        # 3. Crear el equipo físico
+        # 3. Crear equipo físico
         nuevo_equipo = self.repo.create(db, equipo_in.codigo, tipo.id)
 
-        # 4. Generar el código QR
-        directorio_qr = "static/qrs"
-        os.makedirs(directorio_qr, exist_ok=True)
-        ruta_qr = f"{directorio_qr}/{nuevo_equipo.codigo}.png"
-        
+        # 4. Generar el código QR en memoria (Base64)
         qr = qrcode.make(nuevo_equipo.codigo)
-        
-        # Abrir el archivo en modo escritura binaria para satisfacer a MyPy
-        with open(ruta_qr, "wb") as f:
-            qr.save(f)
+        buffer = BytesIO()
+        qr.save(buffer)
+        qr_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        qr_data_uri = f"data:image/png;base64,{qr_b64}"
 
         # 5. Devolver los datos
         return {
@@ -60,5 +44,5 @@ class EquipoService:
             "codigo": nuevo_equipo.codigo,
             "estado": nuevo_equipo.estado,
             "tipo": tipo.nombre,
-            "qr_path": ruta_qr
+            "qr_base64": qr_data_uri
         }

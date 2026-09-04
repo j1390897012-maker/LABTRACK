@@ -1,5 +1,3 @@
-import os
-
 from fastapi.testclient import TestClient
 
 from app.db import get_db
@@ -38,24 +36,22 @@ def test_registrar_equipo_genera_qr(db_session):
         
     app.dependency_overrides[get_db] = override_get_db
 
-    codigo_prueba = "TEST-QR-01"
-    ruta_esperada = f"static/qrs/{codigo_prueba}.png"
+    codigo_prueba = "TEST-QR-02"
 
-    if os.path.exists(ruta_esperada):
-        os.remove(ruta_esperada)
-
+    # 1. Ejecución: simular la petición POST
     response = client.post(
         "/api/equipos", 
         json={"codigo": codigo_prueba, "tipo": "Multimetro"}
     )
 
+    # 2. Validación de la API
     assert response.status_code == 201
     data = response.json()
     assert data["codigo"] == codigo_prueba
-    assert data["qr_path"] == ruta_esperada
-    assert os.path.exists(ruta_esperada) is True
-
-    os.remove(ruta_esperada)
     
-    # 5. Limpiar la intercepción al terminar el test
+    # Validar que se generó un string Base64 válido de imagen PNG
+    assert "qr_base64" in data
+    assert data["qr_base64"].startswith("data:image/png;base64,")
+
+    # 3. Limpiar la intercepción al terminar el test
     app.dependency_overrides.clear()
