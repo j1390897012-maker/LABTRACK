@@ -15,6 +15,6 @@ class EquipoOut(BaseModel):
     codigo: str
     estado: str
     tipo: str
-    qr_path: str | None = None 
+    qr_base64: str | None = None 
 
     model_config = ConfigDict(from_attributes=True)
