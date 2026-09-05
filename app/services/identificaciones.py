@@ -44,18 +44,18 @@ class IdentificacionService:
     asignacion_data: AsignacionRFIDRequest) -> AsignacionRFIDResponse:
         """Asigna un RFID a un estudiante existente."""
         # 1. Verificar que el estudiante existe
-        estudiante = self.repo.get_by_id(db, asignacion_data.estudiante_id)
+        estudiante = self.repo.get_by_matricula(db, asignacion_data.matricula)
         if not estudiante:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Estudiante con ID {
-                    asignacion_data.estudiante_id} no encontrado",
+                detail=f"Estudiante con matrícula {
+                    asignacion_data.matricula} no encontrado",
             )
 
         # 2. Verificar que el RFID no esté ya asignado a otro estudiante
         estudiante_existente = self.repo.get_by_rfid(db, asignacion_data.valor)
         if (estudiante_existente and 
-        estudiante_existente.id != asignacion_data.estudiante_id):
+        estudiante_existente.id != asignacion_data.matricula):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"RFID {asignacion_data.valor} ya está asignado "
@@ -65,7 +65,7 @@ class IdentificacionService:
         # 3. Asignar el RFID al estudiante
         estudiante_actualizado = self.repo.asignar_rfid(
             db,
-            asignacion_data.estudiante_id,
+            estudiante.id,
             asignacion_data.valor,
         )
 

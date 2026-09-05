@@ -51,7 +51,7 @@ class TestEnrolamientoRFID:
         request = AsignacionRFIDRequest(
             tipo="rfid",
             valor="RFID-002",
-            estudiante_id=estudiante_sin_rfid.id,
+            matricula=estudiante_sin_rfid.matricula,
         )
 
         response = service.enrolar_rfid(db_session, request)
@@ -72,7 +72,7 @@ class TestEnrolamientoRFID:
         request = AsignacionRFIDRequest(
             tipo="rfid",
             valor="RFID-003",
-            estudiante_id=999,
+            matricula="MATRICULA-INEXISTENTE",
         )
 
         with pytest.raises(HTTPException) as exc_info:
@@ -101,7 +101,7 @@ class TestEnrolamientoRFID:
         request = AsignacionRFIDRequest(
             tipo="rfid",
             valor="RFID-001",
-            estudiante_id=estudiante.id,
+            matricula=estudiante.matricula,
         )
 
         with pytest.raises(HTTPException) as exc_info:

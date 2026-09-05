@@ -15,7 +15,7 @@ class AsignacionRFIDRequest(BaseModel):
     """ Modelo para representar la solicitud de enrolar una tarjeta"""
     tipo: str
     valor: str
-    estudiante_id: int
+    matricula: str
 
 
 class AsignacionRFIDResponse(BaseModel):
