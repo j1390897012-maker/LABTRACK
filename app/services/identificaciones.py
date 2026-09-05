@@ -55,7 +55,7 @@ class IdentificacionService:
         # 2. Verificar que el RFID no esté ya asignado a otro estudiante
         estudiante_existente = self.repo.get_by_rfid(db, asignacion_data.valor)
         if (estudiante_existente and 
-        estudiante_existente.id != asignacion_data.matricula):
+        estudiante_existente.id != estudiante.id):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"RFID {asignacion_data.valor} ya está asignado "
