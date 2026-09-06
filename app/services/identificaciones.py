@@ -2,49 +2,80 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.repositories.estudiante_repository import EstudianteRepository
+from app.repositories.sesion_repository import SesionRepository
 from app.schemas.identificacion import (
     AsignacionRFIDRequest,
     AsignacionRFIDResponse,
     IdentificacionResponse,
+    ScanRequest,
 )
 
 
 class IdentificacionService:
     def __init__(self) -> None:
-        self.repo = EstudianteRepository()
+        self.repo_estudiante = EstudianteRepository()
+        self.repo_sesion = SesionRepository()
 
-    def escanear_rfid(self, db: Session, uid_rfid: str) -> IdentificacionResponse:
-        """Procesa el escaneo de una credencial RFID."""
-        estudiante = self.repo.get_by_rfid(db, uid_rfid)
-
-        if estudiante:
-            return IdentificacionResponse(
-                estudiante_id=estudiante.id,
-                nombre=estudiante.nombre,
-                matricula=estudiante.matricula,
-                uid_rfid=uid_rfid,
-                estado="registrado",
-                mensaje="Estudiante identificado correctamente",
-            )
-
-        # RFID no asignado: es un caso esperado, no lanzamos excepción
-        # porque el encargado puede enrolarlo luego.
-        return IdentificacionResponse(
-            estudiante_id=None,
-            nombre=None,
-            matricula=None,
-            uid_rfid=uid_rfid,
-            estado="no_registrado",
-            mensaje="RFID no asociado a ningún estudiante. "
-                    "Puede ser enrolado manualmente desde el panel de control.",
+    def procesar_escaneo(
+        self, db: Session, request: ScanRequest
+        ) -> IdentificacionResponse:
+        """Punto de entrada principal para el ESP32."""
+        if request.tipo == "rfid":
+            return self._procesar_rfid(db, request.valor)
+        
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Tipo de escaneo no soportado actualmente."
         )
 
+    def _procesar_rfid(self, db: Session, uid_rfid: str) -> IdentificacionResponse:
+        """Procesa el escaneo de una credencial RFID de estudiante."""
+        estudiante = self.repo_estudiante.get_by_rfid(db, uid_rfid)
+
+        if not estudiante:
+            return IdentificacionResponse(
+                uid_rfid=uid_rfid,
+                estado="no_registrado",
+                mensaje=(
+                    "RFID no asociado a ningún estudiante. "
+                    "Puede ser enrolado manualmente."
+                ),
+            )
+
+        # 1. Regla de negocio: Buscar si ya tiene una sesión abierta
+        sesion = self.repo_sesion.get_activa_by_estudiante(db, estudiante.id)
+
+        equipos: list[str] = []
+        
+        if sesion:
+            accion = "sesion_continuada"
+            # Omitimos la carga de equipos_actuales hasta que Alberto haga la US-03
+        else:
+            # 2. Regla de negocio: Abrir nueva sesión
+            sesion = self.repo_sesion.create(db, estudiante.id)
+            accion = "sesion_abierta"
+
+        return IdentificacionResponse(
+            estudiante_id=estudiante.id,
+            nombre=estudiante.nombre,
+            matricula=estudiante.matricula,
+            uid_rfid=uid_rfid,
+            estado="registrado",
+            mensaje="Estudiante identificado correctamente",
+            accion=accion,
+            sesion_id=sesion.id,
+            equipos_actuales=equipos
+        )
+    
     def enrolar_rfid(self, 
     db: Session, 
     asignacion_data: AsignacionRFIDRequest) -> AsignacionRFIDResponse:
         """Asigna un RFID a un estudiante existente."""
         # 1. Verificar que el estudiante existe
-        estudiante = self.repo.get_by_matricula(db, asignacion_data.matricula)
+        estudiante = self.repo_estudiante.get_by_matricula(
+        db, 
+        asignacion_data.matricula
+        )
         if not estudiante:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -53,7 +84,10 @@ class IdentificacionService:
             )
 
         # 2. Verificar que el RFID no esté ya asignado a otro estudiante
-        estudiante_existente = self.repo.get_by_rfid(db, asignacion_data.valor)
+        estudiante_existente = self.repo_estudiante.get_by_rfid(
+        db, 
+        asignacion_data.valor
+        )
         if (estudiante_existente and 
         estudiante_existente.id != estudiante.id):
             raise HTTPException(
@@ -63,7 +97,7 @@ class IdentificacionService:
             )
 
         # 3. Asignar el RFID al estudiante
-        estudiante_actualizado = self.repo.asignar_rfid(
+        estudiante_actualizado = self.repo_estudiante.asignar_rfid(
             db,
             estudiante.id,
             asignacion_data.valor,
