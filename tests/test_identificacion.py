@@ -156,7 +156,7 @@ class TestEscaneoRFID:
         db_session.add(estudiante)
         db_session.commit()
         
-        sesion = Sesion(estudiante_id=estudiante.id, estado="abierta")
+        sesion = Sesion(estudiante_id=estudiante.id, estado="Activa")
         db_session.add(sesion)
         db_session.commit()
         

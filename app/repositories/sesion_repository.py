@@ -13,13 +13,13 @@ class SesionRepository:
         """Busca si el estudiante tiene una sesión que aún no ha sido cerrada."""
         stmt = select(Sesion).where(
             Sesion.estudiante_id == estudiante_id,
-            Sesion.estado == "abierta"
+            Sesion.estado == "Activa"
         )
         return db.execute(stmt).scalar_one_or_none()
 
     def create(self, db: Session, estudiante_id: int) -> Sesion:
         """Crea una nueva sesión abierta para el estudiante."""
-        nueva_sesion = Sesion(estudiante_id=estudiante_id, estado="abierta")
+        nueva_sesion = Sesion(estudiante_id=estudiante_id, estado="Activa")
         db.add(nueva_sesion)
         db.commit()
         db.refresh(nueva_sesion)
