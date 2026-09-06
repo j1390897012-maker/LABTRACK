@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 # Asegúrate de que la ruta coincida con tu proyecto
 from app.db import get_db
 from app.schemas.identificacion import (
-    AccesorioInfo,
     AsignacionRFIDRequest,
     AsignacionRFIDResponse,
     IdentificacionResponse,
