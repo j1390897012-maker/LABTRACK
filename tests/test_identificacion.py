@@ -1,4 +1,4 @@
-"""Pruebas para el servicio de identificación RFID (US-09 y US-02)."""
+"""Pruebas para el servicio de identificación RFID y QR (US-09, US-02, US-03)."""
 
 import pytest
 from fastapi import HTTPException
@@ -7,12 +7,12 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.main import app
-from app.models import Estudiante
-from app.models.labtrack import Sesion
+from app.models.labtrack import Equipo, Estudiante, Sesion, TipoAccesorio, TipoEquipo
 from app.schemas.identificacion import AsignacionRFIDRequest
 from app.services.identificaciones import IdentificacionService
 
 client = TestClient(app)
+
 
 @pytest.fixture
 def estudiante_con_rfid(db_session: Session) -> Estudiante:
@@ -170,4 +170,63 @@ class TestEscaneoRFID:
         assert data["accion"] == "sesion_continuada"
         assert data["sesion_id"] == sesion.id
         
+        app.dependency_overrides.clear()
+
+
+class TestEscaneoQR:
+    """Pruebas para el escaneo de QR y adición de equipos a sesiones (US-03)."""
+
+    def test_flujo_completo_identificacion_y_qr(self, db_session):
+        app.dependency_overrides[get_db] = lambda: db_session
+
+        # 1. Preparar datos simulados en la base de datos de pruebas
+        tipo = TipoEquipo(nombre="Osciloscopio")
+        db_session.add(tipo)
+        db_session.commit()
+
+        acc = TipoAccesorio(nombre="Puntas", tipo_equipo_id=tipo.id, cantidad_default=2)
+        db_session.add(acc)
+
+        equipo = Equipo(codigo="OSC-0397", tipo_equipo_id=tipo.id, estado="Disponible")
+        db_session.add(equipo)
+
+        estudiante = Estudiante(
+            nombre="Alberto",
+            matricula="S12345",
+            uid_rfid="A1-B2-C3-D4"
+        )
+        db_session.add(estudiante)
+        db_session.commit()
+
+        # 2. Simular escaneo de tarjeta RFID (US-02)
+        res_rfid = client.post(
+            "/api/identificaciones/scan", 
+            json={"tipo": "rfid", "valor": "A1-B2-C3-D4"}
+        )
+        assert res_rfid.status_code == 200
+        datos_rfid = res_rfid.json()
+        sesion_id = datos_rfid["sesion_id"]
+        assert sesion_id is not None
+        assert datos_rfid["accion"] == "sesion_abierta"
+
+        # 3. Simular escaneo de QR agregando el equipo a la sesión (US-03)
+        res_qr = client.post(
+            "/api/identificaciones/scan", 
+            json={"tipo": "qr", "valor": "OSC-0397", "sesion_id": sesion_id}
+        )
+        assert res_qr.status_code == 200
+        datos_qr = res_qr.json()
+        assert datos_qr["codigo"] == "OSC-0397"
+        assert datos_qr["estado"] == "Prestado"
+        assert len(datos_qr["accesorios"]) == 1
+        assert datos_qr["accesorios"][0]["nombre"] == "Puntas"
+
+        # 4. Validar la regla de negocio: el equipo ya está prestado (US-03)
+        res_qr_duplicado = client.post(
+            "/api/identificaciones/scan", 
+            json={"tipo": "qr", "valor": "OSC-0397", "sesion_id": sesion_id}
+        )
+        assert res_qr_duplicado.status_code == 409
+        assert res_qr_duplicado.json()["detail"] == "El equipo no está disponible"
+
         app.dependency_overrides.clear()
