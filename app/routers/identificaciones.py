@@ -9,6 +9,7 @@ from app.schemas.identificacion import (
     AsignacionRFIDRequest,
     AsignacionRFIDResponse,
     IdentificacionResponse,
+    QRScanResponse,
     ScanRequest,
 )
 from app.services.identificaciones import IdentificacionService
@@ -22,7 +23,7 @@ identificacion_service = IdentificacionService()
 
 @router.post(
     "/scan", 
-    response_model=IdentificacionResponse, 
+    response_model=IdentificacionResponse | QRScanResponse, 
     status_code=status.HTTP_200_OK)
 def escanear_identificacion(
     request: ScanRequest, 

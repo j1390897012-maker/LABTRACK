@@ -1,12 +1,15 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.repositories.equipo_repository import EquipoRepository
 from app.repositories.estudiante_repository import EstudianteRepository
 from app.repositories.sesion_repository import SesionRepository
 from app.schemas.identificacion import (
+    AccesorioInfo,
     AsignacionRFIDRequest,
     AsignacionRFIDResponse,
     IdentificacionResponse,
+    QRScanResponse,
     ScanRequest,
 )
 
@@ -15,17 +18,69 @@ class IdentificacionService:
     def __init__(self) -> None:
         self.repo_estudiante = EstudianteRepository()
         self.repo_sesion = SesionRepository()
+        self.repo_equipo = EquipoRepository()  
 
     def procesar_escaneo(
         self, db: Session, request: ScanRequest
-        ) -> IdentificacionResponse:
+    ) -> IdentificacionResponse | QRScanResponse:
         """Punto de entrada principal para el ESP32."""
         if request.tipo == "rfid":
             return self._procesar_rfid(db, request.valor)
         
+        if request.tipo == "qr":
+            if not request.sesion_id:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST, 
+                    detail="Se requiere el sesion_id para asignar un equipo."
+                )
+            return self._procesar_qr(db, request.valor, request.sesion_id)
+        
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail="Tipo de escaneo no soportado actualmente."
+        )
+
+    def _procesar_qr(
+        self, 
+        db: Session, 
+        codigo_qr: str, 
+        sesion_id: int
+    ) -> QRScanResponse:
+        """Procesa el escaneo de un código QR de equipo para agregarlo a la sesión."""
+        # 1. Buscar el equipo
+        equipo = self.repo_equipo.get_by_codigo(db, codigo_qr)
+        if not equipo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Equipo con código '{codigo_qr}' no encontrado."
+            )
+
+        # 2. Regla de negocio: Validar estado (US-03)
+        if equipo.estado != "Disponible":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="El equipo no está disponible" # Mensaje exacto de la US-03
+            )
+
+        # 3. Registrar el préstamo
+        self.repo_sesion.add_equipo(db, sesion_id, equipo)
+
+        # 4. Extraer los accesorios correspondientes mediante SQLAlchemy
+        accesorios_info = [
+            AccesorioInfo(
+                id=acc.id,
+                nombre=acc.nombre,
+                cantidad_default=acc.cantidad_default
+            )
+            for acc in equipo.tipo_equipo.tipos_accesorio
+        ]
+
+        return QRScanResponse(
+            equipo_id=equipo.id,
+            codigo=equipo.codigo,
+            estado="Prestado",
+            mensaje="Equipo agregado a la sesión exitosamente",
+            accesorios=accesorios_info
         )
 
     def _procesar_rfid(self, db: Session, uid_rfid: str) -> IdentificacionResponse:
@@ -67,14 +122,16 @@ class IdentificacionService:
             equipos_actuales=equipos
         )
     
-    def enrolar_rfid(self, 
-    db: Session, 
-    asignacion_data: AsignacionRFIDRequest) -> AsignacionRFIDResponse:
+    def enrolar_rfid(
+        self, 
+        db: Session, 
+        asignacion_data: AsignacionRFIDRequest
+    ) -> AsignacionRFIDResponse:
         """Asigna un RFID a un estudiante existente."""
         # 1. Verificar que el estudiante existe
         estudiante = self.repo_estudiante.get_by_matricula(
-        db, 
-        asignacion_data.matricula
+            db, 
+            asignacion_data.matricula
         )
         if not estudiante:
             raise HTTPException(
@@ -85,11 +142,11 @@ class IdentificacionService:
 
         # 2. Verificar que el RFID no esté ya asignado a otro estudiante
         estudiante_existente = self.repo_estudiante.get_by_rfid(
-        db, 
-        asignacion_data.valor
+            db, 
+            asignacion_data.valor
         )
         if (estudiante_existente and 
-        estudiante_existente.id != estudiante.id):
+            estudiante_existente.id != estudiante.id):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"RFID {asignacion_data.valor} ya está asignado "

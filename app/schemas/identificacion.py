@@ -7,6 +7,21 @@ class ScanRequest(BaseModel):
     tipo: str
     valor: str
     lector_id: str | None = None
+    sesion_id: int | None = None
+
+class AccesorioInfo(BaseModel):
+    id: int
+    nombre: str
+    cantidad_default: int
+
+class QRScanResponse(BaseModel):
+    """ Modelo de respuesta al escanear un equipo vía QR """
+    tipo: str = "equipo"
+    equipo_id: int
+    codigo: str
+    estado: str
+    mensaje: str
+    accesorios: list[AccesorioInfo] = []
 
 class IdentificacionResponse(BaseModel):
     """ Modelo para representar la respuesta de la identificación """
