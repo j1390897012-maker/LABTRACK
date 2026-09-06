@@ -1,13 +1,18 @@
-"""Pruebas para el servicio de identificación RFID (US-09)."""
+"""Pruebas para el servicio de identificación RFID (US-09 y US-02)."""
 
 import pytest
 from fastapi import HTTPException
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.db import get_db
+from app.main import app
 from app.models import Estudiante
+from app.models.labtrack import Sesion
 from app.schemas.identificacion import AsignacionRFIDRequest
 from app.services.identificaciones import IdentificacionService
 
+client = TestClient(app)
 
 @pytest.fixture
 def estudiante_con_rfid(db_session: Session) -> Estudiante:
@@ -108,3 +113,61 @@ class TestEnrolamientoRFID:
             service.enrolar_rfid(db_session, request)
 
         assert exc_info.value.status_code == 409
+
+
+class TestEscaneoRFID:
+    """Pruebas para el escaneo de RFID y control de sesiones (US-02)."""
+
+    def test_escanear_rfid_estudiante_nuevo_crea_sesion(self, db_session):
+        # 1. Asegurar que apunte a la base de datos de pruebas
+        app.dependency_overrides[get_db] = lambda: db_session
+        
+        # 2. Primero, enrolamos un estudiante para la prueba
+        client.post(
+            "/api/estudiantes",
+            json={"nombre": "Alexander Torres Andrade", "matricula": "S23013956"}
+        )
+        client.post(
+            "/api/identificaciones/enrolar",
+            json={"tipo": "rfid", "valor": "TAG-123", "matricula": "S23013956"}
+        )
+        
+        # 3. El ESP32 escanea la tarjeta
+        response = client.post(
+            "/api/identificaciones/scan",
+            json={"tipo": "rfid", "valor": "TAG-123", "lector_id": "esp32-mesa-1"}
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["estado"] == "registrado"
+        assert data["accion"] == "sesion_abierta"
+        assert data["sesion_id"] is not None
+        
+        app.dependency_overrides.clear()
+
+    def test_escanear_rfid_estudiante_con_sesion_continua_sesion(
+        self, db_session
+        ):
+        app.dependency_overrides[get_db] = lambda: db_session
+        
+        # Insertamos el registro directamente con SQLAlchemy para simular el estado
+        estudiante = Estudiante(nombre="Alex", matricula="TEST-1", uid_rfid="TAG-456")
+        db_session.add(estudiante)
+        db_session.commit()
+        
+        sesion = Sesion(estudiante_id=estudiante.id, estado="Activa")
+        db_session.add(sesion)
+        db_session.commit()
+        
+        response = client.post(
+            "/api/identificaciones/scan",
+            json={"tipo": "rfid", "valor": "TAG-456", "lector_id": "esp32-mesa-1"}
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert data["accion"] == "sesion_continuada"
+        assert data["sesion_id"] == sesion.id
+        
+        app.dependency_overrides.clear()
