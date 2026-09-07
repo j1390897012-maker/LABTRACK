@@ -7,7 +7,7 @@ class ScanRequest(BaseModel):
     tipo: str
     valor: str
     lector_id: str | None = None
-    sesion_id: int | None = None
+    
 
 class AccesorioInfo(BaseModel):
     id: int

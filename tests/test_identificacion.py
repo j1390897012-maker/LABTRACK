@@ -231,7 +231,7 @@ class TestEscaneoQR:
             json={
                 "tipo": "qr",
                 "valor": "OSC-0397",
-                "sesion_id": sesion_id,
+                
             },
         )
 
