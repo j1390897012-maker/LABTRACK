@@ -34,3 +34,8 @@ class EquipoRepository:
         db.commit()
         db.refresh(nuevo_equipo)
         return nuevo_equipo
+
+    def get_by_id(self, db: Session, equipo_id: int) -> Equipo | None:
+        """Busca un equipo por su ID interno (Primary Key)."""
+        stmt = select(Equipo).where(Equipo.id == equipo_id)
+        return db.execute(stmt).scalar_one_or_none()
