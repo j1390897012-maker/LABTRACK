@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.main import app
 from app.models.labtrack import Equipo, Estudiante, Sesion, TipoAccesorio, TipoEquipo
+from app.repositories.sesion_repository import SesionRepository
 from app.schemas.identificacion import AsignacionRFIDRequest
 from app.services.identificaciones import IdentificacionService
 
@@ -174,7 +175,7 @@ class TestEscaneoRFID:
 
 
 class TestEscaneoQR:
-    """Pruebas para el escaneo de QR y adición de equipos a sesiones (US-03)."""
+    """Pruebas del flujo integrado US-06 y US-03."""
 
     def test_flujo_completo_identificacion_y_qr(self, db_session):
         app.dependency_overrides[get_db] = lambda: db_session
@@ -184,49 +185,82 @@ class TestEscaneoQR:
         db_session.add(tipo)
         db_session.commit()
 
-        acc = TipoAccesorio(nombre="Puntas", tipo_equipo_id=tipo.id, cantidad_default=2)
+        acc = TipoAccesorio(
+            nombre="Puntas",
+            tipo_equipo_id=tipo.id,
+            cantidad_default=2,
+        )
         db_session.add(acc)
 
-        equipo = Equipo(codigo="OSC-0397", tipo_equipo_id=tipo.id, estado="Disponible")
+        equipo = Equipo(
+            codigo="OSC-0397",
+            tipo_equipo_id=tipo.id,
+            estado="Disponible",
+        )
         db_session.add(equipo)
 
         estudiante = Estudiante(
             nombre="Alberto",
             matricula="S12345",
-            uid_rfid="A1-B2-C3-D4"
+            uid_rfid="A1-B2-C3-D4",
         )
         db_session.add(estudiante)
         db_session.commit()
 
-        # 2. Simular escaneo de tarjeta RFID (US-02)
+        # 2. US-02: Simular escaneo de tarjeta RFID
         res_rfid = client.post(
-            "/api/identificaciones/scan", 
-            json={"tipo": "rfid", "valor": "A1-B2-C3-D4"}
+            "/api/identificaciones/scan",
+            json={
+                "tipo": "rfid",
+                "valor": "A1-B2-C3-D4",
+            },
         )
+
         assert res_rfid.status_code == 200
+
         datos_rfid = res_rfid.json()
+
         sesion_id = datos_rfid["sesion_id"]
+
         assert sesion_id is not None
         assert datos_rfid["accion"] == "sesion_abierta"
 
-        # 3. Simular escaneo de QR agregando el equipo a la sesión (US-03)
+        # 3. US-06: Simular escaneo de QR y obtener decisión
         res_qr = client.post(
-            "/api/identificaciones/scan", 
-            json={"tipo": "qr", "valor": "OSC-0397", "sesion_id": sesion_id}
+            "/api/identificaciones/scan",
+            json={
+                "tipo": "qr",
+                "valor": "OSC-0397",
+                "sesion_id": sesion_id,
+            },
         )
-        assert res_qr.status_code == 200
-        datos_qr = res_qr.json()
-        assert datos_qr["codigo"] == "OSC-0397"
-        assert datos_qr["estado"] == "Prestado"
-        assert len(datos_qr["accesorios"]) == 1
-        assert datos_qr["accesorios"][0]["nombre"] == "Puntas"
 
-        # 4. Validar la regla de negocio: el equipo ya está prestado (US-03)
-        res_qr_duplicado = client.post(
-            "/api/identificaciones/scan", 
-            json={"tipo": "qr", "valor": "OSC-0397", "sesion_id": sesion_id}
+        assert res_qr.status_code == 200
+
+        datos_qr = res_qr.json()
+
+        assert datos_qr["codigo"] == "OSC-0397"
+        assert datos_qr["estado"] == "Disponible"
+        assert datos_qr["accion"] == "confirmar_prestamo"
+
+        assert len(datos_qr["estudiantes"]) == 1
+        assert datos_qr["estudiantes"][0]["matricula"] == "S12345"
+
+        # 4. US-03: Confirmar el préstamo y ejecutar la operación
+        repo_sesion = SesionRepository()
+
+        prestamo = repo_sesion.add_equipo(
+            db_session,
+            sesion_id,
+            equipo,
         )
-        assert res_qr_duplicado.status_code == 409
-        assert res_qr_duplicado.json()["detail"] == "El equipo no está disponible"
+
+        assert prestamo.sesion_id == sesion_id
+        assert prestamo.equipo_id == equipo.id
+        assert prestamo.estado == "Prestado"
+
+        db_session.refresh(equipo)
+
+        assert equipo.estado == "Prestado"
 
         app.dependency_overrides.clear()

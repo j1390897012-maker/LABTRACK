@@ -5,11 +5,14 @@ from app.repositories.equipo_repository import EquipoRepository
 from app.repositories.estudiante_repository import EstudianteRepository
 from app.repositories.sesion_repository import SesionRepository
 from app.schemas.identificacion import (
-    AccesorioInfo,
+    AccesorioPrestamoInfo,
     AsignacionRFIDRequest,
     AsignacionRFIDResponse,
+    EstudianteSesionInfo,
     IdentificacionResponse,
+    PrestamoActivoInfo,
     QRScanResponse,
+    QRUS06Response,
     ScanRequest,
 )
 
@@ -22,66 +25,136 @@ class IdentificacionService:
 
     def procesar_escaneo(
         self, db: Session, request: ScanRequest
-    ) -> IdentificacionResponse | QRScanResponse:
+    ) -> IdentificacionResponse | QRScanResponse | QRUS06Response:
         """Punto de entrada principal para el ESP32."""
+
         if request.tipo == "rfid":
             return self._procesar_rfid(db, request.valor)
-        
+
         if request.tipo == "qr":
-            if not request.sesion_id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST, 
-                    detail="Se requiere el sesion_id para asignar un equipo."
-                )
-            return self._procesar_qr(db, request.valor, request.sesion_id)
-        
+            return self._procesar_qr(db, request.valor)
+
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Tipo de escaneo no soportado actualmente."
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tipo de escaneo no soportado actualmente.",
         )
 
     def _procesar_qr(
-        self, 
-        db: Session, 
-        codigo_qr: str, 
-        sesion_id: int
-    ) -> QRScanResponse:
-        """Procesa el escaneo de un código QR de equipo para agregarlo a la sesión."""
+        self,
+        db: Session,
+        codigo_qr: str,
+    ) -> QRUS06Response:
+        """Procesa un QR de equipo según el flujo de US-06."""
+
         # 1. Buscar el equipo
         equipo = self.repo_equipo.get_by_codigo(db, codigo_qr)
+
         if not equipo:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Equipo con código '{codigo_qr}' no encontrado."
+                detail=f"Equipo con código '{codigo_qr}' no encontrado.",
             )
 
-        # 2. Regla de negocio: Validar estado (US-03)
-        if equipo.estado != "Disponible":
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="El equipo no está disponible" # Mensaje exacto de la US-03
+        # 2. Si está prestado, preparar la devolución
+        if equipo.estado == "Prestado":
+            prestamo = self.repo_sesion.get_prestamo_activo_by_equipo(
+                db,
+                equipo.id,
             )
 
-        # 3. Registrar el préstamo
-        self.repo_sesion.add_equipo(db, sesion_id, equipo)
+            if not prestamo:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=(
+                        "El equipo figura como prestado, "
+                        "pero no tiene un préstamo activo."
+                    ),
+                )
 
-        # 4. Extraer los accesorios correspondientes mediante SQLAlchemy
-        accesorios_info = [
-            AccesorioInfo(
-                id=acc.id,
-                nombre=acc.nombre,
-                cantidad_default=acc.cantidad_default
+            estudiante = prestamo.sesion.estudiante
+
+            accesorios = [
+                AccesorioPrestamoInfo(
+                    id=accesorio.tipo_accesorio.id,
+                    nombre=accesorio.tipo_accesorio.nombre,
+                    cantidad_prestada=accesorio.cantidad_prestada,
+                )
+                for accesorio in prestamo.accesorios
+            ]
+
+            estudiante_info = EstudianteSesionInfo(
+                id=estudiante.id,
+                nombre=estudiante.nombre,
+                matricula=estudiante.matricula,
             )
-            for acc in equipo.tipo_equipo.tipos_accesorio
-        ]
 
-        return QRScanResponse(
-            equipo_id=equipo.id,
-            codigo=equipo.codigo,
-            estado="Prestado",
-            mensaje="Equipo agregado a la sesión exitosamente",
-            accesorios=accesorios_info
+            prestamo_info = PrestamoActivoInfo(
+                estudiante=estudiante_info,
+                accesorios=accesorios,
+            )
+
+            return QRUS06Response(
+                equipo_id=equipo.id,
+                codigo=equipo.codigo,
+                estado=equipo.estado,
+                mensaje="Préstamo activo encontrado. Iniciar devolución.",
+                accion="iniciar_devolucion",
+                prestamo=prestamo_info,
+            )
+
+        # 3. Si está disponible, buscar estudiantes con sesión activa
+        if equipo.estado == "Disponible":
+            sesiones_activas = self.repo_sesion.get_sesiones_activas(db)
+
+            estudiantes = [
+                EstudianteSesionInfo(
+                    id=sesion.estudiante.id,
+                    nombre=sesion.estudiante.nombre,
+                    matricula=sesion.estudiante.matricula,
+                )
+                for sesion in sesiones_activas
+            ]
+
+            # 3.1 Ningún estudiante tiene sesión activa
+            if not estudiantes:
+                return QRUS06Response(
+                    equipo_id=equipo.id,
+                    codigo=equipo.codigo,
+                    estado=equipo.estado,
+                    mensaje="Equipo disponible. Modo consulta.",
+                    accion="consulta",
+                )
+
+            # 3.2 Exactamente un estudiante
+            if len(estudiantes) == 1:
+                return QRUS06Response(
+                    equipo_id=equipo.id,
+                    codigo=equipo.codigo,
+                    estado=equipo.estado,
+                    mensaje=(
+                        "Equipo disponible. "
+                        "Confirmar préstamo al estudiante."
+                    ),
+                    accion="confirmar_prestamo",
+                    estudiantes=estudiantes,
+                )
+
+            # 3.3 Varios estudiantes
+            return QRUS06Response(
+                equipo_id=equipo.id,
+                codigo=equipo.codigo,
+                estado=equipo.estado,
+                mensaje="Equipo disponible. Seleccionar estudiante.",
+                accion="seleccionar_estudiante",
+                estudiantes=estudiantes,
+            )
+
+        # 4. Estado no contemplado actualmente
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Estado de equipo no soportado: {equipo.estado}",
         )
+
 
     def _procesar_rfid(self, db: Session, uid_rfid: str) -> IdentificacionResponse:
         """Procesa el escaneo de una credencial RFID de estudiante."""

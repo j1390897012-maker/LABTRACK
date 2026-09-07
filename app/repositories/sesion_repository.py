@@ -17,6 +17,8 @@ class SesionRepository:
         )
         return db.execute(stmt).scalar_one_or_none()
 
+
+
     def create(self, db: Session, estudiante_id: int) -> Sesion:
         """Crea una nueva sesión abierta para el estudiante."""
         nueva_sesion = Sesion(estudiante_id=estudiante_id, estado="Activa")
@@ -33,6 +35,7 @@ class SesionRepository:
             estado="Prestado"
         )
         
+        
         # Actualizamos el estado del equipo en la misma transacción
         equipo.estado = "Prestado"
         
@@ -40,3 +43,25 @@ class SesionRepository:
         db.commit()
         db.refresh(sesion_equipo)
         return sesion_equipo
+
+    def get_prestamo_activo_by_equipo(
+        self,
+        db: Session,
+        equipo_id: int,
+    ) -> SesionEquipo | None:
+        """Busca el préstamo activo asociado a un equipo."""
+        stmt = select(SesionEquipo).where(
+        SesionEquipo.equipo_id == equipo_id,
+        SesionEquipo.estado == "Prestado"
+    )
+        return db.execute(stmt).scalar_one_or_none()
+
+    def get_sesiones_activas(
+    self, db: Session,
+    )-> list[Sesion]:
+        """ Obtiene todas las sesiones que permanecen activas"""
+        stmt = select(Sesion).where(
+        Sesion.estado == "Activa"
+    )
+        return list(db.execute(stmt).scalars().all())
+
