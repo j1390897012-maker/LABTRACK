@@ -7,12 +7,41 @@ class ScanRequest(BaseModel):
     tipo: str
     valor: str
     lector_id: str | None = None
-    sesion_id: int | None = None
+    
 
 class AccesorioInfo(BaseModel):
     id: int
     nombre: str
     cantidad_default: int
+
+
+
+class EstudianteSesionInfo(BaseModel):
+    id: int
+    nombre: str
+    matricula: str
+
+class AccesorioPrestamoInfo(BaseModel):
+    id: int
+    nombre: str
+    cantidad_prestada: int
+
+
+class PrestamoActivoInfo(BaseModel):
+    estudiante: EstudianteSesionInfo
+    accesorios: list[AccesorioPrestamoInfo] = []
+    
+
+class QRUS06Response(BaseModel):
+    tipo: str = "equipo"
+    equipo_id: int
+    codigo: str
+    estado: str
+    mensaje: str
+    accion: str
+    prestamo: PrestamoActivoInfo | None = None
+    estudiantes: list[EstudianteSesionInfo] = []
+
 
 class QRScanResponse(BaseModel):
     """ Modelo de respuesta al escanear un equipo vía QR """
