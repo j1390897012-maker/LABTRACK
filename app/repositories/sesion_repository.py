@@ -114,3 +114,15 @@ class SesionRepository:
     ) -> SesionEquipo | None:
         """Busca un préstamo de equipo por su ID."""
         return db.get(SesionEquipo, sesion_equipo_id)
+
+    def get_equipos_by_sesion(self, db: Session, sesion_id: int) -> list[SesionEquipo]:
+        """Obtiene todos los equipos vinculados a una sesión."""
+        stmt = select(SesionEquipo).where(SesionEquipo.sesion_id == sesion_id)
+        return list(db.execute(stmt).scalars().all())
+
+    def cerrar_sesion(self, db: Session, sesion: Sesion) -> Sesion:
+        """Actualiza el estado de la sesión a Cerrada."""
+        sesion.estado = "Cerrada"
+        db.commit()
+        db.refresh(sesion)
+        return sesion
