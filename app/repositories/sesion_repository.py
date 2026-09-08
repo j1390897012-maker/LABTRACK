@@ -81,3 +81,36 @@ class SesionRepository:
             db.add(nuevo_accesorio)
         db.commit()
 
+
+    def get_accesorio_prestamo(
+        self,
+        db: Session,
+        sesion_equipo_id: int,
+        tipo_accesorio_id: int,
+    ) -> SesionEquipoAccesorio | None:
+        """Busca un accesorio específico dentro de un préstamo."""
+        stmt = select(SesionEquipoAccesorio).where(
+            SesionEquipoAccesorio.sesion_equipo_id == sesion_equipo_id,
+            SesionEquipoAccesorio.tipo_accesorio_id == tipo_accesorio_id,
+        )
+        return db.execute(stmt).scalar_one_or_none()
+
+    def actualizar_cantidad_devuelta(
+        self,
+        db: Session,
+        accesorio: SesionEquipoAccesorio,
+        cantidad_devuelta: int,
+    ) -> SesionEquipoAccesorio:
+        """Actualiza la cantidad de accesorios devueltos."""
+        accesorio.cantidad_devuelta = cantidad_devuelta
+        db.commit()
+        db.refresh(accesorio)
+        return accesorio
+
+    def get_sesion_equipo_by_id(
+        self,
+        db: Session,
+        sesion_equipo_id: int,
+    ) -> SesionEquipo | None:
+        """Busca un préstamo de equipo por su ID."""
+        return db.get(SesionEquipo, sesion_equipo_id)
