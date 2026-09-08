@@ -96,3 +96,310 @@ def test_registrar_prestamo_equipo_no_disponible(db_session: Session):
     assert "no está disponible" in response.json()["detail"]
     
     app.dependency_overrides.clear()
+
+
+def test_devolver_todos_los_accesorios(db_session: Session):
+    app.dependency_overrides[get_db] = lambda: db_session
+
+    tipo = TipoEquipo(nombre="Osciloscopio")
+    db_session.add(tipo)
+    db_session.commit()
+
+    acc = TipoAccesorio(
+        nombre="Puntas",
+        tipo_equipo_id=tipo.id,
+        cantidad_default=2,
+    )
+    db_session.add(acc)
+
+    equipo = Equipo(
+        codigo="OSC-001",
+        tipo_equipo_id=tipo.id,
+        estado="Prestado",
+    )
+    db_session.add(equipo)
+
+    estudiante = Estudiante(
+        nombre="Juan",
+        matricula="S123456",
+    )
+    db_session.add(estudiante)
+    db_session.commit()
+
+    sesion = Sesion(
+        estudiante_id=estudiante.id,
+        estado="Activa",
+    )
+    db_session.add(sesion)
+    db_session.commit()
+
+    prestamo = SesionEquipo(
+        sesion_id=sesion.id,
+        equipo_id=equipo.id,
+        estado="Prestado",
+    )
+    db_session.add(prestamo)
+    db_session.commit()
+
+    accesorio_prestado = SesionEquipoAccesorio(
+        sesion_equipo_id=prestamo.id,
+        tipo_accesorio_id=acc.id,
+        cantidad_prestada=2,
+    )
+    db_session.add(accesorio_prestado)
+    db_session.commit()
+
+    response = client.post(
+        "/api/devoluciones/accesorios",
+        json={
+            "sesion_equipo_id": prestamo.id,
+            "accesorios": [
+                {
+                    "tipo_accesorio_id": acc.id,
+                    "cantidad_devuelta": 2,
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+
+    db_session.refresh(accesorio_prestado)
+    assert accesorio_prestado.cantidad_prestada == 2
+    assert accesorio_prestado.cantidad_devuelta == 2
+
+    app.dependency_overrides.clear()
+
+
+def test_devolver_parte_de_los_accesorios(db_session: Session):
+    app.dependency_overrides[get_db] = lambda: db_session
+
+    tipo = TipoEquipo(nombre="Osciloscopio")
+    db_session.add(tipo)
+    db_session.commit()
+
+    acc = TipoAccesorio(
+        nombre="Puntas",
+        tipo_equipo_id=tipo.id,
+        cantidad_default=2,
+    )
+    db_session.add(acc)
+
+    equipo = Equipo(
+        codigo="OSC-002",
+        tipo_equipo_id=tipo.id,
+        estado="Prestado",
+    )
+    db_session.add(equipo)
+
+    estudiante = Estudiante(
+        nombre="Pedro",
+        matricula="S654321",
+    )
+    db_session.add(estudiante)
+    db_session.commit()
+
+    sesion = Sesion(
+        estudiante_id=estudiante.id,
+        estado="Activa",
+    )
+    db_session.add(sesion)
+    db_session.commit()
+
+    prestamo = SesionEquipo(
+        sesion_id=sesion.id,
+        equipo_id=equipo.id,
+        estado="Prestado",
+    )
+    db_session.add(prestamo)
+    db_session.commit()
+
+    accesorio_prestado = SesionEquipoAccesorio(
+        sesion_equipo_id=prestamo.id,
+        tipo_accesorio_id=acc.id,
+        cantidad_prestada=2,
+    )
+    db_session.add(accesorio_prestado)
+    db_session.commit()
+
+    response = client.post(
+        "/api/devoluciones/accesorios",
+        json={
+            "sesion_equipo_id": prestamo.id,
+            "accesorios": [
+                {
+                    "tipo_accesorio_id": acc.id,
+                    "cantidad_devuelta": 1,
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+
+    db_session.refresh(accesorio_prestado)
+    assert accesorio_prestado.cantidad_prestada == 2
+    assert accesorio_prestado.cantidad_devuelta == 1
+
+    app.dependency_overrides.clear()
+
+
+def test_no_permitir_devolver_mas_accesorios_de_los_prestados(
+    db_session: Session,
+):
+    app.dependency_overrides[get_db] = lambda: db_session
+
+    tipo = TipoEquipo(nombre="Fuente")
+    db_session.add(tipo)
+    db_session.commit()
+
+    acc = TipoAccesorio(
+        nombre="Cables",
+        tipo_equipo_id=tipo.id,
+        cantidad_default=2,
+    )
+    db_session.add(acc)
+
+    equipo = Equipo(
+        codigo="FUE-001",
+        tipo_equipo_id=tipo.id,
+        estado="Prestado",
+    )
+    db_session.add(equipo)
+
+    estudiante = Estudiante(
+        nombre="Carlos",
+        matricula="S789012",
+    )
+    db_session.add(estudiante)
+    db_session.commit()
+
+    sesion = Sesion(
+        estudiante_id=estudiante.id,
+        estado="Activa",
+    )
+    db_session.add(sesion)
+    db_session.commit()
+
+    prestamo = SesionEquipo(
+        sesion_id=sesion.id,
+        equipo_id=equipo.id,
+        estado="Prestado",
+    )
+    db_session.add(prestamo)
+    db_session.commit()
+
+    accesorio_prestado = SesionEquipoAccesorio(
+        sesion_equipo_id=prestamo.id,
+        tipo_accesorio_id=acc.id,
+        cantidad_prestada=2,
+    )
+    db_session.add(accesorio_prestado)
+    db_session.commit()
+
+    response = client.post(
+        "/api/devoluciones/accesorios",
+        json={
+            "sesion_equipo_id": prestamo.id,
+            "accesorios": [
+                {
+                    "tipo_accesorio_id": acc.id,
+                    "cantidad_devuelta": 3,
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 400
+    assert "mayor" in response.json()["detail"]
+
+    db_session.refresh(accesorio_prestado)
+    assert accesorio_prestado.cantidad_devuelta is None
+
+    app.dependency_overrides.clear()
+
+
+def test_devolucion_con_prestamo_inexistente(db_session: Session):
+    app.dependency_overrides[get_db] = lambda: db_session
+
+    response = client.post(
+        "/api/devoluciones/accesorios",
+        json={
+            "sesion_equipo_id": 9999,
+            "accesorios": [
+                {
+                    "tipo_accesorio_id": 1,
+                    "cantidad_devuelta": 1,
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 404
+    assert "Préstamo de equipo no encontrado" in response.json()["detail"]
+
+    app.dependency_overrides.clear()
+
+
+def test_devolucion_con_accesorio_no_perteneciente_al_prestamo(
+    db_session: Session,
+):
+    app.dependency_overrides[get_db] = lambda: db_session
+
+    tipo = TipoEquipo(nombre="Generador")
+    db_session.add(tipo)
+    db_session.commit()
+
+    acc = TipoAccesorio(
+        nombre="Cable",
+        tipo_equipo_id=tipo.id,
+        cantidad_default=1,
+    )
+    db_session.add(acc)
+
+    equipo = Equipo(
+        codigo="GEN-001",
+        tipo_equipo_id=tipo.id,
+        estado="Prestado",
+    )
+    db_session.add(equipo)
+
+    estudiante = Estudiante(
+        nombre="Ana",
+        matricula="S345678",
+    )
+    db_session.add(estudiante)
+    db_session.commit()
+
+    sesion = Sesion(
+        estudiante_id=estudiante.id,
+        estado="Activa",
+    )
+    db_session.add(sesion)
+    db_session.commit()
+
+    prestamo = SesionEquipo(
+        sesion_id=sesion.id,
+        equipo_id=equipo.id,
+        estado="Prestado",
+    )
+    db_session.add(prestamo)
+    db_session.commit()
+
+    response = client.post(
+        "/api/devoluciones/accesorios",
+        json={
+            "sesion_equipo_id": prestamo.id,
+            "accesorios": [
+                {
+                    "tipo_accesorio_id": 9999,
+                    "cantidad_devuelta": 1,
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 404
+    assert "no pertenece al préstamo" in response.json()["detail"]
+
+    app.dependency_overrides.clear()
