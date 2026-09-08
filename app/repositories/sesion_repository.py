@@ -3,7 +3,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.labtrack import Equipo, Sesion, SesionEquipo
+from app.models.labtrack import Equipo, Sesion, SesionEquipo, SesionEquipoAccesorio
 
 
 class SesionRepository:
@@ -64,4 +64,20 @@ class SesionRepository:
         Sesion.estado == "Activa"
     )
         return list(db.execute(stmt).scalars().all())
+
+    def add_accesorios_prestamo(
+        self, 
+        db: Session, 
+        sesion_equipo_id: int, 
+        accesorios: list[dict[str, int]]
+    ) -> None:
+        """Registra los accesorios vinculados a un préstamo de equipo (US-04)."""
+        for acc in accesorios:
+            nuevo_accesorio = SesionEquipoAccesorio(
+                sesion_equipo_id=sesion_equipo_id,
+                tipo_accesorio_id=acc["tipo_accesorio_id"],
+                cantidad_prestada=acc["cantidad"]
+            )
+            db.add(nuevo_accesorio)
+        db.commit()
 
