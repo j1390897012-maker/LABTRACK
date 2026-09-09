@@ -8,13 +8,23 @@ from sqlalchemy.orm import Session
 
 from app.repositories.equipo_repository import EquipoRepository
 from app.schemas.equipo import EquipoCreate
+from app.schemas.historial_equipo import (
+    HistorialEquipoResponse,
+    HistorialFallaEquipo,
+    HistorialUsoEquipo,
+)
 
 
 class EquipoService:
+    repo: EquipoRepository
+
     def __init__(self) -> None:
         self.repo = EquipoRepository()
+        # Aliamos ambos nombres por compatibilidad con los dos métodos
+        self.repo_equipo = self.repo
 
     def registrar_equipo(self, db: Session, equipo_in: EquipoCreate) -> dict[str, Any]:
+        """Registra un nuevo equipo físico en el sistema."""
         # 1. Verificar duplicados
         equipo_existente = self.repo.get_by_codigo(db, equipo_in.codigo)
         if equipo_existente:
@@ -46,3 +56,61 @@ class EquipoService:
             "tipo": tipo.nombre,
             "qr_base64": qr_data_uri
         }
+
+    def obtener_historial(self, db: Session, equipo_id: int) -> HistorialEquipoResponse:
+        """Consulta el historial completo de un equipo (US-10)."""
+        equipo = self.repo_equipo.get_historial_completo(db, equipo_id)
+        
+        if not equipo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Equipo no encontrado."
+            )
+
+        usos = []
+        for prestamo in sorted(
+            equipo.sesion_equipos,
+            key=lambda p: p.fecha_prestamo,
+            reverse=True
+        ):
+            estudiante = (
+                prestamo.sesion.estudiante
+                if prestamo.sesion and prestamo.sesion.estudiante
+                else None
+            )
+
+            fallas = [
+                HistorialFallaEquipo(
+                    id=f.id,
+                    descripcion=f.descripcion,
+                    estado=f.estado,
+                    fecha=f.fecha
+                ) for f in prestamo.fallas
+            ]
+
+            nombre_est = (
+                estudiante.nombre if estudiante and estudiante.nombre else "Desconocido"
+            )
+            mat_est = (
+                estudiante.matricula if estudiante and estudiante.matricula else "N/A"
+            )
+
+            usos.append(
+                HistorialUsoEquipo(
+                    sesion_equipo_id=prestamo.id,
+                    estudiante_nombre=nombre_est,
+                    matricula_estudiante=mat_est,
+                    estado_prestamo=prestamo.estado,
+                    fecha_prestamo=prestamo.fecha_prestamo,
+                    fecha_devolucion=prestamo.fecha_devolucion,
+                    fallas=fallas
+                )
+            )
+
+        return HistorialEquipoResponse(
+            equipo_id=equipo.id,
+            codigo=equipo.codigo,
+            tipo=equipo.tipo_equipo.nombre if equipo.tipo_equipo else "Sin tipo",
+            estado_actual=equipo.estado,
+            historial_usos=usos
+        )
