@@ -1,9 +1,15 @@
 """Repositorio de Estudiantes (app/repositories/estudiante_repository.py)."""
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
-from app.models.labtrack import Estudiante
+from app.models.labtrack import (
+    Equipo,
+    Estudiante,
+    Sesion,
+    SesionEquipo,
+    SesionEquipoAccesorio,
+)
 
 
 class EstudianteRepository:
@@ -37,3 +43,23 @@ class EstudianteRepository:
         db.commit()
         db.refresh(nuevo_estudiante)
         return nuevo_estudiante
+
+    def get_historial_completo(
+    self,
+    db: Session,
+    estudiante_id: int
+    ) -> Estudiante | None:
+        """Obtiene al estudiante con todas sus sesiones, 
+        equipos, accesorios y fallas anidadas."""
+        stmt = (
+            select(Estudiante)
+            .where(Estudiante.id == estudiante_id)
+            .options(
+                selectinload(Estudiante.sesiones).selectinload(Sesion.sesion_equipos).selectinload(SesionEquipo.equipo).selectinload(Equipo.tipo_equipo),
+                selectinload(Estudiante.sesiones).selectinload(Sesion.sesion_equipos).selectinload(SesionEquipo.accesorios).selectinload(SesionEquipoAccesorio.tipo_accesorio),
+                selectinload(Estudiante.sesiones).selectinload(Sesion.sesion_equipos).selectinload(SesionEquipo.fallas)
+            )
+            # Ordenamos para que las sesiones más recientes salgan primero
+            .order_by(Estudiante.id) 
+        )
+        return db.execute(stmt).scalar_one_or_none()
