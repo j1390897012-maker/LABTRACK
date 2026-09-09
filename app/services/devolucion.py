@@ -8,7 +8,10 @@ from app.repositories.equipo_repository import EquipoRepository
 from app.repositories.falla_repository import FallaRepository
 from app.repositories.sesion_repository import SesionRepository
 from app.schemas.devolucion import (
+    AccesorioPrestadoInfo,
     ConfirmarDevolucionRequest,
+    IniciarDevolucionManualRequest,
+    IniciarDevolucionManualResponse,
     RegistrarFallaRequest,
     RegistrarFallaResponse,
 )
@@ -134,4 +137,69 @@ class DevolucionService:
             equipo_estado=equipo.estado,
             falla_id=None,
             mensaje="Devolución sin fallas. Equipo marcado como 'Disponible'.",
+        )
+
+    def iniciar_devolucion_manual(
+        self,
+        db: Session,
+        request: IniciarDevolucionManualRequest,
+    ) -> IniciarDevolucionManualResponse:
+        """US-12: inicia manualmente una devolución seleccionando el equipo
+        desde la web (respaldo cuando el QR no está disponible).
+
+        Reutiliza la misma consulta que usa el flujo automático por QR
+        (SesionRepository.get_prestamo_activo_by_equipo) para ubicar el
+        préstamo activo del equipo y devolver los datos necesarios para
+        continuar con /api/devoluciones/accesorios y /falla.
+        """
+        if request.equipo_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Falta seleccionar un equipo para iniciar la devolución.",
+            )
+
+        equipo = self.repo_equipo.get_by_id(db, request.equipo_id)
+        if not equipo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Equipo no encontrado.",
+            )
+
+        if equipo.estado != "Prestado":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "El equipo no tiene un préstamo activo "
+                    f"(estado actual: {equipo.estado})."
+                ),
+            )
+
+        prestamo = self.repo_sesion.get_prestamo_activo_by_equipo(db, equipo.id)
+        if not prestamo:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "El equipo figura como prestado, "
+                    "pero no tiene un préstamo activo."
+                ),
+            )
+
+        estudiante = prestamo.sesion.estudiante
+        accesorios = [
+            AccesorioPrestadoInfo(
+                tipo_accesorio_id=acc.tipo_accesorio_id,
+                nombre=acc.tipo_accesorio.nombre,
+                cantidad_prestada=acc.cantidad_prestada,
+            )
+            for acc in prestamo.accesorios
+        ]
+
+        return IniciarDevolucionManualResponse(
+            sesion_equipo_id=prestamo.id,
+            equipo_id=equipo.id,
+            codigo_equipo=equipo.codigo,
+            estudiante_id=estudiante.id,
+            estudiante_nombre=estudiante.nombre,
+            accesorios=accesorios,
+            mensaje="Devolución iniciada manualmente. Continúa con accesorios y falla.",
         )
