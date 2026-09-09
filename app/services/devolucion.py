@@ -4,14 +4,22 @@
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.repositories.equipo_repository import EquipoRepository
+from app.repositories.falla_repository import FallaRepository
 from app.repositories.sesion_repository import SesionRepository
-from app.schemas.devolucion import ConfirmarDevolucionRequest
+from app.schemas.devolucion import (
+    ConfirmarDevolucionRequest,
+    RegistrarFallaRequest,
+    RegistrarFallaResponse,
+)
 
 
 class DevolucionService:
     
     def __init__(self)-> None:
         self.repo_sesion = SesionRepository()
+        self.repo_equipo = EquipoRepository()
+        self.repo_falla = FallaRepository()
 
     def confirmar_devolucion(
         self,
@@ -69,3 +77,61 @@ class DevolucionService:
         return {
             "mensaje": "Devolución de accesorios registrada correctamente."
         }
+
+    def registrar_falla(
+        self,
+        db: Session,
+        sesion_equipo_id: int,
+        request: RegistrarFallaRequest,
+    ) -> RegistrarFallaResponse:
+        """Registra si hubo o no una falla al devolver un equipo (US-08).
+
+        Si hubo falla: se guarda en el historial del equipo y el equipo
+        pasa a estado "En revisión".
+        Si no hubo falla: el equipo pasa a estado "Disponible".
+        Las fallas anteriores nunca se sobrescriben ni eliminan.
+        """
+
+        # 1. Verificar que el préstamo (devolución en curso) exista
+        prestamo = self.repo_sesion.get_sesion_equipo_by_id(
+            db,
+            sesion_equipo_id,
+        )
+
+        if not prestamo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Préstamo de equipo no encontrado.",
+            )
+
+        equipo = prestamo.equipo
+
+        if request.hubo_falla:
+            # La validación de que 'descripcion' venga presente ya la
+            # hace el schema (RegistrarFallaRequest), aquí solo persistimos.
+            falla = self.repo_falla.create(
+                db,
+                equipo_id=equipo.id,
+                sesion_equipo_id=prestamo.id,
+                descripcion=request.descripcion,  # type: ignore[arg-type]
+            )
+            equipo = self.repo_equipo.actualizar_estado(db, equipo, "En revisión")
+
+            return RegistrarFallaResponse(
+                equipo_id=equipo.id,
+                equipo_estado=equipo.estado,
+                falla_id=falla.id,
+                mensaje=(
+                    "Falla registrada en el historial del equipo. "
+                    "Equipo marcado como 'En revisión'."
+                ),
+            )
+
+        equipo = self.repo_equipo.actualizar_estado(db, equipo, "Disponible")
+
+        return RegistrarFallaResponse(
+            equipo_id=equipo.id,
+            equipo_estado=equipo.estado,
+            falla_id=None,
+            mensaje="Devolución sin fallas. Equipo marcado como 'Disponible'.",
+        )
