@@ -39,3 +39,10 @@ class EquipoRepository:
         """Busca un equipo por su ID interno (Primary Key)."""
         stmt = select(Equipo).where(Equipo.id == equipo_id)
         return db.execute(stmt).scalar_one_or_none()
+
+    def actualizar_estado(self, db: Session, equipo: Equipo, estado: str) -> Equipo:
+        """Actualiza el estado general del equipo (p. ej. Disponible, En revisión)."""
+        equipo.estado = estado
+        db.commit()
+        db.refresh(equipo)
+        return equipo
