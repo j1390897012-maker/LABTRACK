@@ -403,3 +403,23 @@ def test_devolucion_con_accesorio_no_perteneciente_al_prestamo(
     assert "no pertenece al préstamo" in response.json()["detail"]
 
     app.dependency_overrides.clear()
+
+def test_registrar_prestamo_cantidad_accesorios_invalida(db_session):
+    """Verifica que el sistema rechace cantidades nulas o negativas (US-04)."""
+    # No necesitamos insertar datos en la BD real porque 
+    # Pydantic debe bloquear la petición antes de llegar al servicio.
+    
+    response = client.post(
+        "/api/equipos/prestar",
+        json={
+            "sesion_id": 1,
+            "equipo_id": 1,
+            "accesorios": [
+                {"tipo_accesorio_id": 1, "cantidad": 0}  # Cantidad inválida
+            ]
+        }
+    )
+    
+    assert response.status_code == 422
+    errores = response.json()["detail"]
+    assert any(error["loc"][-1] == "cantidad" for error in errores)
