@@ -114,3 +114,19 @@ class EquipoService:
             estado_actual=equipo.estado,
             historial_usos=usos
         )
+
+    def obtener_historial_por_codigo(
+        self, db: Session, codigo: str
+    ) -> HistorialEquipoResponse:
+        """Busca el equipo por su código físico (QR) para obtener su ID 
+        y delega en la consulta de historial (US-10).
+        """
+        equipo = self.repo.get_by_codigo(db, codigo)
+        
+        if not equipo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Equipo no encontrado.",
+            )
+            
+        return self.obtener_historial(db, equipo.id)

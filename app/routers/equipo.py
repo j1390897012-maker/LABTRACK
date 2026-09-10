@@ -54,3 +54,16 @@ def obtener_historial_equipo(
     """Consulta el historial completo de 
     un equipo, incluyendo quién lo usó y sus fallas (US-10)."""
     return equipo_service.obtener_historial(db, equipo_id)
+
+@router.get(
+    "/codigo/{codigo}/historial",
+    response_model=HistorialEquipoResponse,
+    status_code=status.HTTP_200_OK,
+)
+def obtener_historial_equipo_por_codigo(
+    codigo: str, db: Session = Depends(get_db)
+) -> HistorialEquipoResponse:
+    """Consulta el historial completo de un equipo escaneando su código QR,
+    obteniendo su ID interno y consultando su trazabilidad (US-10).
+    """
+    return equipo_service.obtener_historial_por_codigo(db, codigo)

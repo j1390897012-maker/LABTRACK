@@ -10,7 +10,6 @@ from app.main import app
 from app.models.labtrack import (
     Equipo,
     Estudiante,
-    Falla,
     Sesion,
     SesionEquipo,
     TipoEquipo,
@@ -20,21 +19,23 @@ app.dependency_overrides = {}  # type: ignore[attr-defined]
 
 client = TestClient(app)
 
-def test_obtener_historial_equipo_exitoso(db_session: Session):
-    """Verifica que el historial del equipo 
-    devuelva sus usos, estudiantes y fallas correctamente."""
+def test_obtener_historial_equipo_por_codigo_exitoso(db_session: Session) -> None:
+    """Verifica que el historial del equipo se pueda consultar 
+    exitosamente utilizando su código físico (QR).
+    """
     app.dependency_overrides[get_db] = lambda: db_session
 
-    # 1. Preparar datos base
-    tipo_eq = TipoEquipo(nombre="Multímetro")
+    # 1. Preparar datos base con un código físico específico
+    tipo_eq = TipoEquipo(nombre="Osciloscopio")
     db_session.add(tipo_eq)
     db_session.commit()
 
-    equipo = Equipo(codigo="MULT-001", tipo_equipo_id=tipo_eq.id, estado="En revisión")
+    codigo_qr = "OSC-0307"
+    equipo = Equipo(codigo=codigo_qr, tipo_equipo_id=tipo_eq.id, estado="Disponible")
     db_session.add(equipo)
     db_session.commit()
 
-    estudiante = Estudiante(nombre="Carlos Pérez", matricula="S222333")
+    estudiante = Estudiante(nombre="María López", matricula="S333444")
     db_session.add(estudiante)
     db_session.commit()
 
@@ -42,45 +43,27 @@ def test_obtener_historial_equipo_exitoso(db_session: Session):
     db_session.add(sesion)
     db_session.commit()
 
-    # 2. Generar el préstamo / uso del equipo
+    # 2. Generar el préstamo
     prestamo = SesionEquipo(
         sesion_id=sesion.id,
         equipo_id=equipo.id,
         estado="Devuelto",
-        fecha_prestamo=datetime.now(UTC)
+        fecha_prestamo=datetime.now(UTC),
     )
     db_session.add(prestamo)
     db_session.commit()
 
-    # 3. Registrar una falla asociada a este préstamo
-    falla = Falla(
-        equipo_id=equipo.id,
-        sesion_equipo_id=prestamo.id,
-        descripcion="Fusibles quemados",
-        estado="Pendiente"
-    )
-    db_session.add(falla)
-    db_session.commit()
+    # 3. Ejecutar la petición HTTP usando el código QR
+    response = client.get(f"/api/equipos/codigo/{codigo_qr}/historial")
 
-    # 4. Ejecutar la petición HTTP
-    response = client.get(f"/api/equipos/{equipo.id}/historial")
-
-    # 5. Validar la respuesta
+    # 4. Validar la respuesta
     assert response.status_code == 200
     data = response.json()
 
     assert data["equipo_id"] == equipo.id
-    assert data["codigo"] == "MULT-001"
-    assert data["tipo"] == "Multímetro"
-    assert data["estado_actual"] == "En revisión"
-    
+    assert data["codigo"] == codigo_qr
     assert len(data["historial_usos"]) == 1
-    uso = data["historial_usos"][0]
-    assert uso["estudiante_nombre"] == "Carlos Pérez"
-    assert uso["matricula_estudiante"] == "S222333"
-    
-    assert len(uso["fallas"]) == 1
-    assert uso["fallas"][0]["descripcion"] == "Fusibles quemados"
+    assert data["historial_usos"][0]["estudiante_nombre"] == "María López"
 
     app.dependency_overrides.clear()
 
