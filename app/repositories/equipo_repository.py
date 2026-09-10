@@ -1,7 +1,7 @@
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
-from app.models import Equipo, TipoEquipo
+from app.models.labtrack import Equipo, Sesion, SesionEquipo, TipoEquipo
 
 
 class EquipoRepository:
@@ -46,3 +46,20 @@ class EquipoRepository:
         db.commit()
         db.refresh(equipo)
         return equipo
+
+    def get_historial_completo(self, db: Session, equipo_id: int) -> Equipo | None:
+        """Obtiene el equipo con todo 
+        su historial de préstamos, estudiantes y fallas asociadas."""
+        stmt = (
+            select(Equipo)
+            .where(Equipo.id == equipo_id)
+            .options(
+                selectinload(Equipo.tipo_equipo),
+                selectinload(Equipo.sesion_equipos)
+                .selectinload(SesionEquipo.sesion)
+                .selectinload(Sesion.estudiante),
+                selectinload(Equipo.sesion_equipos)
+                .selectinload(SesionEquipo.fallas)
+            )
+        )
+        return db.execute(stmt).scalar_one_or_none()
