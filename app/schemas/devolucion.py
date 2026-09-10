@@ -32,3 +32,26 @@ class RegistrarFallaResponse(BaseModel):
     equipo_estado: str
     falla_id: int | None = None
     mensaje: str
+
+
+class IniciarDevolucionManualRequest(BaseModel):
+    """US-12: iniciar manualmente una devolución seleccionando el equipo."""
+
+    equipo_id: int | None = Field(default=None)
+
+
+class AccesorioPrestadoInfo(BaseModel):
+    tipo_accesorio_id: int
+    nombre: str
+    cantidad_prestada: int
+
+
+class IniciarDevolucionManualResponse(BaseModel):
+    sesion_equipo_id: int
+    equipo_id: int
+    codigo_equipo: str
+    estudiante_id: int
+    estudiante_nombre: str
+    accesorios: list[AccesorioPrestadoInfo] = []
+    mensaje: str
+

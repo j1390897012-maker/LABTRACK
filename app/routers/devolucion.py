@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.schemas.devolucion import (
     ConfirmarDevolucionRequest,
+    IniciarDevolucionManualRequest,
+    IniciarDevolucionManualResponse,
     RegistrarFallaRequest,
     RegistrarFallaResponse,
 )
@@ -15,6 +17,19 @@ router = APIRouter(
 )
 
 devolucion_service = DevolucionService()
+
+
+@router.post(
+    "",
+    response_model=IniciarDevolucionManualResponse,
+    status_code=status.HTTP_200_OK,
+)
+def iniciar_devolucion_manual(
+    request: IniciarDevolucionManualRequest,
+    db: Session = Depends(get_db),
+) -> IniciarDevolucionManualResponse:
+    """Inicia manualmente una devolución seleccionando el equipo (US-12)."""
+    return devolucion_service.iniciar_devolucion_manual(db=db, request=request)
 
 
 @router.post(
