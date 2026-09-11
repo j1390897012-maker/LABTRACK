@@ -9,3 +9,10 @@ class ConfirmarPrestamoRequest(BaseModel):
     sesion_id: int
     equipo_id: int
     accesorios: list[AccesorioPrestamoCreate] = []
+
+
+class ConfirmarPrestamoResponse(BaseModel):
+    sesion_id: int
+    equipo_id: int
+    codigo_equipo: str
+    mensaje: str

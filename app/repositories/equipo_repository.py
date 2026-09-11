@@ -1,14 +1,37 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models.labtrack import Equipo, Sesion, SesionEquipo, TipoEquipo
+from app.models import Equipo, TipoAccesorio, TipoEquipo
 
 
 class EquipoRepository:
     def get_by_codigo(self, db: Session, codigo: str) -> Equipo | None:
         """Busca un equipo por su código físico."""
-        stmt = select(Equipo).where(Equipo.codigo == codigo)
+        stmt = (
+            select(Equipo)
+            .where(Equipo.codigo == codigo)
+            .options(selectinload(Equipo.tipo_equipo))
+        )
         return db.execute(stmt).scalar_one_or_none()
+
+    def search(
+        self,
+        db: Session,
+        codigo: str | None = None,
+        estado: str | None = None,
+        tipo: str | None = None,
+    ) -> list[Equipo]:
+        """Lista equipos, opcionalmente filtrando por código (parcial),
+        estado (exacto) y/o tipo (nombre exacto)."""
+        stmt = select(Equipo).options(selectinload(Equipo.tipo_equipo))
+        if codigo:
+            stmt = stmt.where(Equipo.codigo.ilike(f"%{codigo}%"))
+        if estado:
+            stmt = stmt.where(Equipo.estado == estado)
+        if tipo:
+            stmt = stmt.join(TipoEquipo).where(TipoEquipo.nombre == tipo)
+        stmt = stmt.order_by(Equipo.codigo)
+        return list(db.execute(stmt).scalars().all())
 
     def get_tipo_by_nombre(self, db: Session, nombre: str) -> TipoEquipo | None:
         """Busca un tipo de equipo por su nombre."""
@@ -47,19 +70,20 @@ class EquipoRepository:
         db.refresh(equipo)
         return equipo
 
-    def get_historial_completo(self, db: Session, equipo_id: int) -> Equipo | None:
-        """Obtiene el equipo con todo 
-        su historial de préstamos, estudiantes y fallas asociadas."""
-        stmt = (
-            select(Equipo)
-            .where(Equipo.id == equipo_id)
-            .options(
-                selectinload(Equipo.tipo_equipo),
-                selectinload(Equipo.sesion_equipos)
-                .selectinload(SesionEquipo.sesion)
-                .selectinload(Sesion.estudiante),
-                selectinload(Equipo.sesion_equipos)
-                .selectinload(SesionEquipo.fallas)
-            )
-        )
-        return db.execute(stmt).scalar_one_or_none()
+    def list_tipos_equipo(self, db: Session) -> list[TipoEquipo]:
+        """Lista el catálogo de tipos de equipo."""
+        stmt = select(TipoEquipo).order_by(TipoEquipo.nombre)
+        return list(db.execute(stmt).scalars().all())
+
+    def list_tipos_accesorio(
+        self,
+        db: Session,
+        tipo_equipo_id: int | None = None,
+    ) -> list[TipoAccesorio]:
+        """Lista el catálogo de tipos de accesorio, opcionalmente filtrado
+        por tipo de equipo."""
+        stmt = select(TipoAccesorio)
+        if tipo_equipo_id is not None:
+            stmt = stmt.where(TipoAccesorio.tipo_equipo_id == tipo_equipo_id)
+        stmt = stmt.order_by(TipoAccesorio.nombre)
+        return list(db.execute(stmt).scalars().all())

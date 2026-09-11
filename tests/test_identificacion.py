@@ -173,6 +173,63 @@ class TestEscaneoRFID:
         
         app.dependency_overrides.clear()
 
+    def test_escanear_rfid_sesion_continuada_incluye_equipos_actuales(
+        self, db_session
+    ):
+        """Al continuar una sesión, la respuesta debe incluir los códigos
+        de los equipos que el estudiante ya tiene prestados."""
+        app.dependency_overrides[get_db] = lambda: db_session
+
+        tipo = TipoEquipo(nombre="Osciloscopio")
+        db_session.add(tipo)
+        db_session.commit()
+
+        equipo_prestado = Equipo(
+            codigo="OSC-0999", tipo_equipo_id=tipo.id, estado="Prestado"
+        )
+        equipo_devuelto = Equipo(
+            codigo="OSC-1000", tipo_equipo_id=tipo.id, estado="Disponible"
+        )
+        db_session.add_all([equipo_prestado, equipo_devuelto])
+
+        estudiante = Estudiante(nombre="Nora", matricula="TEST-2", uid_rfid="TAG-789")
+        db_session.add(estudiante)
+        db_session.commit()
+
+        sesion = Sesion(estudiante_id=estudiante.id, estado="Activa")
+        db_session.add(sesion)
+        db_session.commit()
+
+        from app.models.labtrack import SesionEquipo
+
+        db_session.add_all(
+            [
+                SesionEquipo(
+                    sesion_id=sesion.id,
+                    equipo_id=equipo_prestado.id,
+                    estado="Prestado",
+                ),
+                SesionEquipo(
+                    sesion_id=sesion.id,
+                    equipo_id=equipo_devuelto.id,
+                    estado="Devuelto",
+                ),
+            ]
+        )
+        db_session.commit()
+
+        response = client.post(
+            "/api/identificaciones/scan",
+            json={"tipo": "rfid", "valor": "TAG-789"},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["accion"] == "sesion_continuada"
+        assert data["equipos_actuales"] == ["OSC-0999"]
+
+        app.dependency_overrides.clear()
+
 
 class TestEscaneoQR:
     """Pruebas del flujo integrado US-06 y US-03."""

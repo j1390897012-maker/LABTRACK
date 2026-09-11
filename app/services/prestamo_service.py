@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.repositories.equipo_repository import EquipoRepository
 from app.repositories.sesion_repository import SesionRepository
-from app.schemas.prestamo import ConfirmarPrestamoRequest
+from app.schemas.prestamo import ConfirmarPrestamoRequest, ConfirmarPrestamoResponse
 
 
 class PrestamoService:
@@ -13,7 +13,7 @@ class PrestamoService:
 
     def confirmar_prestamo(
         self, db: Session, request: ConfirmarPrestamoRequest
-    ) -> dict[str, str]:
+    ) -> ConfirmarPrestamoResponse:
         # 1. Validar disponibilidad del equipo
         equipo = self.repo_equipo.get_by_id(db, request.equipo_id)
         if not equipo:
@@ -38,4 +38,9 @@ class PrestamoService:
             ]
             self.repo_sesion.add_accesorios_prestamo(db, prestamo.id, accesorios_dict)
 
-        return {"mensaje": "Préstamo y accesorios registrados correctamente"}
+        return ConfirmarPrestamoResponse(
+            sesion_id=request.sesion_id,
+            equipo_id=equipo.id,
+            codigo_equipo=equipo.codigo,
+            mensaje="Préstamo y accesorios registrados correctamente",
+        )

@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LABTRACK — Panel del encargado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F1EFE8;
+    --panel: #FFFFFF;
+    --ink: #1E2422;
+    --ink-soft: #5B6560;
+    --ink-faint: #8C9490;
+    --line: #C9C2B4;
+    --line-soft: #DEDACD;
+    --accent: #D9542B;
+    --accent-ink: #FFFFFF;
+    --led-disponible: #2F7A4F;
+    --led-prestado: #C98A1F;
+    --led-revision: #9C2F22;
+    --grid: rgba(30,36,34,0.045);
+    --radius: 2px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  body {
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    min-height: 100vh;
+  }
+
+  code, .mono, .mono-input {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ---------- Top bezel ---------- */
+  .bezel {
+    background: var(--ink);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .bezel-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+
+  .bezel-brand .mark {
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    display: inline-block;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px rgba(217,84,43,0.25);
+  }
+
+  .bezel-brand h1 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.02em;
+  }
+
+  .bezel-brand span.sub {
+    color: #9AA39D;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .bezel-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    color: #9AA39D;
+    text-align: right;
+    line-height: 1.4;
+  }
+
+  .bezel-meta .clock { color: var(--bg); }
+
+  /* ---------- Layout ---------- */
+  .frame {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: calc(100vh - 58px);
+  }
+
+  /* ---------- Left rail: channel select ---------- */
+  .rail {
+    border-right: 1px solid var(--line);
+    padding: 20px 14px;
+    background: rgba(255,255,255,0.4);
+  }
+
+  .rail-label {
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    margin: 4px 6px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .rail button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 10px 12px;
+    margin-bottom: 4px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--ink-soft);
+    cursor: pointer;
+    border-radius: var(--radius);
+  }
+
+  .rail button .num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    width: 16px;
+  }
+
+  .rail button:hover {
+    border-color: var(--line);
+    color: var(--ink);
+  }
+
+  .rail button.active {
+    background: var(--ink);
+    color: var(--bg);
+    border-color: var(--ink);
+  }
+
+  .rail button.active .num { color: var(--accent); }
+
+  /* ---------- Main content ---------- */
+  main { padding: 28px 32px 60px; max-width: 900px; }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .view-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .view-head h2 {
+    font-size: 22px;
+    margin: 0 0 4px;
+    font-weight: 600;
+  }
+
+  .view-head p {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 13.5px;
+  }
+
+  .endpoint-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    border: 1px solid var(--line);
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+
+  /* ---------- Panel (readout) ---------- */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    padding: 20px;
+    margin-bottom: 18px;
+    position: relative;
+  }
+
+  .panel::before, .panel::after {
+    content: "";
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: var(--line);
+    border-style: solid;
+  }
+  .panel::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+  .panel::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+  .panel-title {
+    font-size: 12px;
+    text-transform: none;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    margin: 0 0 14px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ---------- Form controls ---------- */
+  .field-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+  }
+
+  .field { flex: 1; min-width: 180px; }
+
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    padding: 10px 11px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    color: var(--ink);
+    border-radius: var(--radius);
+  }
+
+  .field input:focus, .field select:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: -1px;
+    background: #fff;
+  }
+
+  button.btn {
+    font: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 10px 18px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: var(--accent-ink);
+    cursor: pointer;
+    border-radius: var(--radius);
+    white-space: nowrap;
+  }
+
+  button.btn:hover { background: #C2481F; }
+
+  button.btn.secondary {
+    background: transparent;
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  button.btn.secondary:hover { border-color: var(--ink); }
+
+  /* ---------- LED status ---------- */
+  .led {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+  }
+  .led .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    display: inline-block;
+  }
+  .led.disponible .dot { background: var(--led-disponible); box-shadow: 0 0 0 3px rgba(47,122,79,0.15); }
+  .led.prestado .dot { background: var(--led-prestado); box-shadow: 0 0 0 3px rgba(201,138,31,0.15); }
+  .led.revision .dot { background: var(--led-revision); box-shadow: 0 0 0 3px rgba(156,47,34,0.15); }
+
+  /* ---------- Data rows ---------- */
+  .datarow {
+    display: grid;
+    grid-template-columns: 100px 1fr auto auto;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 4px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .datarow:last-child { border-bottom: none; }
+
+  .datarow .code { font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 14px; }
+  .datarow .desc { color: var(--ink-soft); font-size: 13.5px; }
+  .datarow .meta { color: var(--ink-faint); font-size: 12px; font-family: 'IBM Plex Mono', monospace; text-align: right; }
+
+  table.readout {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  table.readout th {
+    text-align: left;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    padding: 0 10px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+  table.readout td {
+    padding: 10px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  table.readout tr:last-child td { border-bottom: none; }
+  table.readout tr:hover td { background: rgba(217,84,43,0.04); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--ink-faint);
+  }
+  .empty-state .glyph {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 28px;
+    color: var(--line);
+    margin-bottom: 10px;
+  }
+
+  .hint {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    margin-top: 10px;
+  }
+
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+
+  .toggle-group {
+    display: flex;
+    gap: 8px;
+  }
+  .toggle-group button {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    font: inherit;
+    font-size: 13.5px;
+    cursor: pointer;
+    border-radius: var(--radius);
+    color: var(--ink-soft);
+  }
+  .toggle-group button.selected {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  .banner {
+    display: none;
+    padding: 12px 16px;
+    border-left: 3px solid var(--led-disponible);
+    background: rgba(47,122,79,0.06);
+    font-size: 13.5px;
+    margin-bottom: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .banner.show { display: block; }
+</style>
+</head>
+<body>
+
+<div class="bezel">
+  <div class="bezel-brand">
+    <span class="mark"></span>
+    <h1>LABTRACK</h1>
+    <span class="sub">panel del encargado</span>
+  </div>
+  <div class="bezel-meta">
+    <div>Laboratorio de Instrumentación · UV</div>
+    <div class="clock" id="clock">—</div>
+  </div>
+</div>
+
+<div class="frame">
+  <nav class="rail">
+    <div class="rail-label">canales</div>
+    <button class="nav-btn active" data-view="sesion"><span class="num">01</span> Sesión activa</button>
+    <button class="nav-btn" data-view="prestamo"><span class="num">02</span> Préstamo manual</button>
+    <button class="nav-btn" data-view="devolucion"><span class="num">03</span> Devolución</button>
+    <button class="nav-btn" data-view="equipos"><span class="num">04</span> Equipos</button>
+    <button class="nav-btn" data-view="fallas"><span class="num">05</span> Fallas</button>
+  </nav>
+
+  <main>
+
+    <!-- ===================== 01 SESIÓN ACTIVA ===================== -->
+    <section class="view active" id="view-sesion">
+      <div class="view-head">
+        <div>
+          <h2>Sesión activa</h2>
+          <p>Consulta lo que un estudiante tiene prestado ahora mismo, por matrícula.</p>
+        </div>
+        <span class="endpoint-tag">GET /api/sesiones/activa</span>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">buscar por matrícula</p>
+        <div class="field-row">
+          <div class="field">
+            <label for="s-matricula">Matrícula</label>
+            <input class="mono-input" id="s-matricula" type="text" value="S21012345" placeholder="S21012345">
+          </div>
+          <button class="btn" onclick="cargarSesion()">Consultar</button>
+        </div>
+      </div>
+
+      <div class="panel" id="sesion-resultado">
+        <p class="panel-title">resultado</p>
+        <div class="datarow">
+          <div class="code">S21012345</div>
+          <div class="desc">Diana Fuentes Meléndez</div>
+          <div class="led prestado"><span class="dot"></span>Sesión activa</div>
+          <div class="meta">#4821</div>
+        </div>
+        <table class="readout" style="margin-top:14px;">
+          <thead>
+            <tr><th>código</th><th>tipo</th><th>prestado desde</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="mono">OSC-0307</td><td>Osciloscopio</td><td class="mono">09:12</td></tr>
+            <tr><td class="mono">FUE-0119</td><td>Fuente de poder</td><td class="mono">09:14</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== 02 PRÉSTAMO MANUAL ===================== -->
+    <section class="view" id="view-prestamo">
+      <div class="view-head">
+        <div>
+          <h2>Préstamo manual</h2>
+          <p>Respaldo cuando el lector RFID o el QR no están disponibles (US-12).</p>
+        </div>
+        <span class="endpoint-tag">POST /api/sesiones/prestamo-manual</span>
+      </div>
+
+      <div class="banner" id="prestamo-banner">Préstamo registrado. OSC-0307 → S21012345.</div>
+
+      <div class="panel">
+        <p class="panel-title">datos del préstamo</p>
+        <div class="stack">
+          <div class="field-row">
+            <div class="field">
+              <label for="p-matricula">Matrícula del estudiante</label>
+              <input class="mono-input" id="p-matricula" type="text" placeholder="S21012345">
+            </div>
+            <div class="field">
+              <label for="p-codigo">Código de equipo (QR)</label>
+              <input class="mono-input" id="p-codigo" type="text" placeholder="OSC-0307">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="p-accesorio">Accesorio</label>
+              <select id="p-accesorio">
+                <option>— sin accesorios —</option>
+                <option>Puntas de osciloscopio (x2)</option>
+                <option>Cable de alimentación</option>
+                <option>Maletín de transporte</option>
+              </select>
+            </div>
+            <button class="btn" onclick="registrarPrestamo()">Registrar préstamo</button>
+          </div>
+        </div>
+        <p class="hint">Se abre (o reutiliza) la sesión del estudiante y se marca el equipo como Prestado.</p>
+      </div>
+    </section>
+
+    <!-- ===================== 03 DEVOLUCIÓN ===================== -->
+    <section class="view" id="view-devolucion">
+      <div class="view-head">
+        <div>
+          <h2>Devolución</h2>
+          <p>Inicia una devolución escaneando o escribiendo el código del equipo.</p>
+        </div>
+        <span class="endpoint-tag">POST /api/devoluciones</span>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">identificar equipo</p>
+        <div class="field-row">
+          <div class="field">
+            <label for="d-codigo">Código de equipo (QR)</label>
+            <input class="mono-input" id="d-codigo" type="text" value="OSC-0307">
+          </div>
+          <button class="btn" onclick="iniciarDevolucion()">Iniciar devolución</button>
+        </div>
+      </div>
+
+      <div class="panel" id="devolucion-detalle">
+        <p class="panel-title">devolución en curso — OSC-0307</p>
+        <div class="datarow">
+          <div class="code">S21012345</div>
+          <div class="desc">Diana Fuentes Meléndez</div>
+          <div class="meta">prestado 09:12</div>
+        </div>
+
+        <table class="readout" style="margin: 14px 0;">
+          <thead><tr><th>accesorio</th><th>prestado</th><th>devuelto</th></tr></thead>
+          <tbody>
+            <tr><td>Puntas de osciloscopio</td><td class="mono">2</td><td><input class="mono-input" style="width:60px; padding:6px;" value="2"></td></tr>
+          </tbody>
+        </table>
+
+        <p class="panel-title" style="margin-top:18px;">¿hubo una falla?</p>
+        <div class="toggle-group" id="falla-toggle">
+          <button class="selected" data-falla="no" onclick="toggleFalla('no')">No, todo en orden</button>
+          <button data-falla="si" onclick="toggleFalla('si')">Sí, reportar falla</button>
+        </div>
+        <div class="field" id="falla-desc-wrap" style="display:none; margin-top:12px;">
+          <label for="falla-desc">Descripción de la falla</label>
+          <input class="mono-input" id="falla-desc" type="text" placeholder="Ej. pantalla no enciende">
+        </div>
+
+        <div style="margin-top:18px;">
+          <button class="btn" onclick="confirmarDevolucion()">Confirmar devolución</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== 04 EQUIPOS ===================== -->
+    <section class="view" id="view-equipos">
+      <div class="view-head">
+        <div>
+          <h2>Equipos</h2>
+          <p>Inventario del laboratorio, con estado en tiempo real.</p>
+        </div>
+        <span class="endpoint-tag">GET /api/equipos</span>
+      </div>
+
+      <div class="panel">
+        <div class="field-row">
+          <div class="field">
+            <label for="e-buscar">Buscar por código</label>
+            <input class="mono-input" id="e-buscar" type="text" placeholder="OSC-">
+          </div>
+          <div class="field" style="max-width:180px;">
+            <label for="e-estado">Estado</label>
+            <select id="e-estado">
+              <option>Todos</option>
+              <option>Disponible</option>
+              <option>Prestado</option>
+              <option>En revisión</option>
+            </select>
+          </div>
+          <button class="btn secondary" onclick="filtrarEquipos()">Filtrar</button>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">inventario</p>
+        <table class="readout">
+          <thead><tr><th>código</th><th>tipo</th><th>estado</th><th></th></tr></thead>
+          <tbody id="equipos-tbody">
+            <tr>
+              <td class="mono">OSC-0307</td><td>Osciloscopio</td>
+              <td><span class="led prestado"><span class="dot"></span>Prestado</span></td>
+              <td><a href="#" onclick="return verHistorial('OSC-0307')" style="color:var(--accent); font-size:12.5px;">ver historial</a></td>
+            </tr>
+            <tr>
+              <td class="mono">MULT-014</td><td>Multímetro</td>
+              <td><span class="led disponible"><span class="dot"></span>Disponible</span></td>
+              <td><a href="#" onclick="return verHistorial('MULT-014')" style="color:var(--accent); font-size:12.5px;">ver historial</a></td>
+            </tr>
+            <tr>
+              <td class="mono">FUE-0119</td><td>Fuente de poder</td>
+              <td><span class="led prestado"><span class="dot"></span>Prestado</span></td>
+              <td><a href="#" onclick="return verHistorial('FUE-0119')" style="color:var(--accent); font-size:12.5px;">ver historial</a></td>
+            </tr>
+            <tr>
+              <td class="mono">OSC-0198</td><td>Osciloscopio</td>
+              <td><span class="led revision"><span class="dot"></span>En revisión</span></td>
+              <td><a href="#" onclick="return verHistorial('OSC-0198')" style="color:var(--accent); font-size:12.5px;">ver historial</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="panel" id="equipo-historial" style="display:none;">
+        <p class="panel-title">historial — <span id="hist-codigo" class="mono"></span></p>
+        <table class="readout">
+          <thead><tr><th>matrícula</th><th>préstamo</th><th>devolución</th><th>falla</th></tr></thead>
+          <tbody id="hist-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== 05 FALLAS ===================== -->
+    <section class="view" id="view-fallas">
+      <div class="view-head">
+        <div>
+          <h2>Fallas</h2>
+          <p>Incidencias reportadas, más recientes primero.</p>
+        </div>
+        <span class="endpoint-tag">GET /api/fallas?estado=Pendiente</span>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">pendientes</p>
+        <div class="datarow" style="grid-template-columns: 100px 1fr 130px 90px;">
+          <div class="code">OSC-0198</div>
+          <div class="desc">Pantalla no enciende tras reinicio</div>
+          <div class="meta">S21012345 · hoy 08:40</div>
+          <div class="led revision"><span class="dot"></span>Pendiente</div>
+        </div>
+        <div class="datarow" style="grid-template-columns: 100px 1fr 130px 90px;">
+          <div class="code">MULT-003</div>
+          <div class="desc">Cable de prueba roto</div>
+          <div class="meta">S21099871 · ayer 17:05</div>
+          <div class="led revision"><span class="dot"></span>Pendiente</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // ---- reloj del bezel ----
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleDateString('es-MX', {day:'2-digit', month:'short'}) + ' · ' +
+      now.toLocaleTimeString('es-MX', {hour:'2-digit', minute:'2-digit'});
+  }
+  tick(); setInterval(tick, 30000);
+
+  // ---- navegación de canales ----
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    });
+  });
+
+  // ---- mock: sesión activa ----
+  function cargarSesion() {
+    document.getElementById('sesion-resultado').style.display = 'block';
+  }
+
+  // ---- mock: préstamo manual ----
+  function registrarPrestamo() {
+    const matricula = document.getElementById('p-matricula').value || 'S21012345';
+    const codigo = document.getElementById('p-codigo').value || 'OSC-0307';
+    const banner = document.getElementById('prestamo-banner');
+    banner.textContent = `Préstamo registrado. ${codigo} → ${matricula}.`;
+    banner.classList.add('show');
+  }
+
+  // ---- mock: devolución ----
+  function iniciarDevolucion() {
+    document.getElementById('devolucion-detalle').style.display = 'block';
+  }
+  function toggleFalla(valor) {
+    document.querySelectorAll('#falla-toggle button').forEach(b => b.classList.remove('selected'));
+    document.querySelector(`#falla-toggle button[data-falla="${valor}"]`).classList.add('selected');
+    document.getElementById('falla-desc-wrap').style.display = valor === 'si' ? 'block' : 'none';
+  }
+  function confirmarDevolucion() {
+    alert('Devolución confirmada (mock). En la versión conectada esto llama a /api/devoluciones/accesorios y, si aplica, PATCH /api/equipos/{codigo}/estado.');
+  }
+
+  // ---- mock: equipos / historial ----
+  const historialMock = {
+    'OSC-0307': [
+      ['S21012345', 'hoy 09:12', '—', '—'],
+      ['S20088123', 'ayer 14:03', 'ayer 16:40', '—'],
+    ],
+    'MULT-014': [
+      ['S20044212', '3 sep 10:15', '3 sep 12:00', '—'],
+    ],
+    'FUE-0119': [
+      ['S21012345', 'hoy 09:14', '—', '—'],
+    ],
+    'OSC-0198': [
+      ['S21012345', '8 sep 08:20', '8 sep 08:40', 'Pantalla no enciende'],
+    ],
+  };
+  function verHistorial(codigo) {
+    document.getElementById('equipo-historial').style.display = 'block';
+    document.getElementById('hist-codigo').textContent = codigo;
+    const tbody = document.getElementById('hist-tbody');
+    tbody.innerHTML = '';
+    (historialMock[codigo] || []).forEach(row => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = row.map((c,i) => `<td${i===0?' class="mono"':''}>${c}</td>`).join('');
+      tbody.appendChild(tr);
+    });
+    document.getElementById('equipo-historial').scrollIntoView({behavior:'smooth', block:'nearest'});
+    return false;
+  }
+
+  function filtrarEquipos() {
+    // placeholder — en la versión conectada dispara GET /api/equipos?codigo=&estado=
+  }
+</script>
+
+</body>
+</html>

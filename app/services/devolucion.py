@@ -10,6 +10,7 @@ from app.repositories.sesion_repository import SesionRepository
 from app.schemas.devolucion import (
     AccesorioPrestadoInfo,
     ConfirmarDevolucionRequest,
+    ConfirmarDevolucionResponse,
     IniciarDevolucionManualRequest,
     IniciarDevolucionManualResponse,
     RegistrarFallaRequest,
@@ -28,7 +29,7 @@ class DevolucionService:
         self,
         db: Session,
         request: ConfirmarDevolucionRequest,
-    ) -> dict[str, str]:
+    ) -> ConfirmarDevolucionResponse:
         """Registra la cantidad de accesorios devueltos de un préstamo."""
 
         # 1. Verificar que el préstamo exista
@@ -77,9 +78,10 @@ class DevolucionService:
                 accesorio_data.cantidad_devuelta,
             )
 
-        return {
-            "mensaje": "Devolución de accesorios registrada correctamente."
-        }
+        return ConfirmarDevolucionResponse(
+            sesion_equipo_id=request.sesion_equipo_id,
+            mensaje="Devolución de accesorios registrada correctamente.",
+        )
 
     def registrar_falla(
         self,
@@ -147,22 +149,36 @@ class DevolucionService:
         """US-12: inicia manualmente una devolución seleccionando el equipo
         desde la web (respaldo cuando el QR no está disponible).
 
+        La interfaz debe identificar el equipo por `codigo_equipo` (el
+        código QR); `equipo_id` se conserva solo por compatibilidad
+        interna.
+
         Reutiliza la misma consulta que usa el flujo automático por QR
         (SesionRepository.get_prestamo_activo_by_equipo) para ubicar el
         préstamo activo del equipo y devolver los datos necesarios para
         continuar con /api/devoluciones/accesorios y /falla.
         """
-        if request.equipo_id is None:
+        if request.codigo_equipo:
+            equipo = self.repo_equipo.get_by_codigo(db, request.codigo_equipo)
+            if not equipo:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=(
+                        f"Equipo con código '{request.codigo_equipo}' "
+                        "no encontrado."
+                    ),
+                )
+        elif request.equipo_id is not None:
+            equipo = self.repo_equipo.get_by_id(db, request.equipo_id)
+            if not equipo:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Equipo no encontrado.",
+                )
+        else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Falta seleccionar un equipo para iniciar la devolución.",
-            )
-
-        equipo = self.repo_equipo.get_by_id(db, request.equipo_id)
-        if not equipo:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Equipo no encontrado.",
             )
 
         if equipo.estado != "Prestado":
@@ -200,6 +216,7 @@ class DevolucionService:
             codigo_equipo=equipo.codigo,
             estudiante_id=estudiante.id,
             estudiante_nombre=estudiante.nombre,
+            matricula=estudiante.matricula,
             accesorios=accesorios,
             mensaje="Devolución iniciada manualmente. Continúa con accesorios y falla.",
         )
