@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers import (
     catalogos,
@@ -11,6 +12,15 @@ from app.routers import (
 from app.routers.sesiones import router as sesiones_router
 
 app = FastAPI(title="LABTRACK")
+
+# Configuración de CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"], 
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(equipo)
 app.include_router(identificaciones)

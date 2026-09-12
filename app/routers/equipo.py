@@ -28,10 +28,12 @@ from app.schemas.prestamo import ConfirmarPrestamoRequest, ConfirmarPrestamoResp
 from app.services.equipo_service import EquipoService
 from app.services.prestamo_service import PrestamoService
 
+# 1. Primero se define el router
 router = APIRouter(prefix="/api/equipos", tags=["Equipos"])
 equipo_service = EquipoService()
 prestamo_service = PrestamoService()
 
+# 2. Luego se usan sus decoradores
 @router.post("", response_model=EquipoOut, status_code=status.HTTP_201_CREATED)
 def registrar_equipo(
     equipo_in: EquipoCreate, 

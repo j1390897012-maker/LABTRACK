@@ -88,6 +88,7 @@ class EquipoService:
             "qr_base64": qr_data_uri
         }
 
+
     def listar(
         self,
         db: Session,

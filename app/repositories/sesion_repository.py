@@ -159,6 +159,9 @@ class SesionRepository:
         )
         return list(db.execute(stmt).scalars().all())
 
+    def obtener_todos(self, db: Session):
+        return db.query(Equipo).all()
+
     def cerrar_sesion(self, db: Session, sesion: Sesion) -> Sesion:
         """Actualiza el estado de la sesión a Cerrada."""
         sesion.estado = "Cerrada"
