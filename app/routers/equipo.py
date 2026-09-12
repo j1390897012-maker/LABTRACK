@@ -16,22 +16,26 @@ from sqlalchemy.orm import Session
 
 from app.db import get_db
 from app.schemas.equipo import (
+    BajaEquipoResponse,
     CambioEstadoEquipoRequest,
     CambioEstadoEquipoResponse,
     EquipoCreate,
     EquipoDetalleResponse,
     EquipoListItem,
     EquipoOut,
+    EquipoUpdate,
 )
 from app.schemas.historial import HistorialEquipoResponse
 from app.schemas.prestamo import ConfirmarPrestamoRequest, ConfirmarPrestamoResponse
 from app.services.equipo_service import EquipoService
 from app.services.prestamo_service import PrestamoService
 
+# 1. Primero se define el router
 router = APIRouter(prefix="/api/equipos", tags=["Equipos"])
 equipo_service = EquipoService()
 prestamo_service = PrestamoService()
 
+# 2. Luego se usan sus decoradores
 @router.post("", response_model=EquipoOut, status_code=status.HTTP_201_CREATED)
 def registrar_equipo(
     equipo_in: EquipoCreate, 
@@ -87,6 +91,35 @@ def obtener_historial_equipo(
     """Historial completo de préstamos de un equipo, identificado por su
     código QR, más reciente primero (US-10)."""
     return equipo_service.obtener_historial(db, codigo)
+
+@router.put(
+    "/{codigo}",
+    response_model=EquipoOut,
+    status_code=status.HTTP_200_OK,
+)
+def actualizar_equipo(
+    codigo: str,
+    datos: EquipoUpdate,
+    db: Session = Depends(get_db),
+) -> EquipoOut:
+    """Corrige el tipo de un equipo (error de captura). El código QR no
+    es editable por API porque ya está impreso en el equipo físico."""
+    return equipo_service.actualizar(db, codigo, datos)
+
+
+@router.patch(
+    "/{codigo}/baja",
+    response_model=BajaEquipoResponse,
+    status_code=status.HTTP_200_OK,
+)
+def dar_de_baja_equipo(
+    codigo: str,
+    db: Session = Depends(get_db),
+) -> BajaEquipoResponse:
+    """Da de baja un equipo obsoleto o irreparable. No borra su
+    historial; solo cambia su estado a 'Baja' y lo saca de circulación."""
+    return equipo_service.dar_de_baja(db, codigo)
+
 
 @router.patch(
     "/{codigo}/estado",

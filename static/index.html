@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LABTRACK - Escáner</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        button { padding: 15px 30px; font-size: 18px; margin: 10px; cursor: pointer; border-radius: 8px; border: none; }
+        .btn-nfc { background-color: #007bff; color: white; }
+        .btn-qr { background-color: #28a745; color: white; }
+        #qr-reader { width: 100%; max-width: 400px; margin: 0 auto; display: none; }
+        #log { margin-top: 20px; padding: 10px; background: #f4f4f4; border-radius: 5px; text-align: left; font-family: monospace; white-space: pre-wrap; word-wrap: break-word;}
+    </style>
+</head>
+<body>
+
+    <h2>LABTRACK - Acceso Web</h2>
+    
+    <button class="btn-nfc" onclick="iniciarNFC()">💳 Leer Tarjeta RFID</button>
+    <button class="btn-qr" onclick="iniciarQR()">📷 Escanear Equipo (QR)</button>
+
+    <div id="qr-reader"></div>
+    <div id="log">Logs de operación...</div>
+
+    <script>
+        // Cambia esto por la URL de tu API (ej. la que te de ngrok)
+        const API_URL = "https://TU_URL_DE_NGROK.ngrok-free.app/api/identificaciones/scan";
+        let html5QrcodeScanner;
+
+        function log(mensaje) {
+            document.getElementById('log').innerText = mensaje + "\n" + document.getElementById('log').innerText;
+        }
+
+        // --- LÓGICA NFC (SOLO CHROME EN ANDROID) ---
+        async function iniciarNFC() {
+            if (!("NDEFReader" in window)) {
+                log("❌ Tu navegador no soporta Web NFC (Usa Chrome en Android).");
+                return;
+            }
+            try {
+                const ndef = new NDEFReader();
+                await ndef.scan();
+                log("📡 Acerca la tarjeta al celular...");
+                
+                ndef.onreading = event => {
+                    const uid = event.serialNumber;
+                    log(`✅ Tarjeta leída: ${uid}`);
+                    
+                    // Enviar a FastAPI
+                    enviarScanAPI("RFID", uid, "Celular-Admin");
+                };
+            } catch (error) {
+                log(`❌ Error al iniciar NFC: ${error}`);
+            }
+        }
+
+        // --- LÓGICA QR ---
+        function iniciarQR() {
+            document.getElementById('qr-reader').style.display = "block";
+            const html5QrCode = new Html5Qrcode("qr-reader");
+
+            html5QrCode.start(
+                { facingMode: "environment" }, // Usa la cámara trasera
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                (codigoDecodificado, decodedResult) => {
+                    // Se encontró un QR
+                    log(`✅ QR leí­do: ${codigoDecodificado}`);
+                    html5QrCode.stop(); // Apagar cámara
+                    document.getElementById('qr-reader').style.display = "none";
+                    
+                    // Aquí asumo que ya tienes una sesión abierta. 
+                    // En tu lógica final, necesitarás sacar el sesion_id de algún lado (ej. guardarlo en LocalStorage tras el escaneo RFID)
+                    const sesionIdActiva = prompt("Ingresa el ID de la sesión actual:"); 
+                    
+                    enviarScanAPI("qr", codigoDecodificado, "Celular-Admin", parseInt(sesionIdActiva));
+                },
+                (errorMessage) => {
+                    // Ignorar errores frame a frame
+                }
+            ).catch((err) => {
+                log(`❌ Error de cámara: ${err}`);
+            });
+        }
+
+        // --- PETICIÓN AL BACKEND ---
+        async function enviarScanAPI(tipo, valor, lector_id, sesion_id = null) {
+            const payload = {
+                tipo: tipo,
+                valor: valor,
+                lector_id: lector_id
+            };
+            if (sesion_id) payload.sesion_id = sesion_id;
+
+            log(`⏳ Enviando a API: ${JSON.stringify(payload)}`);
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                if(response.ok) {
+                    log(`🟢 API OK: ${JSON.stringify(data)}`);
+                } else {
+                    log(`🔴 API ERROR (${response.status}): ${JSON.stringify(data)}`);
+                }
+            } catch (error) {
+                log(`🔴 Fallo de conexión: ${error}`);
+            }
+        }
+    </script>
+</body>
+</html>

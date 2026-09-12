@@ -24,3 +24,10 @@ class EstudianteResponse(EstudianteBase):
     class Config:
         # Permite que Pydantic lea directamente del modelo de SQLAlchemy
         from_attributes = True
+
+
+# 4. Lo que aceptamos en el PUT (Editar un error de captura).
+# Ambos campos son opcionales para permitir corregir solo uno de los dos.
+class EstudianteUpdate(BaseModel):
+    nombre: str | None = None
+    matricula: str | None = None

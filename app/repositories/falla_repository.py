@@ -1,5 +1,7 @@
 """Repositorio de Fallas (app/repositories/falla_repository.py)."""
 
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -74,3 +76,18 @@ class FallaRepository:
         db.commit()
         db.refresh(nueva_falla)
         return nueva_falla
+
+    def resolver(
+        self,
+        db: Session,
+        falla: Falla,
+        observacion_resolucion: str | None,
+    ) -> Falla:
+        """Marca una falla como 'Resuelta' y registra cuándo y con qué
+        observación (PATCH /api/fallas/{falla_id}/resolver)."""
+        falla.estado = "Resuelta"
+        falla.fecha_resolucion = datetime.utcnow()
+        falla.observacion_resolucion = observacion_resolucion
+        db.commit()
+        db.refresh(falla)
+        return falla

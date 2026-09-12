@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Equipo, TipoAccesorio, TipoEquipo
+from app.models import Equipo, SesionEquipo, TipoAccesorio, TipoEquipo
 
 
 class EquipoRepository:
@@ -70,9 +70,37 @@ class EquipoRepository:
         db.refresh(equipo)
         return equipo
 
+    def actualizar_tipo(
+        self, db: Session, equipo: Equipo, tipo_equipo_id: int
+    ) -> Equipo:
+        """Corrige el tipo asignado a un equipo ya registrado."""
+        equipo.tipo_equipo_id = tipo_equipo_id
+        db.commit()
+        db.refresh(equipo)
+        return equipo
+
+    def tiene_historial(self, db: Session, equipo_id: int) -> bool:
+        """True si el equipo ya tiene al menos un préstamo registrado.
+        Se usa para decidir si dar de baja es seguro/tiene sentido."""
+        stmt = (
+            select(SesionEquipo.id)
+            .where(SesionEquipo.equipo_id == equipo_id)
+            .limit(1)
+        )
+        return db.execute(stmt).first() is not None
+
     def list_tipos_equipo(self, db: Session) -> list[TipoEquipo]:
         """Lista el catálogo de tipos de equipo."""
         stmt = select(TipoEquipo).order_by(TipoEquipo.nombre)
+        return list(db.execute(stmt).scalars().all())
+
+    def obtener_todos(self, db: Session) -> list[Equipo]:
+        """Lista todos los equipos ordenados por código."""
+        stmt = (
+            select(Equipo)
+            .options(selectinload(Equipo.tipo_equipo))
+            .order_by(Equipo.codigo)
+        )
         return list(db.execute(stmt).scalars().all())
 
     def list_tipos_accesorio(

@@ -63,3 +63,26 @@ class HistorialEquipoResponse(BaseModel):
     tipo: str
     estado: str
     prestamos: list[HistorialEquipoPrestamo] = []
+
+
+class HistorialGlobalItem(BaseModel):
+    """Un evento dentro del feed global de actividad del laboratorio."""
+
+    tipo_evento: str  # "prestamo" | "devolucion" | "falla" | "resolucion_falla"
+    fecha: datetime
+    codigo_equipo: str
+    tipo_equipo: str
+    matricula: str | None = None
+    estudiante_nombre: str | None = None
+    detalle: str
+
+
+class HistorialGlobalResponse(BaseModel):
+    """Respuesta de GET /api/historial: feed cronológico (más reciente
+    primero) de préstamos, devoluciones y fallas de todo el laboratorio,
+    paginado."""
+
+    items: list[HistorialGlobalItem] = []
+    total: int
+    limit: int
+    offset: int

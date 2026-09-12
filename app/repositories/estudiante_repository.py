@@ -44,6 +44,39 @@ class EstudianteRepository:
         db.refresh(nuevo_estudiante)
         return nuevo_estudiante
 
+    def update(
+        self,
+        db: Session,
+        estudiante: Estudiante,
+        nombre: str | None = None,
+        matricula: str | None = None,
+    ) -> Estudiante:
+        """Corrige nombre y/o matrícula de un estudiante ya registrado."""
+        if nombre is not None:
+            estudiante.nombre = nombre
+        if matricula is not None:
+            estudiante.matricula = matricula
+        db.commit()
+        db.refresh(estudiante)
+        return estudiante
+
+    def tiene_historial(self, db: Session, estudiante_id: int) -> bool:
+        """True si el estudiante ya tiene al menos una sesión registrada
+        (préstamo). Se usa para bloquear el borrado y no romper el
+        historial (US-11)."""
+        stmt = (
+            select(Sesion.id)
+            .where(Sesion.estudiante_id == estudiante_id)
+            .limit(1)
+        )
+        return db.execute(stmt).first() is not None
+
+    def delete(self, db: Session, estudiante: Estudiante) -> None:
+        """Elimina físicamente a un estudiante. Solo debe llamarse cuando
+        no tiene historial asociado (ver tiene_historial)."""
+        db.delete(estudiante)
+        db.commit()
+
     def search(
         self,
         db: Session,

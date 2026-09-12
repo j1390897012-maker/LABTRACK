@@ -5,7 +5,11 @@ from sqlalchemy.orm import Session
 
 # Asegúrate de que la importación de get_db coincida con tu proyecto
 from app.db import get_db
-from app.schemas.estudiante import EstudianteCreate, EstudianteResponse
+from app.schemas.estudiante import (
+    EstudianteCreate,
+    EstudianteResponse,
+    EstudianteUpdate,
+)
 from app.schemas.historial import HistorialEstudianteResponse
 from app.services.estudiante import crear_estudiante
 from app.services.estudiante_service import EstudianteService
@@ -36,6 +40,33 @@ def listar_estudiantes(
 ) -> list[EstudianteResponse]:
     """Lista estudiantes, con búsqueda opcional por matrícula y/o nombre."""
     return estudiante_service.buscar(db, matricula=matricula, nombre=nombre)
+
+
+@router.put(
+    "/{estudiante_id}",
+    response_model=EstudianteResponse,
+    status_code=status.HTTP_200_OK,
+)
+def actualizar_estudiante(
+    estudiante_id: int,
+    datos: EstudianteUpdate,
+    db: Session = Depends(get_db),
+) -> EstudianteResponse:
+    """Corrige un error de captura en nombre y/o matrícula."""
+    return estudiante_service.actualizar(db, estudiante_id, datos)
+
+
+@router.delete(
+    "/{estudiante_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def eliminar_estudiante(
+    estudiante_id: int,
+    db: Session = Depends(get_db),
+) -> None:
+    """Elimina un estudiante sin historial de préstamos. Si ya tiene
+    historial, responde 409 (usar PUT para corregir en vez de borrar)."""
+    estudiante_service.eliminar(db, estudiante_id)
 
 
 @router.get(

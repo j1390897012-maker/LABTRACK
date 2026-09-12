@@ -2,13 +2,20 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.models.labtrack import Falla
+from app.repositories.equipo_repository import EquipoRepository
 from app.repositories.falla_repository import FallaRepository
-from app.schemas.falla import FallaDetalleResponse, FallaListItem
+from app.schemas.falla import (
+    FallaDetalleResponse,
+    FallaListItem,
+    ResolverFallaRequest,
+    ResolverFallaResponse,
+)
 
 
 class FallaService:
     def __init__(self) -> None:
         self.repo_falla = FallaRepository()
+        self.repo_equipo = EquipoRepository()
 
     def _matricula_y_nombre(self, falla: Falla) -> tuple[str | None, str | None]:
         """Obtiene matrícula/nombre del estudiante asociado a la falla, si
@@ -62,4 +69,58 @@ class FallaService:
             estudiante_nombre=estudiante_nombre,
             fecha_resolucion=falla.fecha_resolucion,
             observacion_resolucion=falla.observacion_resolucion,
+        )
+
+    def resolver(
+        self,
+        db: Session,
+        falla_id: int,
+        request: ResolverFallaRequest,
+    ) -> ResolverFallaResponse:
+        """Resuelve una falla (PATCH /api/fallas/{falla_id}/resolver).
+
+        Si el equipo estaba 'En revisión' y esta era su última falla
+        pendiente, el equipo regresa a 'Disponible'. Si el equipo tiene
+        otras fallas pendientes, se queda 'En revisión' hasta que también
+        se resuelvan.
+        """
+        falla = self.repo_falla.get_by_id(db, falla_id)
+        if not falla:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Falla con id {falla_id} no encontrada.",
+            )
+        if falla.estado == "Resuelta":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Esta falla ya fue resuelta anteriormente.",
+            )
+
+        falla = self.repo_falla.resolver(
+            db, falla, request.observacion_resolucion
+        )
+        equipo = falla.equipo
+
+        mensaje = "Falla marcada como 'Resuelta'."
+        fallas_del_equipo = self.repo_falla.get_by_equipo(db, equipo.id)
+        quedan_pendientes = any(
+            f.estado == "Pendiente" for f in fallas_del_equipo
+        )
+        if equipo.estado == "En revisión" and not quedan_pendientes:
+            equipo = self.repo_equipo.actualizar_estado(
+                db, equipo, "Disponible"
+            )
+            mensaje += " Equipo marcado como 'Disponible'."
+        elif equipo.estado == "En revisión":
+            mensaje += (
+                " El equipo sigue 'En revisión': tiene otras fallas "
+                "pendientes."
+            )
+
+        return ResolverFallaResponse(
+            falla_id=falla.id,
+            equipo_id=equipo.id,
+            codigo_equipo=equipo.codigo,
+            equipo_estado=equipo.estado,
+            mensaje=mensaje,
         )
