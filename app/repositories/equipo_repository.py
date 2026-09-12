@@ -75,6 +75,15 @@ class EquipoRepository:
         stmt = select(TipoEquipo).order_by(TipoEquipo.nombre)
         return list(db.execute(stmt).scalars().all())
 
+    def obtener_todos(self, db: Session) -> list[Equipo]:
+        """Lista todos los equipos ordenados por código."""
+        stmt = (
+            select(Equipo)
+            .options(selectinload(Equipo.tipo_equipo))
+            .order_by(Equipo.codigo)
+        )
+        return list(db.execute(stmt).scalars().all())
+
     def list_tipos_accesorio(
         self,
         db: Session,
