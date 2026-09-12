@@ -28,6 +28,16 @@ def registrar_estudiante(
     nuevo_estudiante = crear_estudiante(db=db, estudiante_in=estudiante_in)
     return nuevo_estudiante
 
+@router.get("", response_model=list[EstudianteResponse], status_code=status.HTTP_200_OK)
+def listar_estudiantes(
+    matricula: str | None = None,
+    nombre: str | None = None,
+    db: Session = Depends(get_db),
+) -> list[EstudianteResponse]:
+    """Lista estudiantes, con búsqueda opcional por matrícula y/o nombre."""
+    return estudiante_service.buscar(db, matricula=matricula, nombre=nombre)
+
+
 @router.get(
     "/{estudiante_id}/historial", 
     response_model=HistorialEstudianteResponse,

@@ -12,6 +12,11 @@ class ConfirmarDevolucionRequest(BaseModel):
     accesorios: list[AccesorioDevuelto]
 
 
+class ConfirmarDevolucionResponse(BaseModel):
+    sesion_equipo_id: int
+    mensaje: str
+
+
 class RegistrarFallaRequest(BaseModel):
     """Payload para registrar (o descartar) una falla al devolver un equipo (US-08)."""
 
@@ -35,9 +40,15 @@ class RegistrarFallaResponse(BaseModel):
 
 
 class IniciarDevolucionManualRequest(BaseModel):
-    """US-12: iniciar manualmente una devolución seleccionando el equipo."""
+    """US-12: iniciar manualmente una devolución seleccionando el equipo.
+
+    La interfaz debe operar con `codigo_equipo` (el código QR); `equipo_id`
+    se conserva únicamente por compatibilidad con integraciones internas
+    existentes.
+    """
 
     equipo_id: int | None = Field(default=None)
+    codigo_equipo: str | None = Field(default=None)
 
 
 class AccesorioPrestadoInfo(BaseModel):
@@ -52,6 +63,7 @@ class IniciarDevolucionManualResponse(BaseModel):
     codigo_equipo: str
     estudiante_id: int
     estudiante_nombre: str
+    matricula: str
     accesorios: list[AccesorioPrestadoInfo] = []
     mensaje: str
 

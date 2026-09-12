@@ -1,7 +1,7 @@
 """Repositorio de Sesiones (app/repositories/sesion_repository.py)."""
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.labtrack import Equipo, Sesion, SesionEquipo, SesionEquipoAccesorio
 
@@ -117,7 +117,46 @@ class SesionRepository:
 
     def get_equipos_by_sesion(self, db: Session, sesion_id: int) -> list[SesionEquipo]:
         """Obtiene todos los equipos vinculados a una sesión."""
-        stmt = select(SesionEquipo).where(SesionEquipo.sesion_id == sesion_id)
+        stmt = (
+            select(SesionEquipo)
+            .where(SesionEquipo.sesion_id == sesion_id)
+            .options(selectinload(SesionEquipo.equipo))
+        )
+        return list(db.execute(stmt).scalars().all())
+
+    def get_equipos_prestados_by_sesion(
+        self, db: Session, sesion_id: int
+    ) -> list[SesionEquipo]:
+        """Obtiene los equipos actualmente prestados (no devueltos) de una
+        sesión."""
+        stmt = (
+            select(SesionEquipo)
+            .where(
+                SesionEquipo.sesion_id == sesion_id,
+                SesionEquipo.estado == "Prestado",
+            )
+            .options(selectinload(SesionEquipo.equipo))
+        )
+        return list(db.execute(stmt).scalars().all())
+
+    def get_historial_by_equipo(
+        self, db: Session, equipo_id: int
+    ) -> list[SesionEquipo]:
+        """Obtiene el historial completo de préstamos de un equipo
+        (sesión, estudiante, accesorios y fallas), ordenado por fecha de
+        préstamo descendente (US-10)."""
+        stmt = (
+            select(SesionEquipo)
+            .where(SesionEquipo.equipo_id == equipo_id)
+            .options(
+                selectinload(SesionEquipo.sesion).selectinload(Sesion.estudiante),
+                selectinload(SesionEquipo.accesorios).selectinload(
+                    SesionEquipoAccesorio.tipo_accesorio
+                ),
+                selectinload(SesionEquipo.fallas),
+            )
+            .order_by(SesionEquipo.fecha_prestamo.desc())
+        )
         return list(db.execute(stmt).scalars().all())
 
     def cerrar_sesion(self, db: Session, sesion: Sesion) -> Sesion:

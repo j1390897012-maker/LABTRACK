@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.repositories.estudiante_repository import EstudianteRepository
+from app.schemas.estudiante import EstudianteResponse
 from app.schemas.historial import (
     HistorialAccesorio,
     HistorialEquipo,
@@ -14,6 +15,19 @@ from app.schemas.historial import (
 class EstudianteService:
     def __init__(self) -> None:
         self.repo_estudiante = EstudianteRepository()
+
+    def buscar(
+        self,
+        db: Session,
+        matricula: str | None = None,
+        nombre: str | None = None,
+    ) -> list[EstudianteResponse]:
+        """Lista estudiantes, opcionalmente filtrando por matrícula y/o
+        nombre (GET /api/estudiantes)."""
+        estudiantes = self.repo_estudiante.search(
+            db, matricula=matricula, nombre=nombre
+        )
+        return [EstudianteResponse.model_validate(e) for e in estudiantes]
 
     def obtener_historial(
         self, db: Session, estudiante_id: int

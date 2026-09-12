@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.schemas.devolucion import (
     ConfirmarDevolucionRequest,
+    ConfirmarDevolucionResponse,
     IniciarDevolucionManualRequest,
     IniciarDevolucionManualResponse,
     RegistrarFallaRequest,
@@ -34,12 +35,13 @@ def iniciar_devolucion_manual(
 
 @router.post(
     "/accesorios",
+    response_model=ConfirmarDevolucionResponse,
     status_code=status.HTTP_200_OK,
 )
 def confirmar_devolucion_accesorios(
     request: ConfirmarDevolucionRequest,
     db: Session = Depends(get_db),
-) -> dict[str, str]:
+) -> ConfirmarDevolucionResponse:
     """Confirma la devolución de accesorios de un préstamo."""
     return devolucion_service.confirmar_devolucion(
         db=db,

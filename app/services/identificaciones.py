@@ -174,10 +174,15 @@ class IdentificacionService:
         sesion = self.repo_sesion.get_activa_by_estudiante(db, estudiante.id)
 
         equipos: list[str] = []
-        
+
         if sesion:
             accion = "sesion_continuada"
-            # Omitimos la carga de equipos_actuales hasta que Alberto haga la US-03
+            # US-03: se listan los códigos de los equipos que el
+            # estudiante tiene actualmente prestados en esta sesión.
+            equipos_prestados = self.repo_sesion.get_equipos_prestados_by_sesion(
+                db, sesion.id
+            )
+            equipos = [se.equipo.codigo for se in equipos_prestados]
         else:
             # 2. Regla de negocio: Abrir nueva sesión
             sesion = self.repo_sesion.create(db, estudiante.id)

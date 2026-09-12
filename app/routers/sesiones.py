@@ -8,11 +8,26 @@ from app.schemas.sesion import (
     AgregarEquipoManualRequest,
     AgregarEquipoManualResponse,
     CierreSesionResponse,
+    PrestamoManualRequest,
+    PrestamoManualResponse,
+    SesionActivaResponse,
 )
 from app.services.sesion_service import SesionService
 
 router = APIRouter(prefix="/api/sesiones", tags=["Sesiones"])
 sesion_service = SesionService()
+
+@router.get(
+    "/activa", response_model=SesionActivaResponse, status_code=status.HTTP_200_OK
+)
+def obtener_sesion_activa(
+    matricula: str,
+    db: Session = Depends(get_db),
+) -> SesionActivaResponse:
+    """Consulta la sesión activa de un estudiante por su matrícula, junto
+    con los equipos actualmente prestados en ella."""
+    return sesion_service.sesion_activa_por_matricula(db, matricula)
+
 
 @router.post("/{sesion_id}/cerrar", response_model=CierreSesionResponse)
 def cerrar_sesion_prestamo(sesion_id: int, db: 
@@ -32,8 +47,24 @@ def abrir_sesion_manual(
     request: AbrirSesionManualRequest,
     db: Session = Depends(get_db),
 ) -> AbrirSesionManualResponse:
-    """Abre manualmente una sesión seleccionando al estudiante (US-12)."""
-    return sesion_service.abrir_sesion_manual(db, request.estudiante_id)
+    """Abre manualmente una sesión seleccionando al estudiante por
+    matrícula (US-12)."""
+    return sesion_service.abrir_sesion_manual(db, request)
+
+
+@router.post(
+    "/prestamo-manual",
+    response_model=PrestamoManualResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def prestamo_manual(
+    request: PrestamoManualRequest,
+    db: Session = Depends(get_db),
+) -> PrestamoManualResponse:
+    """US-12: registra en un solo paso un préstamo manual usando la
+    matrícula del estudiante y el código QR del equipo (abre/reutiliza la
+    sesión internamente)."""
+    return sesion_service.prestamo_manual(db, request)
 
 
 @router.post(

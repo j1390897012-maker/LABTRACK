@@ -44,6 +44,22 @@ class EstudianteRepository:
         db.refresh(nuevo_estudiante)
         return nuevo_estudiante
 
+    def search(
+        self,
+        db: Session,
+        matricula: str | None = None,
+        nombre: str | None = None,
+    ) -> list[Estudiante]:
+        """Lista estudiantes, opcionalmente filtrando por matrícula y/o
+        nombre (coincidencia parcial, sin distinguir mayúsculas)."""
+        stmt = select(Estudiante)
+        if matricula:
+            stmt = stmt.where(Estudiante.matricula.ilike(f"%{matricula}%"))
+        if nombre:
+            stmt = stmt.where(Estudiante.nombre.ilike(f"%{nombre}%"))
+        stmt = stmt.order_by(Estudiante.nombre)
+        return list(db.execute(stmt).scalars().all())
+
     def get_historial_completo(
     self,
     db: Session,
