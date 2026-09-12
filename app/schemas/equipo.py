@@ -86,3 +86,23 @@ class CambioEstadoEquipoResponse(BaseModel):
     estado: str
     falla_id: int | None = None
     mensaje: str
+
+
+class EquipoUpdate(BaseModel):
+    """Payload para PUT /api/equipos/{codigo}.
+
+    Solo permite corregir el `tipo`. El `codigo` no es editable a
+    propósito: es el mismo valor codificado en el QR físico ya pegado
+    al equipo, así que cambiarlo por API dejaría la etiqueta impresa
+    desincronizada con la base de datos.
+    """
+
+    tipo: str = Field(..., description="Clasificación corregida del equipo")
+
+
+class BajaEquipoResponse(BaseModel):
+    """Respuesta de PATCH /api/equipos/{codigo}/baja."""
+
+    codigo: str
+    estado: str
+    mensaje: str

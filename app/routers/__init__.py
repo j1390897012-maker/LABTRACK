@@ -3,6 +3,7 @@ from app.routers.devolucion import router as devolucion_router
 from app.routers.equipo import router as equipo
 from app.routers.estudiante import router as estudiante
 from app.routers.fallas import router as fallas
+from app.routers.historial import router as historial
 from app.routers.identificaciones import router as identificaciones
 
 __all__ = [
@@ -11,5 +12,6 @@ __all__ = [
     "equipo",
     "estudiante",
     "fallas",
+    "historial",
     "identificaciones",
 ]

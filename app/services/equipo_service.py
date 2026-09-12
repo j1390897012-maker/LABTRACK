@@ -13,11 +13,14 @@ from app.repositories.equipo_repository import EquipoRepository
 from app.repositories.falla_repository import FallaRepository
 from app.repositories.sesion_repository import SesionRepository
 from app.schemas.equipo import (
+    BajaEquipoResponse,
     CambioEstadoEquipoRequest,
     CambioEstadoEquipoResponse,
     EquipoCreate,
     EquipoDetalleResponse,
     EquipoListItem,
+    EquipoOut,
+    EquipoUpdate,
     PrestamoActivoEquipoInfo,
 )
 from app.schemas.historial import (
@@ -144,6 +147,64 @@ class EquipoService:
                 )
                 for f in fallas
             ],
+        )
+
+    def actualizar(
+        self, db: Session, codigo: str, datos: EquipoUpdate
+    ) -> EquipoOut:
+        """Corrige el tipo de un equipo ya registrado
+        (PUT /api/equipos/{codigo}). El código no se puede editar por
+        API: ver la nota en EquipoUpdate."""
+        equipo = self.repo.get_by_codigo(db, codigo)
+        if not equipo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Equipo con código '{codigo}' no encontrado.",
+            )
+
+        tipo = self.repo.get_tipo_by_nombre(db, datos.tipo)
+        if not tipo:
+            tipo = self.repo.create_tipo(db, datos.tipo)
+
+        equipo = self.repo.actualizar_tipo(db, equipo, tipo.id)
+        return EquipoOut(
+            id=equipo.id,
+            codigo=equipo.codigo,
+            estado=equipo.estado,
+            tipo=tipo.nombre,
+            qr_base64=None,
+        )
+
+    def dar_de_baja(self, db: Session, codigo: str) -> BajaEquipoResponse:
+        """Da de baja un equipo obsoleto/dañado sin repararse
+        (PATCH /api/equipos/{codigo}/baja).
+
+        No se elimina físicamente el registro: el equipo conserva su
+        historial de préstamos y fallas para efectos de auditoría, solo
+        cambia su `estado` a 'Baja' y deja de aparecer como disponible
+        para préstamo.
+        """
+        equipo = self.repo.get_by_codigo(db, codigo)
+        if not equipo:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Equipo con código '{codigo}' no encontrado.",
+            )
+
+        if equipo.estado == "Prestado":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "No se puede dar de baja un equipo prestado. "
+                    "Regístra la devolución primero."
+                ),
+            )
+
+        equipo = self.repo.actualizar_estado(db, equipo, "Baja")
+        return BajaEquipoResponse(
+            codigo=equipo.codigo,
+            estado=equipo.estado,
+            mensaje="Equipo marcado como 'Baja'.",
         )
 
     def obtener_historial(self, db: Session, codigo: str) -> HistorialEquipoResponse:

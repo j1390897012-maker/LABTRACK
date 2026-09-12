@@ -2,7 +2,10 @@ from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.repositories.estudiante_repository import EstudianteRepository
-from app.schemas.estudiante import EstudianteResponse
+from app.schemas.estudiante import (
+    EstudianteResponse,
+    EstudianteUpdate,
+)
 from app.schemas.historial import (
     HistorialAccesorio,
     HistorialEquipo,
@@ -28,6 +31,66 @@ class EstudianteService:
             db, matricula=matricula, nombre=nombre
         )
         return [EstudianteResponse.model_validate(e) for e in estudiantes]
+
+    def actualizar(
+        self,
+        db: Session,
+        estudiante_id: int,
+        datos: EstudianteUpdate,
+    ) -> EstudianteResponse:
+        """Corrige un error de captura en nombre y/o matrícula
+        (PUT /api/estudiantes/{id})."""
+        estudiante = self.repo_estudiante.get_by_id(db, estudiante_id)
+        if not estudiante:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Estudiante no encontrado.",
+            )
+
+        if datos.matricula and datos.matricula != estudiante.matricula:
+            duplicado = self.repo_estudiante.get_by_matricula(
+                db, datos.matricula
+            )
+            if duplicado:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Ya existe otro estudiante con esa matrícula.",
+                )
+
+        estudiante = self.repo_estudiante.update(
+            db,
+            estudiante,
+            nombre=datos.nombre,
+            matricula=datos.matricula,
+        )
+        return EstudianteResponse.model_validate(estudiante)
+
+    def eliminar(self, db: Session, estudiante_id: int) -> None:
+        """Elimina un estudiante (DELETE /api/estudiantes/{id}).
+
+        Se rechaza con 409 si el estudiante ya tiene historial de
+        préstamos, para no romper la trazabilidad del laboratorio
+        (US-10/US-11). En ese caso, corregir datos con PUT en vez de
+        borrar y recrear.
+        """
+        estudiante = self.repo_estudiante.get_by_id(db, estudiante_id)
+        if not estudiante:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Estudiante no encontrado.",
+            )
+
+        if self.repo_estudiante.tiene_historial(db, estudiante_id):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=(
+                    "No se puede eliminar: el estudiante ya tiene "
+                    "historial de préstamos. Usa PUT para corregir sus "
+                    "datos en vez de eliminarlo."
+                ),
+            )
+
+        self.repo_estudiante.delete(db, estudiante)
 
     def obtener_historial(
         self, db: Session, estudiante_id: int

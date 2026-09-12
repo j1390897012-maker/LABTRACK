@@ -7,6 +7,7 @@ from app.routers import (
     equipo,
     estudiante,
     fallas,
+    historial,
     identificaciones,
 )
 from app.routers.sesiones import router as sesiones_router
@@ -29,6 +30,7 @@ app.include_router(devolucion_router)
 app.include_router(sesiones_router)
 app.include_router(catalogos)
 app.include_router(fallas)
+app.include_router(historial)
 
 @app.get("/health")
 def health() -> dict[str, str]:
