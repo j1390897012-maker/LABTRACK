@@ -568,6 +568,48 @@ tbody tr:hover {
   margin-bottom: 14px;
 }
 
+.operacion-resultado {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: white;
+  font-size: 13px;
+  min-height: 20px;
+}
+
+.operacion-resultado:empty {
+  display: none;
+}
+
+.sesion-activa-panel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  border-radius: 10px;
+  border: 1px solid var(--primary);
+  background: var(--primary-soft);
+}
+
+.sesion-activa-panel p {
+  margin: 0;
+  font-size: 13px;
+}
+
+.sesion-activa-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
 .operation-option h3 {
   margin: 0;
   font-size: 16px;

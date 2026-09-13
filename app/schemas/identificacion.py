@@ -1,6 +1,8 @@
 
 from pydantic import BaseModel
 
+from app.schemas.historial import HistorialFalla
+
 
 class ScanRequest(BaseModel):
     """ Modelo para recibir la petición del ESP32 """
@@ -41,6 +43,7 @@ class QRUS06Response(BaseModel):
     accion: str
     prestamo: PrestamoActivoInfo | None = None
     estudiantes: list[EstudianteSesionInfo] = []
+    fallas: list[HistorialFalla] = []
 
 
 class QRScanResponse(BaseModel):

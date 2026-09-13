@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.repositories.equipo_repository import EquipoRepository
 from app.repositories.estudiante_repository import EstudianteRepository
+from app.repositories.falla_repository import FallaRepository
 from app.repositories.sesion_repository import SesionRepository
+from app.schemas.historial import HistorialFalla
 from app.schemas.identificacion import (
     AccesorioPrestamoInfo,
     AsignacionRFIDRequest,
@@ -21,7 +23,8 @@ class IdentificacionService:
     def __init__(self) -> None:
         self.repo_estudiante = EstudianteRepository()
         self.repo_sesion = SesionRepository()
-        self.repo_equipo = EquipoRepository()  
+        self.repo_equipo = EquipoRepository()
+        self.repo_falla = FallaRepository()
 
     def procesar_escaneo(
         self, db: Session, request: ScanRequest
@@ -147,6 +150,26 @@ class IdentificacionService:
                 mensaje="Equipo disponible. Seleccionar estudiante.",
                 accion="seleccionar_estudiante",
                 estudiantes=estudiantes,
+            )
+
+        # 3.5 En revisión: mostrar fallas antes de decidir si se presta
+        if equipo.estado == "En revisión":
+            fallas = self.repo_falla.get_by_equipo(db, equipo.id)
+            return QRUS06Response(
+                equipo_id=equipo.id,
+                codigo=equipo.codigo,
+                estado=equipo.estado,
+                mensaje="Equipo en revisión. Revisar fallas antes de prestar.",
+                accion="revisar_fallas",
+                fallas=[
+                    HistorialFalla(
+                        id=f.id,
+                        descripcion=f.descripcion,
+                        estado=f.estado,
+                        fecha=f.fecha,
+                    )
+                    for f in fallas
+                ],
             )
 
         # 4. Estado no contemplado actualmente
