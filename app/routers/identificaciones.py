@@ -37,7 +37,7 @@ def escanear_identificacion(
     return identificacion_service.procesar_escaneo(db=db, request=request)
 
 @router.get("/ultimo-scan")
-def obtener_ultimo_scan() -> dict:
+def obtener_ultimo_scan() -> dict[str, Any]:
     """Último escaneo procesado por cualquier dispositivo (app móvil,
     Swagger, etc.), para que la interfaz web lo detecte automáticamente
     sin necesidad de un lector físico propio.

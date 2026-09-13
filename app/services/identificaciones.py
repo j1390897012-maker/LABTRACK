@@ -1,8 +1,8 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-
+from typing import Any
 from app.repositories.equipo_repository import EquipoRepository
 from app.repositories.estudiante_repository import EstudianteRepository
 from app.repositories.falla_repository import FallaRepository
@@ -27,13 +27,13 @@ class IdentificacionService:
         self.repo_sesion = SesionRepository()
         self.repo_equipo = EquipoRepository()
         self.repo_falla = FallaRepository()
-        self.ultimo_scan: dict | None = None
+        self.ultimo_scan: dict [str, Any]  | None = None
 
     def procesar_escaneo(
         self, db: Session, request: ScanRequest
     ) -> IdentificacionResponse | QRScanResponse | QRUS06Response:
         """Punto de entrada principal para el ESP32 (y para la app móvil)."""
-
+        resultado: IdentificacionResponse | QRScanResponse | QRUS06Response
         if request.tipo == "rfid":
             resultado = self._procesar_rfid(db, request.valor)
         elif request.tipo == "qr":
@@ -49,7 +49,7 @@ class IdentificacionService:
         # automáticamente vía polling en GET /identificaciones/ultimo-scan.
         self.ultimo_scan = {
             "tipo": request.tipo,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "datos": resultado.model_dump(),
         }
         return resultado
