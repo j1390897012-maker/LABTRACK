@@ -106,6 +106,8 @@ async function showEquipment(codigo) {
   try {
     const response = await fetch(`${API_URL}/equipos/${codigo}`);
     const data = await response.json();
+    console.log("DATOS DEL EQUIPO:", data);
+    console.log("QR:", data.qr_base64);
 
     if (!response.ok) {
       console.error("Error al obtener equipo:", data.detail);

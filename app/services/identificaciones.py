@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -25,22 +27,32 @@ class IdentificacionService:
         self.repo_sesion = SesionRepository()
         self.repo_equipo = EquipoRepository()
         self.repo_falla = FallaRepository()
+        self.ultimo_scan: dict | None = None
 
     def procesar_escaneo(
         self, db: Session, request: ScanRequest
     ) -> IdentificacionResponse | QRScanResponse | QRUS06Response:
-        """Punto de entrada principal para el ESP32."""
+        """Punto de entrada principal para el ESP32 (y para la app móvil)."""
 
         if request.tipo == "rfid":
-            return self._procesar_rfid(db, request.valor)
+            resultado = self._procesar_rfid(db, request.valor)
+        elif request.tipo == "qr":
+            resultado = self._procesar_qr(db, request.valor)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Tipo de escaneo no soportado actualmente.",
+            )
 
-        if request.tipo == "qr":
-            return self._procesar_qr(db, request.valor)
-
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Tipo de escaneo no soportado actualmente.",
-        )
+        # Se guarda el último escaneo procesado (venga de donde venga:
+        # app móvil, Swagger, etc.) para que la interfaz web lo detecte
+        # automáticamente vía polling en GET /identificaciones/ultimo-scan.
+        self.ultimo_scan = {
+            "tipo": request.tipo,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "datos": resultado.model_dump(),
+        }
+        return resultado
 
     def _procesar_qr(
         self,
