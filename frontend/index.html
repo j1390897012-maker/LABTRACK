@@ -1,342 +1,1139 @@
 <!DOCTYPE html>
+
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LABTRACK — Panel del encargado</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
 
-<div class="app">
+  <div class="app">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-mark">L</div>
-      <div class="brand-text">
-        <div class="brand-name">LABTRACK</div>
-        <span class="brand-subtitle">Gestión de laboratorio</span>
-      </div>
+```
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+  <div class="brand">
+    <div class="brand-mark">L</div>
+
+    <div class="brand-text">
+      <div class="brand-name">LABTRACK</div>
+      <span class="brand-subtitle">Gestión de laboratorio</span>
+    </div>
+  </div>
+
+  <div class="nav-title">Panel</div>
+
+  <nav class="nav">
+
+    <button class="nav-button active" data-view="equipos">
+      <span class="nav-icon">▦</span>
+      <span class="nav-label">Equipos</span>
+    </button>
+
+    <button class="nav-button" data-view="operacion">
+      <span class="nav-icon">↔</span>
+      <span class="nav-label">Operación</span>
+    </button>
+
+    <button class="nav-button" data-view="estudiantes">
+      <span class="nav-icon">♙</span>
+      <span class="nav-label">Estudiantes</span>
+    </button>
+
+    <button class="nav-button" data-view="historial">
+      <span class="nav-icon">◷</span>
+      <span class="nav-label">Historial</span>
+    </button>
+
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-name">Encargado</div>
+    <div class="user-role">Laboratorio de Instrumentación · UV</div>
+  </div>
+
+</aside>
+
+
+<!-- MAIN -->
+<main class="main">
+
+  <header class="topbar">
+
+    <div class="breadcrumb">
+      LABTRACK / <strong id="breadcrumb">Equipos</strong>
     </div>
 
-    <div class="nav-title">Panel</div>
-    <nav class="nav">
-      <button class="nav-button active" data-view="equipos">
-        <span class="nav-icon">▦</span>
-        <span class="nav-label">Equipos</span>
-      </button>
-      <button class="nav-button" data-view="operacion">
-        <span class="nav-icon">↔</span>
-        <span class="nav-label">Operación</span>
-      </button>
-      <button class="nav-button" data-view="estudiantes">
-        <span class="nav-icon">♙</span>
-        <span class="nav-label">Estudiantes</span>
-      </button>
-      <button class="nav-button" data-view="historial">
-        <span class="nav-icon">◷</span>
-        <span class="nav-label">Historial</span>
-      </button>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="user-name">Encargado</div>
-      <div class="user-role">Laboratorio de Instrumentación · UV</div>
+    <div style="color: var(--muted); font-size: 12px;">
+      Laboratorio de Instrumentación
     </div>
-  </aside>
 
-  <!-- MAIN -->
-  <main class="main">
-    <header class="topbar">
-      <div class="breadcrumb">
-        LABTRACK / <strong id="breadcrumb">Equipos</strong>
+  </header>
+
+
+  <div class="content">
+
+    <!-- ========================================================= -->
+    <!-- 01 EQUIPOS -->
+    <!-- ========================================================= -->
+
+    <section class="view active" id="view-equipos">
+
+      <div class="page-header">
+
+        <div>
+          <h1>Equipos</h1>
+          <p>Administra y consulta el inventario del laboratorio.</p>
+        </div>
+
+        <button
+          class="button button-primary"
+          onclick="openModal('equipo-modal')"
+        >
+          + Registrar equipo
+        </button>
+
       </div>
-      <div style="color: var(--muted); font-size: 12px;">
-        Laboratorio de Instrumentación
+
+
+      <div class="stats">
+
+        <div class="card stat-card">
+          <div class="stat-label">Total de equipos</div>
+          <div class="stat-value">0</div>
+          <div class="stat-description">Equipos registrados</div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-label">Disponibles</div>
+          <div class="stat-value" style="color: var(--success);">0</div>
+          <div class="stat-description">Listos para préstamo</div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-label">Prestados</div>
+          <div class="stat-value" style="color: var(--warning);">0</div>
+          <div class="stat-description">Actualmente en uso</div>
+        </div>
+
+        <div class="card stat-card">
+          <div class="stat-label">En revisión</div>
+          <div class="stat-value" style="color: var(--danger);">0</div>
+          <div class="stat-description">Requieren atención</div>
+        </div>
+
       </div>
-    </header>
 
-    <div class="content">
 
-      <!-- 01 EQUIPOS -->
-      <section class="view active" id="view-equipos">
-        <div class="page-header">
+      <div class="card">
+
+        <div class="card-header">
+
           <div>
-            <h1>Equipos</h1>
-            <p>Administra y consulta el inventario del laboratorio.</p>
+            <h2 class="card-title">Inventario</h2>
+            <p class="card-subtitle">
+              Busca por código o filtra por estado.
+            </p>
           </div>
-          <button class="button button-primary" onclick="openModal('equipo-modal')">
-            + Registrar equipo
-          </button>
+
+          <div class="toolbar">
+
+            <input
+              class="input search-input"
+              id="equipment-search"
+              type="text"
+              placeholder="Buscar por código..."
+              oninput="filterEquipment()"
+            >
+
+            <select
+              class="select"
+              id="equipment-status"
+              onchange="filterEquipment()"
+            >
+              <option value="">Todos los estados</option>
+              <option value="Disponible">Disponible</option>
+              <option value="Prestado">Prestado</option>
+              <option value="En revisión">En revisión</option>
+            </select>
+
+          </div>
+
         </div>
 
-        <div class="stats">
-          <div class="card stat-card">
-            <div class="stat-label">Total de equipos</div>
-            <div class="stat-value">0</div>
-            <div class="stat-description">Equipos registrados</div>
-          </div>
-          <div class="card stat-card">
-            <div class="stat-label">Disponibles</div>
-            <div class="stat-value" style="color: var(--success);">0</div>
-            <div class="stat-description">Listos para préstamo</div>
-          </div>
-          <div class="card stat-card">
-            <div class="stat-label">Prestados</div>
-            <div class="stat-value" style="color: var(--warning);">0</div>
-            <div class="stat-description">Actualmente en uso</div>
-          </div>
-          <div class="card stat-card">
-            <div class="stat-label">En revisión</div>
-            <div class="stat-value" style="color: var(--danger);">0</div>
-            <div class="stat-description">Requieren atención</div>
-          </div>
-        </div>
 
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Inventario</h2>
-              <p class="card-subtitle">Busca por código o filtra por estado.</p>
-            </div>
-            <div class="toolbar">
-              <input class="input search-input" id="equipment-search" type="text" placeholder="Buscar por código..." oninput="filterEquipment()">
-              <select class="select" id="equipment-status" onchange="filterEquipment()">
-                <option value="">Todos los estados</option>
-                <option value="Disponible">Disponible</option>
-                <option value="Prestado">Prestado</option>
-                <option value="En revisión">En revisión</option>
-              </select>
-            </div>
-          </div>
+        <div class="table-wrapper">
 
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Código</th>
-                  <th>Tipo</th>
-                  <th>Estado</th>
-                  <th></th>
-                </tr>
-              </thead>
+          <table>
+
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Tipo</th>
+                <th>Estado</th>
+                <th></th>
+              </tr>
+            </thead>
+
+            <tbody id="equipment-table">
               <!-- El JavaScript inyectará las filas aquí -->
-              <tbody id="equipment-table">
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+            </tbody>
 
-      <!-- 02 OPERACIÓN -->
-      <section class="view" id="view-operacion">
-        <div class="page-header">
-          <div>
-            <h1>Operación</h1>
-            <p>Gestiona préstamos y devoluciones mediante RFID, QR o respaldo manual.</p>
-          </div>
-        </div>
-        <div id="panel-sesion-activa" class="sesion-activa-panel" hidden>
-          <span class="sesion-activa-badge">Sesión activa</span>
-          <p id="sesion-activa-texto"></p>
-        </div>
-        <div class="operation-grid">
-          <div class="operation-option">
-            <div class="operation-icon">⌁</div>
-            <h3>Identificar estudiante</h3>
-            <p>El lector RFID identifica automáticamente al estudiante y muestra su sesión actual.</p>
-            <button class="button button-primary" onclick="simularRFID()">Esperar RFID</button>
-          </div>
-          <div class="operation-option">
-            <div class="operation-icon">▣</div>
-            <h3>Escanear equipo</h3>
-            <p>Escanea el código QR del equipo para iniciar un préstamo o una devolución.</p>
-            <button class="button button-secondary" onclick="simularQR()">Escanear QR</button>
-          </div>
-        </div>
-        <div id="operacion-resultado" class="operacion-resultado"></div>
-      </section>
+          </table>
 
-      <!-- 03 ESTUDIANTES -->
-      <section class="view" id="view-estudiantes">
-        <div class="page-header">
-          <div>
-            <h1>Estudiantes</h1>
-            <p>Registra estudiantes y administra su identificación RFID.</p>
-          </div>
-          <button class="button button-primary" onclick="openModal('student-modal')">+ Registrar estudiante</button>
         </div>
-        <div class="card">
-          <div class="card-header">
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================================= -->
+    <!-- 02 OPERACIÓN -->
+    <!-- ========================================================= -->
+
+    <section class="view" id="view-operacion">
+
+      <div class="page-header">
+
+        <div>
+          <h1>Operación</h1>
+          <p>
+            Gestiona préstamos y devoluciones mediante RFID y QR.
+          </p>
+        </div>
+
+      </div>
+
+
+      <!-- ESTADO ACTUAL DE LA OPERACIÓN -->
+      <div class="card operation-flow-card">
+
+        <div class="card-header">
+
+          <div>
+            <h2 class="card-title">Operación actual</h2>
+
+            <p class="card-subtitle" id="operacion-paso">
+              Esperando identificación del estudiante.
+            </p>
+          </div>
+
+          <span
+            class="status status-available"
+            id="operacion-estado"
+          >
+            <span class="status-dot"></span>
+            Esperando RFID
+          </span>
+
+        </div>
+
+
+        <!-- PASO 1: RFID -->
+        <div
+          id="operacion-paso-rfid"
+          class="operation-step"
+        >
+
+          <div class="operation-step-icon">⌁</div>
+
+          <div class="operation-step-content">
+
+            <h3>1. Identificar estudiante</h3>
+
+            <p>
+              Escanea la credencial RFID del estudiante para identificarlo
+              y consultar su sesión.
+            </p>
+
+            <button
+              class="button button-primary"
+              onclick="simularRFID()"
+            >
+              Esperar RFID
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- ESTUDIANTE IDENTIFICADO -->
+        <div
+          id="operacion-estudiante"
+          class="operation-context"
+          hidden
+        >
+
+          <div class="operation-context-header">
+
             <div>
-              <h2 class="card-title">Estudiantes registrados</h2>
-              <p class="card-subtitle">Busca por matrícula o nombre.</p>
-            </div>
-            <input class="input search-input" placeholder="Buscar estudiante..." oninput="filterStudents()" id="student-search">
-          </div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Estudiante</th>
-                  <th>Matrícula</th>
-                  <th>RFID</th>
-                  <th>Sesión</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <!-- El JavaScript inyectará las filas aquí -->
-              <tbody id="student-table">
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+              <div class="info-item-label">Estudiante</div>
 
-      <!-- 04 HISTORIAL -->
-      <section class="view" id="view-historial">
-        <div class="page-header">
+              <div
+                class="operation-student-name"
+                id="operacion-estudiante-nombre"
+              ></div>
+            </div>
+
+            <div>
+              <div class="info-item-label">Matrícula</div>
+
+              <div
+                class="operation-student-data"
+                id="operacion-estudiante-matricula"
+              ></div>
+            </div>
+
+            <div>
+              <div class="info-item-label">Sesión</div>
+
+              <div
+                class="operation-student-data"
+                id="operacion-estudiante-sesion"
+              ></div>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- PASO 2: QR -->
+        <div
+          id="operacion-paso-qr"
+          class="operation-step"
+          hidden
+        >
+
+          <div class="operation-step-icon">▣</div>
+
+          <div class="operation-step-content">
+
+            <h3>2. Escanear equipo</h3>
+
+            <p>
+              Escanea el código QR del equipo para consultar su estado
+              y determinar si corresponde un préstamo o una devolución.
+            </p>
+
+            <button
+              class="button button-primary"
+              onclick="simularQR()"
+            >
+              Escanear QR
+            </button>
+
+          </div>
+
+        </div>
+
+
+        <!-- INFORMACIÓN DEL EQUIPO ESCANEADO -->
+        <div
+          id="operacion-equipo"
+          class="operation-context"
+          hidden
+        >
+
+          <div class="operation-context-header">
+
+            <div>
+              <div class="info-item-label">Equipo</div>
+
+              <div
+                class="operation-student-name"
+                id="operacion-equipo-codigo"
+              ></div>
+            </div>
+
+            <div>
+              <div class="info-item-label">Tipo</div>
+
+              <div
+                class="operation-student-data"
+                id="operacion-equipo-tipo"
+              ></div>
+            </div>
+
+            <div>
+              <div class="info-item-label">Estado</div>
+
+              <div id="operacion-equipo-estado"></div>
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- RESULTADO / SIGUIENTE ACCIÓN -->
+        <div
+          id="operacion-resultado"
+          class="operacion-resultado"
+        ></div>
+
+      </div>
+
+
+      <!-- SESIÓN ACTIVA -->
+      <div
+        id="panel-sesion-activa"
+        class="sesion-activa-panel"
+        hidden
+      >
+
+        <span class="sesion-activa-badge">
+          Sesión activa
+        </span>
+
+        <p id="sesion-activa-texto"></p>
+
+      </div>
+
+    </section>
+
+
+    <!-- ========================================================= -->
+    <!-- 03 ESTUDIANTES -->
+    <!-- ========================================================= -->
+
+    <section class="view" id="view-estudiantes">
+
+      <div class="page-header">
+
+        <div>
+          <h1>Estudiantes</h1>
+
+          <p>
+            Registra estudiantes y administra su identificación RFID.
+          </p>
+        </div>
+
+        <button
+          class="button button-primary"
+          onclick="openModal('student-modal')"
+        >
+          + Registrar estudiante
+        </button>
+
+      </div>
+
+
+      <div class="card">
+
+        <div class="card-header">
+
           <div>
-            <h1>Historial</h1>
-            <p>Consulta las operaciones realizadas en el laboratorio.</p>
+            <h2 class="card-title">
+              Estudiantes registrados
+            </h2>
+
+            <p class="card-subtitle">
+              Busca por matrícula o nombre.
+            </p>
           </div>
+
+          <input
+            class="input search-input"
+            placeholder="Buscar estudiante..."
+            oninput="filterStudents()"
+            id="student-search"
+          >
+
         </div>
-        <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">Actividad reciente</h2>
-          </div>
-          <div class="card-body">
-            <!-- El JavaScript inyectará las filas aquí -->
-            <div class="history-list" id="history-list">
-            </div>
-          </div>
+
+
+        <div class="table-wrapper">
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>Estudiante</th>
+                <th>Matrícula</th>
+                <th>RFID</th>
+                <th>Sesión</th>
+                <th></th>
+              </tr>
+
+            </thead>
+
+            <tbody id="student-table">
+              <!-- El JavaScript inyectará las filas aquí -->
+            </tbody>
+
+          </table>
+
         </div>
-      </section>
 
-    </div>
-  </main>
-</div>
+      </div>
 
-<!-- MODALES -->
-<div id="equipo-modal" class="modal-backdrop">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Registrar equipo</h2>
-      <button class="modal-close" onclick="closeModal('equipo-modal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Código del equipo</label>
-        <input type="text" id="input-equipo-codigo" class="input" placeholder="Ej. OSC-0307">
+    </section>
+
+
+    <!-- ========================================================= -->
+    <!-- 04 HISTORIAL -->
+    <!-- ========================================================= -->
+
+    <section class="view" id="view-historial">
+
+      <div class="page-header">
+
+        <div>
+          <h1>Historial</h1>
+
+          <p>
+            Consulta las operaciones realizadas en el laboratorio.
+          </p>
+        </div>
+
       </div>
-      <div class="form-group">
-        <label>Tipo de equipo</label>
-        <input type="text" id="input-equipo-tipo" class="input" placeholder="Escribe el tipo de equipo">
+
+
+      <div class="card">
+
+        <div class="card-header">
+          <h2 class="card-title">
+            Actividad reciente
+          </h2>
+        </div>
+
+
+        <div class="card-body">
+
+          <div
+            class="history-list"
+            id="history-list"
+          >
+            <!-- El JavaScript inyectará la información aquí -->
+          </div>
+
+        </div>
+
       </div>
-    </div>
-    <div class="modal-footer">
-      <button class="button button-secondary" onclick="closeModal('equipo-modal')">Cancelar</button>
-      <button class="button button-primary" onclick="guardarEquipo()">Guardar equipo</button>
-    </div>
+
+    </section>
+
   </div>
-</div><div id="rfid-modal" class="modal-backdrop">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Esperando lectura RFID</h2>
-      <button class="modal-close" onclick="closeModal('rfid-modal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <p style="color: var(--muted); font-size: 13px; margin-bottom: 15px;">
-        Simula la lectura física del ESP32. El sistema consultará automáticamente la base de datos.
-      </p>
-      <div class="form-group">
-        <input type="text" id="input-rfid-simulado" class="input" placeholder="Ej. A1B2C3D4" autocomplete="off">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="button button-secondary" onclick="closeModal('rfid-modal')">Cancelar</button>
-      <button class="button button-primary" onclick="procesarRFID()">Procesar lectura</button>
-    </div>
-  </div>
-</div>
 
-<div id="qr-modal" class="modal-backdrop">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Escanear equipo QR</h2>
-      <button class="modal-close" onclick="closeModal('qr-modal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <input type="text" id="input-qr-simulado" class="input" placeholder="Ej. OSC-0307" autocomplete="off">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="button button-secondary" onclick="closeModal('qr-modal')">Cancelar</button>
-      <button class="button button-primary" onclick="procesarQR()">Procesar lectura</button>
-    </div>
-  </div>
-</div>
+</main>
+```
 
-<div id="detalle-equipo-modal" class="modal-backdrop">
-  <div class="modal">
-    <div class="modal-header">
+  </div>
+
+  <!-- ============================================================= -->
+
+  <!-- MODALES -->
+
+  <!-- ============================================================= -->
+
+  <!-- REGISTRAR EQUIPO -->
+
+  <div
+    id="equipo-modal"
+    class="modal-backdrop"
+  >
+
+```
+<div class="modal">
+
+  <div class="modal-header">
+
+    <h2>Registrar equipo</h2>
+
+    <button
+      class="modal-close"
+      onclick="closeModal('equipo-modal')"
+    >
+      &times;
+    </button>
+
+  </div>
+
+
+  <div class="modal-body">
+
+    <div class="form-group">
+
+      <label>Código del equipo</label>
+
+      <input
+        type="text"
+        id="input-equipo-codigo"
+        class="input"
+        placeholder="Ej. OSC-0307"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label>Tipo de equipo</label>
+
+      <input
+        type="text"
+        id="input-equipo-tipo"
+        class="input"
+        placeholder="Escribe el tipo de equipo"
+      >
+
+    </div>
+
+  </div>
+
+
+  <div class="modal-footer">
+
+    <button
+      class="button button-secondary"
+      onclick="closeModal('equipo-modal')"
+    >
+      Cancelar
+    </button>
+
+    <button
+      class="button button-primary"
+      onclick="guardarEquipo()"
+    >
+      Guardar equipo
+    </button>
+
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <!-- DETALLE DEL EQUIPO -->
+
+  <div
+    id="detalle-equipo-modal"
+    class="modal-backdrop"
+  >
+
+```
+<div class="modal modal-large">
+
+  <div class="modal-header">
+
+    <div>
+
       <h2>Detalles del equipo</h2>
-      <button class="modal-close" onclick="closeModal('detalle-equipo-modal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="info-list">
-        <div>
-          <div class="info-item-label">Código</div>
-          <div class="info-item-value" id="detalle-codigo"></div>
-        </div>
-        <div>
-          <div class="info-item-label">Tipo</div>
-          <div class="info-item-value" id="detalle-tipo"></div>
-        </div>
-        <div>
-          <div class="info-item-label">Estado</div>
-          <div class="info-item-value" id="detalle-estado"></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="button button-secondary" onclick="closeModal('detalle-equipo-modal')">Cerrar</button>
-    </div>
-  </div>
-</div>
 
-<div id="student-modal" class="modal-backdrop">
-  <div class="modal">
-    <div class="modal-header">
-      <h2>Registrar estudiante</h2>
-      <button class="modal-close" onclick="closeModal('student-modal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Nombre completo</label>
-        <input type="text" id="input-estudiante-nombre" class="input" placeholder="Ej. Alberto Hernández Landa">
-      </div>
-      <div class="form-group">
-        <label>Matrícula</label>
-        <input type="text" id="input-estudiante-matricula" class="input" placeholder="Ej. S23013959">
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="button button-secondary" onclick="closeModal('student-modal')">Cancelar</button>
-      <button class="button button-primary" onclick="guardarEstudiante()">Guardar estudiante</button>
-    </div>
-  </div>
-</div>
+      <p class="card-subtitle">
+        Información del equipo y su historial actual.
+      </p>
 
-<!-- SCRIPTS ENLAZADOS -->
-<script src="js/api.js"></script>
-<script src="js/app.js"></script>
-<script src="js/equipos.js"></script>
-<script src="js/estudiantes.js"></script>
-<script src="js/operacion.js"></script>
-<script src="js/historial.js"></script>
+    </div>
+
+    <button
+      class="modal-close"
+      onclick="closeModal('detalle-equipo-modal')"
+    >
+      &times;
+    </button>
+
+  </div>
+
+
+  <div class="modal-body">
+
+    <div class="info-list">
+
+      <div>
+
+        <div class="info-item-label">
+          Código
+        </div>
+
+        <div
+          class="info-item-value"
+          id="detalle-codigo"
+        ></div>
+
+      </div>
+
+
+      <div>
+
+        <div class="info-item-label">
+          Tipo
+        </div>
+
+        <div
+          class="info-item-value"
+          id="detalle-tipo"
+        ></div>
+
+      </div>
+
+
+      <div>
+
+        <div class="info-item-label">
+          Estado
+        </div>
+
+        <div
+          class="info-item-value"
+          id="detalle-estado"
+        ></div>
+
+      </div>
+
+    </div>
+
+
+    <!-- QR -->
+    <div class="detail-section">
+
+      <h3>Código QR</h3>
+
+      <div
+        class="qr-container"
+        id="detalle-qr-container"
+      >
+
+        <p class="card-subtitle">
+          Cargando código QR...
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- FALLAS -->
+    <div class="detail-section">
+
+      <h3>Fallas registradas</h3>
+
+      <div id="detalle-fallas">
+
+        <p class="card-subtitle">
+          Cargando fallas...
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- PRÉSTAMO -->
+    <div class="detail-section">
+
+      <h3>Información del préstamo actual</h3>
+
+      <div id="detalle-prestamo">
+
+        <p class="card-subtitle">
+          Cargando información...
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="modal-footer">
+
+    <button
+      class="button button-secondary"
+      onclick="closeModal('detalle-equipo-modal')"
+    >
+      Cerrar
+    </button>
+
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <!-- REGISTRAR ESTUDIANTE -->
+
+  <div
+    id="student-modal"
+    class="modal-backdrop"
+  >
+
+```
+<div class="modal">
+
+  <div class="modal-header">
+
+    <h2>Registrar estudiante</h2>
+
+    <button
+      class="modal-close"
+      onclick="closeModal('student-modal')"
+    >
+      &times;
+    </button>
+
+  </div>
+
+
+  <div class="modal-body">
+
+    <div class="form-group">
+
+      <label>Nombre completo</label>
+
+      <input
+        type="text"
+        id="input-estudiante-nombre"
+        class="input"
+        placeholder="Ej. Alberto Hernández Landa"
+      >
+
+    </div>
+
+
+    <div class="form-group">
+
+      <label>Matrícula</label>
+
+      <input
+        type="text"
+        id="input-estudiante-matricula"
+        class="input"
+        placeholder="Ej. S23013959"
+      >
+
+    </div>
+
+  </div>
+
+
+  <div class="modal-footer">
+
+    <button
+      class="button button-secondary"
+      onclick="closeModal('student-modal')"
+    >
+      Cancelar
+    </button>
+
+    <button
+      class="button button-primary"
+      onclick="guardarEstudiante()"
+    >
+      Guardar estudiante
+    </button>
+
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <!-- DETALLE DEL ESTUDIANTE -->
+
+  <div
+    id="detalle-estudiante-modal"
+    class="modal-backdrop"
+  >
+
+```
+<div class="modal modal-large">
+
+  <div class="modal-header">
+
+    <div>
+
+      <h2>Detalles del estudiante</h2>
+
+      <p class="card-subtitle">
+        Información e historial relacionado con el estudiante.
+      </p>
+
+    </div>
+
+    <button
+      class="modal-close"
+      onclick="closeModal('detalle-estudiante-modal')"
+    >
+      &times;
+    </button>
+
+  </div>
+
+
+  <div class="modal-body">
+
+    <div class="info-list">
+
+      <div>
+
+        <div class="info-item-label">
+          Nombre
+        </div>
+
+        <div
+          class="info-item-value"
+          id="detalle-estudiante-nombre"
+        ></div>
+
+      </div>
+
+
+      <div>
+
+        <div class="info-item-label">
+          Matrícula
+        </div>
+
+        <div
+          class="info-item-value"
+          id="detalle-estudiante-matricula"
+        ></div>
+
+      </div>
+
+
+      <div>
+
+        <div class="info-item-label">
+          RFID
+        </div>
+
+        <div
+          class="info-item-value"
+          id="detalle-estudiante-rfid"
+        ></div>
+
+      </div>
+
+
+      <div>
+
+        <div class="info-item-label">
+          Sesión
+        </div>
+
+        <div
+          class="info-item-value"
+          id="detalle-estudiante-sesion"
+        ></div>
+
+      </div>
+
+    </div>
+
+
+    <div class="detail-section">
+
+      <h3>Equipos asociados</h3>
+
+      <div id="detalle-estudiante-equipos">
+
+        <p class="card-subtitle">
+          Cargando equipos...
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="detail-section">
+
+      <h3>Historial</h3>
+
+      <div id="detalle-estudiante-historial">
+
+        <p class="card-subtitle">
+          Cargando historial...
+        </p>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <div class="modal-footer">
+
+    <button
+      class="button button-secondary"
+      onclick="closeModal('detalle-estudiante-modal')"
+    >
+      Cerrar
+    </button>
+
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <!-- RFID -->
+
+  <div
+    id="rfid-modal"
+    class="modal-backdrop"
+  >
+
+```
+<div class="modal">
+
+  <div class="modal-header">
+
+    <h2>Esperando lectura RFID</h2>
+
+    <button
+      class="modal-close"
+      onclick="closeModal('rfid-modal')"
+    >
+      &times;
+    </button>
+
+  </div>
+
+
+  <div class="modal-body">
+
+    <p
+      style="color: var(--muted); font-size: 13px; margin-bottom: 15px;"
+    >
+      Simula la lectura física del ESP32.
+      El sistema consultará automáticamente la base de datos.
+    </p>
+
+
+    <div class="form-group">
+
+      <input
+        type="text"
+        id="input-rfid-simulado"
+        class="input"
+        placeholder="Ej. A1B2C3D4"
+        autocomplete="off"
+      >
+
+    </div>
+
+  </div>
+
+
+  <div class="modal-footer">
+
+    <button
+      class="button button-secondary"
+      onclick="closeModal('rfid-modal')"
+    >
+      Cancelar
+    </button>
+
+    <button
+      class="button button-primary"
+      onclick="procesarRFID()"
+    >
+      Procesar lectura
+    </button>
+
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <!-- QR -->
+
+  <div
+    id="qr-modal"
+    class="modal-backdrop"
+  >
+
+```
+<div class="modal">
+
+  <div class="modal-header">
+
+    <h2>Escanear equipo QR</h2>
+
+    <button
+      class="modal-close"
+      onclick="closeModal('qr-modal')"
+    >
+      &times;
+    </button>
+
+  </div>
+
+
+  <div class="modal-body">
+
+    <div class="form-group">
+
+      <input
+        type="text"
+        id="input-qr-simulado"
+        class="input"
+        placeholder="Ej. OSC-0307"
+        autocomplete="off"
+      >
+
+    </div>
+
+  </div>
+
+
+  <div class="modal-footer">
+
+    <button
+      class="button button-secondary"
+      onclick="closeModal('qr-modal')"
+    >
+      Cancelar
+    </button>
+
+    <button
+      class="button button-primary"
+      onclick="procesarQR()"
+    >
+      Procesar lectura
+    </button>
+
+  </div>
+
+</div>
+```
+
+  </div>
+
+  <!-- SCRIPTS ENLAZADOS -->
+
+  <script src="js/api.js"></script>
+
+  <script src="js/app.js"></script>
+
+  <script src="js/equipos.js"></script>
+
+  <script src="js/estudiantes.js"></script>
+
+  <script src="js/operacion.js"></script>
+
+  <script src="js/historial.js"></script>
 
 </body>
+
 </html>

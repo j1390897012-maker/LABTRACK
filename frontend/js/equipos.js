@@ -106,25 +106,52 @@ async function showEquipment(codigo) {
   try {
     const response = await fetch(`${API_URL}/equipos/${codigo}`);
     const data = await response.json();
-    
-    if (response.ok) {
-      document.getElementById('detalle-codigo').textContent = data.codigo;
-      document.getElementById('detalle-tipo').textContent = data.tipo;
-      
-      const statusClass = STATUS_CLASSES[data.estado] || "status-available";
-      document.getElementById('detalle-estado').innerHTML = `
-        <span class="status ${statusClass}">
-          <span class="status-dot"></span>
-          ${data.estado}
-        </span>
-      `;
-      
-      openModal('detalle-equipo-modal');
-    } else {
+
+    if (!response.ok) {
       console.error("Error al obtener equipo:", data.detail);
+      return;
     }
+
+    document.getElementById("detalle-codigo").textContent = data.codigo;
+    document.getElementById("detalle-tipo").textContent = data.tipo;
+
+    const statusClass = STATUS_CLASSES[data.estado] || "status-available";
+
+    document.getElementById("detalle-estado").innerHTML = `
+      <span class="status ${statusClass}">
+        <span class="status-dot"></span>
+        ${data.estado}
+      </span>
+    `;
+
+    const qrContainer = document.getElementById("detalle-qr-container");
+
+    if (data.qr_base64) {
+      qrContainer.innerHTML = `
+        <img
+          src="${data.qr_base64}"
+          alt="Código QR de ${data.codigo}"
+          style="width: 220px; height: 220px; object-fit: contain;"
+        >
+      `;
+    } else {
+      qrContainer.innerHTML = `
+        <p class="card-subtitle">
+          Este equipo no tiene un código QR disponible.
+        </p>
+      `;
+    }
+
+    openModal("detalle-equipo-modal");
+
   } catch (error) {
-    console.error("Error obteniendo detalles:", error);
+    console.error("Error obteniendo detalles del equipo:", error);
+
+    document.getElementById("detalle-qr-container").innerHTML = `
+      <p class="card-subtitle">
+        No se pudo cargar la información del equipo.
+      </p>
+    `;
   }
 }
 
