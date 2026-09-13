@@ -108,15 +108,23 @@ async function showEquipment(codigo) {
     const data = await response.json();
     
     if (response.ok) {
-      // Por ahora usamos un alert para confirmar que la API responde.
-      // En el futuro, esto puede abrir un modal estructurado.
-      alert(`Detalles del Equipo:\nCódigo: ${data.codigo}\nTipo: ${data.tipo}\nEstado: ${data.estado}`);
+      document.getElementById('detalle-codigo').textContent = data.codigo;
+      document.getElementById('detalle-tipo').textContent = data.tipo;
+      
+      const statusClass = STATUS_CLASSES[data.estado] || "status-available";
+      document.getElementById('detalle-estado').innerHTML = `
+        <span class="status ${statusClass}">
+          <span class="status-dot"></span>
+          ${data.estado}
+        </span>
+      `;
+      
+      openModal('detalle-equipo-modal');
     } else {
-      alert("Error: " + data.detail);
+      console.error("Error al obtener equipo:", data.detail);
     }
   } catch (error) {
     console.error("Error obteniendo detalles:", error);
-    alert("No se pudo conectar con el servidor.");
   }
 }
 
