@@ -279,6 +279,34 @@
   </div>
 </div>
 
+<div id="detalle-equipo-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Detalles del equipo</h2>
+      <button class="modal-close" onclick="closeModal('detalle-equipo-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-list">
+        <div>
+          <div class="info-item-label">Código</div>
+          <div class="info-item-value" id="detalle-codigo"></div>
+        </div>
+        <div>
+          <div class="info-item-label">Tipo</div>
+          <div class="info-item-value" id="detalle-tipo"></div>
+        </div>
+        <div>
+          <div class="info-item-label">Estado</div>
+          <div class="info-item-value" id="detalle-estado"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="closeModal('detalle-equipo-modal')">Cerrar</button>
+    </div>
+  </div>
+</div>
+
 <div id="student-modal" class="modal-backdrop">
   <div class="modal">
     <div class="modal-header">
