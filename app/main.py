@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.routers import (
     catalogos,
@@ -35,3 +36,6 @@ app.include_router(historial)
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+# Servir la interfaz web estática en la raíz (debe ir estrictamente al final)
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
