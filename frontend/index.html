@@ -74,22 +74,22 @@
         <div class="stats">
           <div class="card stat-card">
             <div class="stat-label">Total de equipos</div>
-            <div class="stat-value">24</div>
+            <div class="stat-value">0</div>
             <div class="stat-description">Equipos registrados</div>
           </div>
           <div class="card stat-card">
             <div class="stat-label">Disponibles</div>
-            <div class="stat-value" style="color: var(--success);">17</div>
+            <div class="stat-value" style="color: var(--success);">0</div>
             <div class="stat-description">Listos para préstamo</div>
           </div>
           <div class="card stat-card">
             <div class="stat-label">Prestados</div>
-            <div class="stat-value" style="color: var(--warning);">5</div>
+            <div class="stat-value" style="color: var(--warning);">0</div>
             <div class="stat-description">Actualmente en uso</div>
           </div>
           <div class="card stat-card">
             <div class="stat-label">En revisión</div>
-            <div class="stat-value" style="color: var(--danger);">2</div>
+            <div class="stat-value" style="color: var(--danger);">0</div>
             <div class="stat-description">Requieren atención</div>
           </div>
         </div>
@@ -121,19 +121,8 @@
                   <th></th>
                 </tr>
               </thead>
+              <!-- El JavaScript inyectará las filas aquí -->
               <tbody id="equipment-table">
-                <tr data-code="OSC-0307" data-status="Prestado">
-                  <td class="code">OSC-0307</td>
-                  <td>Osciloscopio</td>
-                  <td><span class="status status-loaned"><span class="status-dot"></span>Prestado</span></td>
-                  <td><button class="button button-secondary button-small" onclick="showEquipment('OSC-0307')">Ver detalles</button></td>
-                </tr>
-                <tr data-code="MULT-014" data-status="Disponible">
-                  <td class="code">MULT-014</td>
-                  <td>Multímetro</td>
-                  <td><span class="status status-available"><span class="status-dot"></span>Disponible</span></td>
-                  <td><button class="button button-secondary button-small" onclick="showEquipment('MULT-014')">Ver detalles</button></td>
-                </tr>
               </tbody>
             </table>
           </div>
@@ -197,19 +186,8 @@
                   <th></th>
                 </tr>
               </thead>
+              <!-- El JavaScript inyectará las filas aquí -->
               <tbody id="student-table">
-                <tr data-student="José Alejandro Hernández S21012345">
-                  <td>
-                    <div class="student-card">
-                      <div class="avatar">JA</div>
-                      <div><div class="student-name">José Alejandro Hernández</div></div>
-                    </div>
-                  </td>
-                  <td class="code">S21012345</td>
-                  <td><span class="rfid-badge">RFID registrado</span></td>
-                  <td><span class="status status-available"><span class="status-dot"></span>Activa</span></td>
-                  <td><button class="button button-secondary button-small">Ver estudiante</button></td>
-                </tr>
               </tbody>
             </table>
           </div>
@@ -229,15 +207,8 @@
             <h2 class="card-title">Actividad reciente</h2>
           </div>
           <div class="card-body">
-            <div class="history-list">
-              <div class="history-item">
-                <div class="history-date">Hoy<br>09:12</div>
-                <div>
-                  <div class="history-main">Préstamo de <strong>OSC-0307</strong></div>
-                  <div class="history-secondary">José Alejandro Hernández · S21012345</div>
-                </div>
-                <span class="history-type">Préstamo</span>
-              </div>
+            <!-- El JavaScript inyectará las filas aquí -->
+            <div class="history-list" id="history-list">
             </div>
           </div>
         </div>
