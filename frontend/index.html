@@ -148,6 +148,10 @@
             <p>Gestiona préstamos y devoluciones mediante RFID, QR o respaldo manual.</p>
           </div>
         </div>
+        <div id="panel-sesion-activa" class="sesion-activa-panel" hidden>
+          <span class="sesion-activa-badge">Sesión activa</span>
+          <p id="sesion-activa-texto"></p>
+        </div>
         <div class="operation-grid">
           <div class="operation-option">
             <div class="operation-icon">⌁</div>
@@ -162,6 +166,7 @@
             <button class="button button-secondary" onclick="simularQR()">Escanear QR</button>
           </div>
         </div>
+        <div id="operacion-resultado" class="operacion-resultado"></div>
       </section>
 
       <!-- 03 ESTUDIANTES -->
