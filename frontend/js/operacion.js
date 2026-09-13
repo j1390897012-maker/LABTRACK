@@ -55,19 +55,7 @@ async function procesarScan(tipo, valor) {
     const data = await peticionAPI("/identificaciones/scan", "POST", { tipo, valor });
 
     if (tipo === "rfid") {
-      if (data.estado === "no_registrado") {
-        const matricula = prompt("Tarjeta no registrada. Ingresa la matrícula para enrolarla:");
-        if (matricula) await enrolarRFID(valor, matricula);
-        return;
-      }
-
-      sesionActual = {
-        sesion_id: data.sesion_id,
-        matricula: data.matricula,
-        nombre: data.nombre,
-      };
-      mostrarPanelSesion(data.nombre, data.matricula);
-      mostrarResultadoOperacion(`${data.nombre} (${data.matricula}) — ${data.mensaje}`);
+      await manejarRespuestaRFID(valor, data);
       return;
     }
 
@@ -78,6 +66,44 @@ async function procesarScan(tipo, valor) {
     mostrarResultadoOperacion("Error: " + (error.detail || "no se pudo procesar."));
   }
 }
+
+async function manejarRespuestaRFID(valor, data) {
+  if (data.estado === "no_registrado") {
+    const matricula = prompt("Tarjeta no registrada. Ingresa la matrícula para enrolarla:");
+    if (matricula) await enrolarRFID(valor, matricula);
+    return;
+  }
+
+  sesionActual = {
+    sesion_id: data.sesion_id,
+    matricula: data.matricula,
+    nombre: data.nombre,
+  };
+  mostrarPanelSesion(data.nombre, data.matricula);
+  mostrarResultadoOperacion(`${data.nombre} (${data.matricula}) — ${data.mensaje}`);
+}
+
+// --- Detectar escaneos que lleguen desde la app móvil (o Swagger) ---
+let ultimoScanVisto = null;
+
+async function revisarUltimoScan() {
+  try {
+    const evento = await peticionAPI("/identificaciones/ultimo-scan");
+    if (!evento.timestamp || evento.timestamp === ultimoScanVisto) return;
+
+    ultimoScanVisto = evento.timestamp;
+
+    if (evento.tipo === "rfid") {
+      await manejarRespuestaRFID(evento.datos.uid_rfid, evento.datos);
+    } else if (evento.tipo === "qr") {
+      await manejarRespuestaQR(evento.datos);
+    }
+  } catch (error) {
+    // Silencioso: un fallo puntual de polling no debe interrumpir la interfaz.
+  }
+}
+
+setInterval(revisarUltimoScan, 2500);
 
 async function manejarRespuestaQR(data) {
   if (data.accion === "revisar_fallas") {

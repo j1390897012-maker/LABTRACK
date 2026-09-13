@@ -36,6 +36,18 @@ def escanear_identificacion(
     """
     return identificacion_service.procesar_escaneo(db=db, request=request)
 
+@router.get("/ultimo-scan")
+def obtener_ultimo_scan() -> dict[str, Any]:
+    """Último escaneo procesado por cualquier dispositivo (app móvil,
+    Swagger, etc.), para que la interfaz web lo detecte automáticamente
+    sin necesidad de un lector físico propio.
+    """
+    return identificacion_service.ultimo_scan or {
+        "tipo": None,
+        "timestamp": None,
+        "datos": None,
+    }
+
 @router.post(
     "/enrolar", 
     response_model=AsignacionRFIDResponse, 
