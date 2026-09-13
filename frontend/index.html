@@ -240,6 +240,43 @@
       <button class="button button-primary" onclick="guardarEquipo()">Guardar equipo</button>
     </div>
   </div>
+</div><div id="rfid-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Esperando lectura RFID</h2>
+      <button class="modal-close" onclick="closeModal('rfid-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: var(--muted); font-size: 13px; margin-bottom: 15px;">
+        Simula la lectura física del ESP32. El sistema consultará automáticamente la base de datos.
+      </p>
+      <div class="form-group">
+        <input type="text" id="input-rfid-simulado" class="input" placeholder="Ej. A1B2C3D4" autocomplete="off">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="closeModal('rfid-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="procesarRFID()">Procesar lectura</button>
+    </div>
+  </div>
+</div>
+
+<div id="qr-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Escanear equipo QR</h2>
+      <button class="modal-close" onclick="closeModal('qr-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <input type="text" id="input-qr-simulado" class="input" placeholder="Ej. OSC-0307" autocomplete="off">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="closeModal('qr-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="procesarQR()">Procesar lectura</button>
+    </div>
+  </div>
 </div>
 
 <div id="student-modal" class="modal-backdrop">
