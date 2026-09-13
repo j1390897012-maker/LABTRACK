@@ -1,15 +1,43 @@
 const STATUS_CLASSES = {
   "Disponible": "status-available",
   "Prestado": "status-loaned",
-  "En revisión": "status-review"
+  "En revisión": "status-review",
+  "Baja": "status-review" 
 };
+
+async function guardarEquipo() {
+  const codigo = document.getElementById("input-equipo-codigo").value;
+  const tipo = document.getElementById("input-equipo-tipo").value;
+
+  if (!codigo || !tipo) return alert("Completa todos los campos.");
+
+  try {
+    const response = await fetch(`${API_URL}/equipos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ codigo, tipo })
+    });
+    
+    if (response.ok) {
+      closeModal("equipo-modal");
+      document.getElementById("input-equipo-codigo").value = "";
+      document.getElementById("input-equipo-tipo").value = "";
+      cargarEquiposDesdeAPI();
+    } else {
+      const error = await response.json();
+      alert("Error: " + error.detail);
+    }
+  } catch (e) {
+    console.error("Error al guardar equipo:", e);
+  }
+}
 
 async function cargarEquiposDesdeAPI() {
   try {
-    // 1. Obtener datos reales de Render
-    const equipos = await peticionAPI("/equipos");
+    const response = await fetch(`${API_URL}/equipos`);
+    if (!response.ok) throw new Error("Error al consultar API");
     
-    // 2. Limpiar la tabla actual
+    const equipos = await response.json();
     const tbody = document.getElementById("equipment-table");
     tbody.innerHTML = ""; 
 
@@ -18,14 +46,13 @@ async function cargarEquiposDesdeAPI() {
     let prestados = 0;
     let revision = 0;
 
-    // 3. Crear las filas dinámicamente
     equipos.forEach(eq => {
       if (eq.estado === "Disponible") disponibles++;
       if (eq.estado === "Prestado") prestados++;
       if (eq.estado === "En revisión") revision++;
 
       const tr = document.createElement("tr");
-      tr.dataset.code = eq.codigo;
+      tr.dataset.code = eq.codigo.toLowerCase();
       tr.dataset.status = eq.estado;
 
       const statusClass = STATUS_CLASSES[eq.estado] || "status-available";
@@ -48,7 +75,6 @@ async function cargarEquiposDesdeAPI() {
       tbody.appendChild(tr);
     });
 
-    // 4. Actualizar las tarjetas de estadísticas
     const statValues = document.querySelectorAll(".stat-card .stat-value");
     if (statValues.length >= 4) {
       statValues[0].textContent = total;
@@ -68,7 +94,7 @@ function filterEquipment() {
   const rows = document.querySelectorAll("#equipment-table tr");
 
   rows.forEach(row => {
-    const code = row.dataset.code.toLowerCase();
+    const code = row.dataset.code || "";
     const rowStatus = row.dataset.status;
     const matchesCode = code.includes(search);
     const matchesStatus = !status || rowStatus === status;
@@ -76,11 +102,26 @@ function filterEquipment() {
   });
 }
 
-function showEquipment(codigo) {
-  alert(`Se abrirá el detalle de ${codigo}. Luego usaremos peticionAPI('/equipos/${codigo}')`);
+async function showEquipment(codigo) {
+  try {
+    const response = await fetch(`${API_URL}/equipos/${codigo}`);
+    const data = await response.json();
+    
+    if (response.ok) {
+      // Por ahora usamos un alert para confirmar que la API responde.
+      // En el futuro, esto puede abrir un modal estructurado.
+      alert(`Detalles del Equipo:\nCódigo: ${data.codigo}\nTipo: ${data.tipo}\nEstado: ${data.estado}`);
+    } else {
+      alert("Error: " + data.detail);
+    }
+  } catch (error) {
+    console.error("Error obteniendo detalles:", error);
+    alert("No se pudo conectar con el servidor.");
+  }
 }
 
-// 5. Ejecutar automáticamente al cargar la página
 document.addEventListener("DOMContentLoaded", () => {
-  cargarEquiposDesdeAPI();
+  if (document.getElementById("equipment-table")) {
+    cargarEquiposDesdeAPI();
+  }
 });

@@ -153,13 +153,13 @@
             <div class="operation-icon">⌁</div>
             <h3>Identificar estudiante</h3>
             <p>El lector RFID identifica automáticamente al estudiante y muestra su sesión actual.</p>
-            <button class="button button-primary">Esperar RFID</button>
+            <button class="button button-primary" onclick="simularRFID()">Esperar RFID</button>
           </div>
           <div class="operation-option">
             <div class="operation-icon">▣</div>
             <h3>Escanear equipo</h3>
             <p>Escanea el código QR del equipo para iniciar un préstamo o una devolución.</p>
-            <button class="button button-secondary">Escanear QR</button>
+            <button class="button button-secondary" onclick="simularQR()">Escanear QR</button>
           </div>
         </div>
       </section>
@@ -240,6 +240,53 @@
 
     </div>
   </main>
+</div>
+
+<!-- MODALES -->
+<div id="equipo-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Registrar equipo</h2>
+      <button class="modal-close" onclick="closeModal('equipo-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Código del equipo</label>
+        <input type="text" id="input-equipo-codigo" class="input" placeholder="Ej. OSC-0307">
+      </div>
+      <div class="form-group">
+        <label>Tipo de equipo</label>
+        <input type="text" id="input-equipo-tipo" class="input" placeholder="Escribe el tipo de equipo">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="closeModal('equipo-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="guardarEquipo()">Guardar equipo</button>
+    </div>
+  </div>
+</div>
+
+<div id="student-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Registrar estudiante</h2>
+      <button class="modal-close" onclick="closeModal('student-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nombre completo</label>
+        <input type="text" id="input-estudiante-nombre" class="input" placeholder="Ej. Alberto Hernández Landa">
+      </div>
+      <div class="form-group">
+        <label>Matrícula</label>
+        <input type="text" id="input-estudiante-matricula" class="input" placeholder="Ej. S23013959">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="closeModal('student-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="guardarEstudiante()">Guardar estudiante</button>
+    </div>
+  </div>
 </div>
 
 <!-- SCRIPTS ENLAZADOS -->

@@ -102,9 +102,11 @@ COPY app/ app/
 # Copiamos las migraciones de Alembic.
 COPY alembic/ alembic/
 
-
 # Copiamos la configuración de Alembic.
 COPY alembic.ini .
+
+# Copiamos el frontend para que FastAPI lo sirva
+COPY frontend/ frontend/
 
 # Puerto donde escuchará la API.
 EXPOSE 8000
