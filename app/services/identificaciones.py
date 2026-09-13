@@ -1,8 +1,9 @@
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
-from typing import Any
+
 from app.repositories.equipo_repository import EquipoRepository
 from app.repositories.estudiante_repository import EstudianteRepository
 from app.repositories.falla_repository import FallaRepository
