@@ -132,11 +132,16 @@ class EquipoService:
                 )
 
         fallas = self.repo_falla.get_by_equipo(db, equipo.id)
+        
+        # Generar nuevamente el QR a partir del código del equipo
+        qr_data_uri = self._generar_qr_data_uri(equipo.codigo)
+
 
         return EquipoDetalleResponse(
             codigo=equipo.codigo,
             tipo=equipo.tipo_equipo.nombre,
             estado=equipo.estado,
+            qr_base64=qr_data_uri,
             prestamo_activo=prestamo_activo,
             fallas=[
                 HistorialFalla(

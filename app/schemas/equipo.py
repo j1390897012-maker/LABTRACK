@@ -51,6 +51,7 @@ class EquipoDetalleResponse(BaseModel):
     codigo: str
     tipo: str
     estado: str
+    qr_base64: str
     prestamo_activo: PrestamoActivoEquipoInfo | None = None
     fallas: list[HistorialFalla] = []
 
