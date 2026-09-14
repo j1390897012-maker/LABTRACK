@@ -9,11 +9,11 @@
   --muted: #667085;
   --muted-soft: #98a2b3;
 
-  --primary: #4f46e5;
-  --primary-dark: #4338ca;
-  --primary-darker: #3730a3;
-  --primary-soft: #eef2ff;
-  --primary-ring: rgba(79, 70, 229, 0.16);
+  --primary: #8b5cf6;       /* Morado vibrante para botones principales */
+  --primary-dark: #7c3aed;  /* Morado oscuro para el hover */
+  --primary-darker: #5b21b6;/* Tono profundo similar al icono NFC de la app */
+  --primary-soft: #ede9fe;  /* Tono muy claro para fondos de items seleccionados */
+  --primary-ring: rgba(139, 92, 246, 0.16);
 
   --success: #059669;
   --success-dark: #047857;

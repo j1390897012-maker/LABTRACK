@@ -537,9 +537,6 @@ async function manejarRespuestaRFID(valor, data) {
     );
 
     if (!confirmar) {
-      //mostrarResultadoRFID(
-      //  `Tarjeta ${valor} no registrada. No se realizó el enrolamiento.`
-      //);
       return;
     }
 
@@ -586,12 +583,6 @@ async function manejarRespuestaRFID(valor, data) {
   if (botonTerminar) {
     botonTerminar.style.display = "block";
   }
-// Ya no mostramos texto de depuración; la tarjeta de estudiante
-// identificado (rfid-flow-estudiante) ya cubre esta información.
-// mostrarResultadoRFID(
-//   `${data.nombre} (${data.matricula}) — ` +
-//   `${data.mensaje || "Estudiante identificado correctamente."}`
-//  );
 }
 
 // ============================================================
@@ -649,23 +640,14 @@ function actualizarEstadoRFID(estado, subtitulo) {
 }
 
 // ============================================================
-// RESULTADO DEL FLUJO RFID
+// RESULTADO DEL FLUJO RFID (Logs ocultos por petición)
 // ============================================================
 
 function mostrarResultadoRFID(texto) {
   const el = document.getElementById("rfid-flow-resultado");
-
-  if (!el) {
-    return;
+  if (el) {
+    el.innerHTML = ""; // Se deja vacío para eliminar la caja de logs
   }
-
-  el.innerHTML = `
-    <div class="card stat-card" style="border-left: 4px solid var(--primary); margin-top: 20px;">
-      <div class="stat-description" style="color: var(--text); font-size: 14px;">
-        ${texto}
-      </div>
-    </div>
-  `;
 }
 
 // ============================================================
