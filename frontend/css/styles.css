@@ -283,6 +283,28 @@ button {
   font-size: 12px;
 }
 
+/* Clase utilitaria para botones de icono en tablas */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border-radius: 6px;
+  background-color: var(--surface-soft);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-icon:hover {
+  background-color: var(--primary-soft);
+  color: var(--primary);
+  border-color: #bfdbfe;
+}
+
 /* =========================================================
    CARDS
    ========================================================= */
@@ -300,7 +322,12 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 15px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.card-header > div:first-child {
+  flex: 1;
 }
 
 .card-title {
@@ -320,7 +347,7 @@ button {
 }
 
 /* =========================================================
-   DASHBOARD
+   DASHBOARD STATS
    ========================================================= */
 
 .stats {
@@ -332,6 +359,18 @@ button {
 
 .stat-card {
   padding: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-icon {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  opacity: 0.15;
+  color: currentColor;
 }
 
 .stat-label {
@@ -354,7 +393,7 @@ button {
 }
 
 /* =========================================================
-   SEARCH
+   SEARCH / INPUTS
    ========================================================= */
 
 .toolbar {
@@ -422,6 +461,12 @@ tbody tr:hover {
   background: #fafcff;
 }
 
+/* Normalización de texto en la tabla de equipos */
+#equipment-table td:nth-child(1),
+#equipment-table td:nth-child(2) {
+  text-transform: capitalize;
+}
+
 .code {
   font-family: "SFMono-Regular", Consolas, monospace;
   font-weight: 600;
@@ -429,7 +474,7 @@ tbody tr:hover {
 }
 
 /* =========================================================
-   STATUS
+   STATUS BADGES
    ========================================================= */
 
 .status {
@@ -476,7 +521,7 @@ tbody tr:hover {
 }
 
 /* =========================================================
-   DETAIL
+   DETAIL & INFO LISTS
    ========================================================= */
 
 .detail-grid {
@@ -487,18 +532,27 @@ tbody tr:hover {
 
 .info-list {
   display: grid;
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin: 0 20px 20px; 
+  padding: 18px 24px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  border-radius: 8px;
 }
 
 .info-item-label {
   color: var(--muted);
   font-size: 11px;
-  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
 }
 
 .info-item-value {
-  font-size: 14px;
-  font-weight: 550;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
 }
 
 .history-list {
@@ -535,7 +589,7 @@ tbody tr:hover {
 }
 
 /* =========================================================
-   OPERATION
+   OPERATION FLOW & RESULTS
    ========================================================= */
 
 .operation-grid {
@@ -569,17 +623,26 @@ tbody tr:hover {
 }
 
 .operacion-resultado {
-  margin-top: 18px;
-  padding: 14px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: white;
-  font-size: 13px;
-  min-height: 20px;
+  margin-top: 24px !important;
+  padding: 18px 20px !important;
+  border-radius: 8px;
+  background: var(--surface-soft) !important;
+  border: 1px solid var(--border) !important;
+  border-left: 4px solid var(--primary) !important;
+  font-size: 14px;
+  color: var(--text);
+  box-shadow: var(--shadow);
 }
 
 .operacion-resultado:empty {
   display: none;
+}
+
+.operacion-resultado .stat-card {
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  background: transparent !important;
 }
 
 .sesion-activa-panel {
@@ -698,23 +761,7 @@ tbody tr:hover {
 }
 
 /* =========================================================
-   HISTORY
-   ========================================================= */
-
-.history-filters {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 18px;
-  flex-wrap: wrap;
-}
-
-.history-type {
-  color: var(--muted);
-  font-size: 11px;
-}
-
-/* =========================================================
-   MODAL
+   MODALS
    ========================================================= */
 
 .modal-backdrop {
@@ -788,6 +835,104 @@ tbody tr:hover {
   gap: 8px;
 }
 
+.modal-large {
+  max-width: 640px;
+}
+
+/* =========================================================
+   DETAIL — SECCIONES DENTRO DEL MODAL
+   ========================================================= */
+
+.detail-section {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.detail-section h3 {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* =========================================================
+   PASO DE OPERACIÓN / FLUJO RFID
+   ========================================================= */
+
+.operation-step {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  padding: 24px;
+}
+
+.operation-step-icon {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 24px;
+  box-shadow: 0 0 0 4px var(--surface), 0 0 0 6px var(--primary-soft);
+}
+
+.operation-step-content h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 650;
+  color: var(--text);
+}
+
+.operation-step-content p {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.waiting-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.waiting-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--primary);
+  animation: waiting-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes waiting-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+/* =========================================================
+   AJUSTES ESPECÍFICOS DE VISTA RFID
+   ========================================================= */
+
+#view-prestamo-rfid .card {
+  margin-top: 16px !important;
+}
+
+#view-prestamo-rfid .page-header {
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 24px;
+}
+
 /* =========================================================
    RESPONSIVE
    ========================================================= */
@@ -858,89 +1003,4 @@ tbody tr:hover {
   .search-input {
     width: 100%;
   }
-}
-
-
-/* =========================================================
-   MODAL — variante ancha
-   ========================================================= */
-
-.modal-large {
-  max-width: 640px;
-}
-
-/* =========================================================
-   DETALLE — secciones dentro de modal
-   ========================================================= */
-
-.detail-section {
-  margin-top: 22px;
-  padding-top: 18px;
-  border-top: 1px solid var(--border);
-}
-
-.detail-section h3 {
-  margin: 0 0 12px;
-  font-size: 12px;
-  font-weight: 650;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-}
-
-/* =========================================================
-   PASO DE OPERACIÓN (flujo RFID)
-   ========================================================= */
-
-.operation-step {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  padding: 20px;
-}
-
-.operation-step-icon {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  background: var(--primary-soft);
-  color: var(--primary);
-  font-size: 20px;
-}
-
-.operation-step-content h3 {
-  margin: 0 0 4px;
-  font-size: 15px;
-}
-
-.operation-step-content p {
-  margin: 0 0 14px;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.waiting-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--primary);
-}
-
-.waiting-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--primary);
-  animation: waiting-pulse 1.2s ease-in-out infinite;
-}
-
-@keyframes waiting-pulse {
-  0%, 100% { opacity: 0.35; transform: scale(0.85); }
-  50% { opacity: 1; transform: scale(1); }
 }

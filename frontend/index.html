@@ -5,6 +5,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LABTRACK — Panel del encargado</title>
   <link rel="stylesheet" href="css/styles.css">
+  <style>
+    /* ========================================================= */
+    /* MEJORAS DE DISEÑO UI/UX (Inyectadas sin alterar scripts)  */
+    /* ========================================================= */
+    
+    /* 1. Separador del perfil de usuario en Sidebar */
+    .sidebar-footer {
+      border-top: 1px solid var(--border-color, #e2e8f0);
+      padding-top: 16px;
+      margin-top: auto;
+    }
+
+    /* 2. Alineación perfecta en cabeceras de tarjetas */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .card-header > div:first-child {
+      flex: 1;
+    }
+
+    /* 3. Posicionamiento para íconos de tarjetas de estadística */
+    .stat-card {
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-icon {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 28px;
+      height: 28px;
+      opacity: 0.15;
+      color: currentColor;
+    }
+
+    /* 4. Normalización de texto (Capitalize) para la tabla de equipos */
+    #equipment-table td:nth-child(1),
+    #equipment-table td:nth-child(2) {
+      text-transform: capitalize;
+    }
+
+    /* 5. Clase utilitaria para botones de icono en tablas (Usar en el JS) */
+    .btn-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      border-radius: 6px;
+      background-color: var(--bg-secondary, #f8fafc);
+      color: var(--text-muted, #64748b);
+      border: 1px solid var(--border-color, #e2e8f0);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-icon:hover {
+      background-color: var(--primary-light, #eff6ff);
+      color: var(--primary, #3b82f6);
+      border-color: var(--primary-border, #bfdbfe);
+    }
+  </style>
 </head>
 
 <body>
@@ -28,7 +94,6 @@
     <div class="nav-title">Panel</div>
 
     <nav class="nav">
-
       <button class="nav-button active" data-view="equipos">
         <span class="nav-icon">▦</span>
         <span class="nav-label">Equipos</span>
@@ -48,18 +113,14 @@
         <span class="nav-icon">◷</span>
         <span class="nav-label">Historial</span>
       </button>
-
     </nav>
 
     <div class="sidebar-footer">
       <div class="user-name">Encargado</div>
-      <div class="user-role">
-        Laboratorio de Instrumentación · UV
-      </div>
+      <div class="user-role">Laboratorio de Instrumentación · UV</div>
     </div>
 
   </aside>
-
 
   <!-- ========================================================= -->
   <!-- MAIN -->
@@ -68,18 +129,13 @@
   <main class="main">
 
     <header class="topbar">
-
       <div class="breadcrumb">
-        LABTRACK /
-        <strong id="breadcrumb">Equipos</strong>
+        LABTRACK / <strong id="breadcrumb">Equipos</strong>
       </div>
-
       <div style="color: var(--muted); font-size: 12px;">
         Laboratorio de Instrumentación
       </div>
-
     </header>
-
 
     <div class="content">
 
@@ -89,118 +145,71 @@
 
       <section class="view active" id="view-equipos">
 
-        <div class="page-header">
-
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
           <div>
             <h1>Equipos</h1>
-            <p>
-              Administra y consulta el inventario del laboratorio.
-            </p>
+            <p>Administra y consulta el inventario del laboratorio.</p>
           </div>
-
-          <button
-            class="button button-primary"
-            onclick="openModal('equipo-modal')"
-          >
+          <button class="button button-primary" onclick="openModal('equipo-modal')">
             + Registrar equipo
           </button>
-
         </div>
-
 
         <div class="stats">
 
           <div class="card stat-card">
+            <!-- Icono: Caja -->
+            <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
             <div class="stat-label">Total de equipos</div>
             <div class="stat-value">0</div>
-            <div class="stat-description">
-              Equipos registrados
-            </div>
+            <div class="stat-description">Equipos registrados</div>
           </div>
 
           <div class="card stat-card">
+            <!-- Icono: Check Circle -->
+            <svg class="stat-icon" style="color: var(--success, #10b981);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             <div class="stat-label">Disponibles</div>
-            <div
-              class="stat-value"
-              style="color: var(--success);"
-            >
-              0
-            </div>
-            <div class="stat-description">
-              Listos para préstamo
-            </div>
+            <div class="stat-value" style="color: var(--success);">0</div>
+            <div class="stat-description">Listos para préstamo</div>
           </div>
 
           <div class="card stat-card">
+            <!-- Icono: Usuarios/Préstamo -->
+            <svg class="stat-icon" style="color: var(--warning, #f59e0b);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             <div class="stat-label">Prestados</div>
-            <div
-              class="stat-value"
-              style="color: var(--warning);"
-            >
-              0
-            </div>
-            <div class="stat-description">
-              Actualmente en uso
-            </div>
+            <div class="stat-value" style="color: var(--warning);">0</div>
+            <div class="stat-description">Actualmente en uso</div>
           </div>
 
           <div class="card stat-card">
+            <!-- Icono: Alerta -->
+            <svg class="stat-icon" style="color: var(--danger, #ef4444);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             <div class="stat-label">En revisión</div>
-            <div
-              class="stat-value"
-              style="color: var(--danger);"
-            >
-              0
-            </div>
-            <div class="stat-description">
-              Requieren atención
-            </div>
+            <div class="stat-value" style="color: var(--danger);">0</div>
+            <div class="stat-description">Requieren atención</div>
           </div>
 
         </div>
 
-
         <div class="card">
-
           <div class="card-header">
-
             <div>
               <h2 class="card-title">Inventario</h2>
-              <p class="card-subtitle">
-                Busca por código o filtra por estado.
-              </p>
+              <p class="card-subtitle">Busca por código o filtra por estado.</p>
             </div>
-
-            <div class="toolbar">
-
-              <input
-                class="input search-input"
-                id="equipment-search"
-                type="text"
-                placeholder="Buscar por código..."
-                oninput="filterEquipment()"
-              >
-
-              <select
-                class="select"
-                id="equipment-status"
-                onchange="filterEquipment()"
-              >
+            <div class="toolbar" style="display: flex; gap: 10px;">
+              <input class="input search-input" id="equipment-search" type="text" placeholder="Buscar por código..." oninput="filterEquipment()">
+              <select class="select" id="equipment-status" onchange="filterEquipment()">
                 <option value="">Todos los estados</option>
                 <option value="Disponible">Disponible</option>
                 <option value="Prestado">Prestado</option>
                 <option value="En revisión">En revisión</option>
               </select>
-
             </div>
-
           </div>
 
-
           <div class="table-wrapper">
-
             <table>
-
               <thead>
                 <tr>
                   <th>Código</th>
@@ -209,453 +218,178 @@
                   <th></th>
                 </tr>
               </thead>
-
               <tbody id="equipment-table">
                 <!-- JavaScript -->
               </tbody>
-
             </table>
-
           </div>
-
         </div>
 
       </section>
-
 
       <!-- ===================================================== -->
       <!-- 02 OPERACIÓN MANUAL -->
       <!-- ===================================================== -->
 
       <section class="view" id="view-operacion">
-
         <div class="page-header">
-
           <div>
             <h1>Operación</h1>
-            <p>
-              Realiza préstamos y devoluciones manualmente.
-            </p>
+            <p>Realiza préstamos y devoluciones manualmente.</p>
           </div>
-
         </div>
-
 
         <!-- PRÉSTAMO MANUAL -->
-
         <div class="card">
-
           <div class="card-header">
-
             <div>
-              <h2 class="card-title">
-                Préstamo manual
-              </h2>
-
-              <p class="card-subtitle">
-                Registra un préstamo seleccionando la sesión
-                y el equipo.
-              </p>
+              <h2 class="card-title">Préstamo manual</h2>
+              <p class="card-subtitle">Registra un préstamo seleccionando la sesión y el equipo.</p>
             </div>
-
           </div>
-
-
           <div class="form-group">
-
-            <label for="manual-prestamo-matricula">
-              Matrícula del estudiante
-            </label>
-
-            <input
-              id="manual-prestamo-matricula"
-              class="input"
-              type="text"
-              placeholder="Ej. S23013959"
-              autocomplete="off"
-            >
-
+            <label for="manual-prestamo-matricula">Matrícula del estudiante</label>
+            <input id="manual-prestamo-matricula" class="input" type="text" placeholder="Ej. S23013959" autocomplete="off">
           </div>
-
-
           <div class="form-group">
-
-            <label for="manual-prestamo-codigo">
-              Código del equipo
-            </label>
-
-            <input
-              id="manual-prestamo-codigo"
-              class="input"
-              type="text"
-              placeholder="Ej. OSC-0307"
-              autocomplete="off"
-            >
-
+            <label for="manual-prestamo-codigo">Código del equipo</label>
+            <input id="manual-prestamo-codigo" class="input" type="text" placeholder="Ej. OSC-0307" autocomplete="off">
           </div>
-
-
-          <div
-            id="manual-prestamo-resultado"
-            class="operacion-resultado"
-          ></div>
-
-
+          <div id="manual-prestamo-resultado" class="operacion-resultado"></div>
           <div class="modal-footer">
-
-            <button
-              class="button button-primary"
-              onclick="prestarEquipoManual()"
-            >
-              Registrar préstamo
-            </button>
-
+            <button class="button button-primary" onclick="prestarEquipoManual()">Registrar préstamo</button>
           </div>
-
         </div>
-
 
         <!-- DEVOLUCIÓN MANUAL -->
-
         <div class="card" style="margin-top: 20px;">
-
           <div class="card-header">
-
             <div>
-              <h2 class="card-title">
-                Devolución manual
-              </h2>
-
-              <p class="card-subtitle">
-                Inicia la devolución indicando el código
-                del equipo.
-              </p>
+              <h2 class="card-title">Devolución manual</h2>
+              <p class="card-subtitle">Inicia la devolución indicando el código del equipo.</p>
             </div>
-
           </div>
-
-
           <div class="form-group">
-
-            <label for="manual-devolucion-codigo">
-              Código del equipo
-            </label>
-
-            <input
-              id="manual-devolucion-codigo"
-              class="input"
-              type="text"
-              placeholder="Ej. OSC-0307"
-              autocomplete="off"
-            >
-
+            <label for="manual-devolucion-codigo">Código del equipo</label>
+            <input id="manual-devolucion-codigo" class="input" type="text" placeholder="Ej. OSC-0307" autocomplete="off">
           </div>
-
-
-          <div
-            id="manual-devolucion-resultado"
-            class="operacion-resultado"
-          ></div>
-
-
+          <div id="manual-devolucion-resultado" class="operacion-resultado"></div>
           <div class="modal-footer">
-
-            <button
-              class="button button-primary"
-              onclick="devolverEquipoManual()"
-            >
-              Iniciar devolución
-            </button>
-
+            <button class="button button-primary" onclick="devolverEquipoManual()">Iniciar devolución</button>
           </div>
-
         </div>
-
       </section>
-
 
       <!-- ===================================================== -->
       <!-- 03 PRÉSTAMO RFID / QR -->
       <!-- ===================================================== -->
 
-      <!-- Esta vista NO tiene botón en el sidebar.
-           Se abre automáticamente cuando se detecta RFID. -->
-
       <section class="view" id="view-prestamo-rfid">
-
-        <div class="page-header">
-
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
           <div>
-
             <h1>Préstamo RFID</h1>
-
-            <p id="rfid-flow-subtitle">
-              Esperando identificación del estudiante.
-            </p>
-
+            <p id="rfid-flow-subtitle">Esperando identificación del estudiante.</p>
           </div>
-
-          <button
-            class="button button-secondary"
-            onclick="cancelarFlujoRFID()"
-          >
-            Cancelar operación
-          </button>
-
+          <div style="display: flex; gap: 10px;">
+            <button class="button button-secondary" onclick="cancelarFlujoRFID()">Cancelar</button>
+            <button id="btn-terminar-operacion" class="button button-primary" style="display: none;" onclick="terminarOperacion()">Terminar operación</button>
+          </div>
         </div>
-
 
         <!-- ESTADO -->
-
         <div class="card">
-
           <div class="card-header">
-
             <div>
-
-              <h2 class="card-title">
-                Estado de operación
-              </h2>
-
-              <p
-                class="card-subtitle"
-                id="rfid-flow-status"
-              >
-                Esperando RFID...
-              </p>
-
+              <h2 class="card-title">Estado de operación</h2>
+              <p class="card-subtitle" id="rfid-flow-status">Esperando RFID...</p>
             </div>
-
-            <span
-              class="status status-available"
-              id="rfid-flow-badge"
-            >
-              <span class="status-dot"></span>
-              Esperando RFID
+            <span class="status status-available" id="rfid-flow-badge">
+              <span class="status-dot"></span> Esperando RFID
             </span>
-
           </div>
-
         </div>
-
 
         <!-- ESTUDIANTE -->
-
-        <div
-          class="card"
-          id="rfid-flow-estudiante"
-          hidden
-          style="margin-top: 20px;"
-        >
-
+        <div class="card" id="rfid-flow-estudiante" hidden style="margin-top: 20px;">
           <div class="card-header">
-
             <div>
-
-              <h2 class="card-title">
-                RFID detectada
-              </h2>
-
-              <p class="card-subtitle">
-                Estudiante identificado correctamente.
-              </p>
-
+              <h2 class="card-title">RFID detectada</h2>
+              <p class="card-subtitle">Estudiante identificado correctamente.</p>
             </div>
-
           </div>
-
-
           <div class="info-list">
-
             <div>
-
-              <div class="info-item-label">
-                Estudiante
-              </div>
-
-              <div
-                class="info-item-value"
-                id="rfid-flow-nombre"
-              ></div>
-
+              <div class="info-item-label">Estudiante</div>
+              <div class="info-item-value" id="rfid-flow-nombre"></div>
             </div>
-
-
             <div>
-
-              <div class="info-item-label">
-                Matrícula
-              </div>
-
-              <div
-                class="info-item-value"
-                id="rfid-flow-matricula"
-              ></div>
-
+              <div class="info-item-label">Matrícula</div>
+              <div class="info-item-value" id="rfid-flow-matricula"></div>
             </div>
-
-
             <div>
-
-              <div class="info-item-label">
-                Sesión
-              </div>
-
-              <div
-                class="info-item-value"
-                id="rfid-flow-sesion"
-              ></div>
-
+              <div class="info-item-label">Sesión</div>
+              <div class="info-item-value" id="rfid-flow-sesion"></div>
             </div>
-
           </div>
-
         </div>
-
 
         <!-- ESPERANDO QR -->
-
-        <div
-          class="card"
-          id="rfid-flow-esperando-qr"
-          hidden
-          style="margin-top: 20px;"
-        >
-
+        <div class="card" id="rfid-flow-esperando-qr" hidden style="margin-top: 20px;">
           <div class="operation-step">
-
-            <div class="operation-step-icon">
-              ▣
-            </div>
-
+            <div class="operation-step-icon">▣</div>
             <div class="operation-step-content">
-
-              <h3>
-                Listo para prestar equipos
-              </h3>
-
-              <p>
-                Escanea el código QR del equipo con el lector
-                para continuar con el préstamo. La lectura se
-                registra automáticamente.
-              </p>
-
+              <h3>Listo para prestar equipos</h3>
+              <p>Escanea el código QR del equipo con el lector para continuar con el préstamo. La lectura se registra automáticamente.</p>
               <div class="waiting-indicator">
-                <span class="waiting-dot"></span>
-                Esperando lectura del equipo…
+                <span class="waiting-dot"></span> Esperando lectura del equipo…
               </div>
-
             </div>
-
           </div>
-
         </div>
 
-
         <!-- EQUIPOS ESCANEADOS -->
-
-        <div
-          class="card"
-          id="rfid-flow-equipos"
-          hidden
-          style="margin-top: 20px;"
-        >
-
+        <div class="card" id="rfid-flow-equipos" hidden style="margin-top: 20px;">
           <div class="card-header">
-
             <div>
-
-              <h2 class="card-title">
-                Equipos de la operación
-              </h2>
-
-              <p class="card-subtitle">
-                Equipos detectados durante esta operación.
-              </p>
-
+              <h2 class="card-title">Equipos de la operación</h2>
+              <p class="card-subtitle">Equipos detectados durante esta operación.</p>
             </div>
-
           </div>
-
-
           <div id="rfid-flow-equipo-list">
             <!-- JavaScript -->
           </div>
-
         </div>
 
-
         <!-- RESULTADO -->
-
-        <div
-          id="rfid-flow-resultado"
-          class="operacion-resultado"
-          style="margin-top: 20px;"
-        ></div>
-
+        <div id="rfid-flow-resultado" class="operacion-resultado" style="margin-top: 20px;"></div>
       </section>
-
 
       <!-- ===================================================== -->
       <!-- 04 ESTUDIANTES -->
       <!-- ===================================================== -->
 
       <section class="view" id="view-estudiantes">
-
-        <div class="page-header">
-
+        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
           <div>
-
             <h1>Estudiantes</h1>
-
-            <p>
-              Registra estudiantes y administra su identificación RFID.
-            </p>
-
+            <p>Registra estudiantes y administra su identificación RFID.</p>
           </div>
-
-          <button
-            class="button button-primary"
-            onclick="openModal('student-modal')"
-          >
+          <button class="button button-primary" onclick="openModal('student-modal')">
             + Registrar estudiante
           </button>
-
         </div>
 
-
         <div class="card">
-
           <div class="card-header">
-
             <div>
-
-              <h2 class="card-title">
-                Estudiantes registrados
-              </h2>
-
-              <p class="card-subtitle">
-                Busca por matrícula o nombre.
-              </p>
-
+              <h2 class="card-title">Estudiantes registrados</h2>
+              <p class="card-subtitle">Busca por matrícula o nombre.</p>
             </div>
-
-            <input
-              class="input search-input"
-              placeholder="Buscar estudiante..."
-              oninput="filterStudents()"
-              id="student-search"
-            >
-
+            <input class="input search-input" placeholder="Buscar estudiante..." oninput="filterStudents()" id="student-search">
           </div>
-
-
           <div class="table-wrapper">
-
             <table>
-
               <thead>
-
                 <tr>
                   <th>Estudiante</th>
                   <th>Matrícula</th>
@@ -663,741 +397,285 @@
                   <th>Sesión</th>
                   <th></th>
                 </tr>
-
               </thead>
-
               <tbody id="student-table">
                 <!-- JavaScript -->
               </tbody>
-
             </table>
-
           </div>
-
         </div>
-
       </section>
-
 
       <!-- ===================================================== -->
       <!-- 05 HISTORIAL -->
       <!-- ===================================================== -->
 
       <section class="view" id="view-historial">
-
         <div class="page-header">
-
           <div>
-
             <h1>Historial</h1>
-
-            <p>
-              Consulta las operaciones realizadas en el laboratorio.
-            </p>
-
+            <p>Consulta las operaciones realizadas en el laboratorio.</p>
           </div>
-
         </div>
-
 
         <div class="card">
-
           <div class="card-header">
-
-            <h2 class="card-title">
-              Actividad reciente
-            </h2>
-
+            <h2 class="card-title">Actividad reciente</h2>
           </div>
-
-
           <div class="card-body">
-
-            <div
-              class="history-list"
-              id="history-list"
-            >
+            <div class="history-list" id="history-list">
               <!-- JavaScript -->
             </div>
-
           </div>
-
         </div>
-
       </section>
 
     </div>
-
   </main>
-
 </div>
-
 
 <!-- ============================================================= -->
 <!-- MODALES -->
 <!-- ============================================================= -->
 
-
 <!-- ============================================================= -->
 <!-- REGISTRAR EQUIPO -->
 <!-- ============================================================= -->
-
-<div
-  id="equipo-modal"
-  class="modal-backdrop"
->
-
+<div id="equipo-modal" class="modal-backdrop">
   <div class="modal">
-
     <div class="modal-header">
-
       <h2>Registrar equipo</h2>
-
-      <button
-        class="modal-close"
-        onclick="closeModal('equipo-modal')"
-      >
-        &times;
-      </button>
-
+      <button class="modal-close" onclick="closeModal('equipo-modal')">&times;</button>
     </div>
-
-
     <div class="modal-body">
-
       <div class="form-group">
-
-        <label>
-          Código del equipo
-        </label>
-
-        <input
-          type="text"
-          id="input-equipo-codigo"
-          class="input"
-          placeholder="Ej. OSC-0307"
-        >
-
+        <label>Código del equipo</label>
+        <input type="text" id="input-equipo-codigo" class="input" placeholder="Ej. OSC-0307">
       </div>
-
-
       <div class="form-group">
-
-        <label>
-          Tipo de equipo
-        </label>
-
-        <input
-          type="text"
-          id="input-equipo-tipo"
-          class="input"
-          placeholder="Escribe el tipo de equipo"
-        >
-
+        <label>Tipo de equipo</label>
+        <input type="text" id="input-equipo-tipo" class="input" placeholder="Escribe el tipo de equipo">
       </div>
-
     </div>
-
-
     <div class="modal-footer">
-
-      <button
-        class="button button-secondary"
-        onclick="closeModal('equipo-modal')"
-      >
-        Cancelar
-      </button>
-
-      <button
-        class="button button-primary"
-        onclick="guardarEquipo()"
-      >
-        Guardar equipo
-      </button>
-
+      <button class="button button-secondary" onclick="closeModal('equipo-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="guardarEquipo()">Guardar equipo</button>
     </div>
-
   </div>
-
 </div>
-
 
 <!-- ============================================================= -->
 <!-- DETALLE DEL EQUIPO -->
 <!-- ============================================================= -->
-
-<div
-  id="detalle-equipo-modal"
-  class="modal-backdrop"
->
-
+<div id="detalle-equipo-modal" class="modal-backdrop">
   <div class="modal modal-large">
-
     <div class="modal-header">
-
       <div>
-
-        <h2>
-          Detalles del equipo
-        </h2>
-
-        <p class="card-subtitle">
-          Información del equipo y su historial actual.
-        </p>
-
+        <h2>Detalles del equipo</h2>
+        <p class="card-subtitle">Información del equipo y su historial actual.</p>
       </div>
-
-      <button
-        class="modal-close"
-        onclick="closeModal('detalle-equipo-modal')"
-      >
-        &times;
-      </button>
-
+      <button class="modal-close" onclick="closeModal('detalle-equipo-modal')">&times;</button>
     </div>
-
-
     <div class="modal-body">
-
       <div class="info-list">
-
         <div>
-
-          <div class="info-item-label">
-            Código
-          </div>
-
-          <div
-            class="info-item-value"
-            id="detalle-codigo"
-          ></div>
-
+          <div class="info-item-label">Código</div>
+          <div class="info-item-value" id="detalle-codigo"></div>
         </div>
-
-
         <div>
-
-          <div class="info-item-label">
-            Tipo
-          </div>
-
-          <div
-            class="info-item-value"
-            id="detalle-tipo"
-          ></div>
-
+          <div class="info-item-label">Tipo</div>
+          <div class="info-item-value" id="detalle-tipo"></div>
         </div>
-
-
         <div>
-
-          <div class="info-item-label">
-            Estado
-          </div>
-
-          <div
-            class="info-item-value"
-            id="detalle-estado"
-          ></div>
-
+          <div class="info-item-label">Estado</div>
+          <div class="info-item-value" id="detalle-estado"></div>
         </div>
-
       </div>
-
-
-      <!-- QR -->
-
       <div class="detail-section">
-
-        <h3>
-          Código QR
-        </h3>
-
-        <div
-          class="qr-container"
-          id="detalle-qr-container"
-        >
-
-          <p class="card-subtitle">
-            Cargando código QR...
-          </p>
-
+        <h3>Código QR</h3>
+        <div class="qr-container" id="detalle-qr-container">
+          <p class="card-subtitle">Cargando código QR...</p>
         </div>
-
       </div>
-
-
-      <!-- FALLAS -->
-
       <div class="detail-section">
-
-        <h3>
-          Fallas registradas
-        </h3>
-
+        <h3>Fallas registradas</h3>
         <div id="detalle-fallas">
-
-          <p class="card-subtitle">
-            Cargando fallas...
-          </p>
-
+          <p class="card-subtitle">Cargando fallas...</p>
         </div>
-
       </div>
-
-
-      <!-- PRÉSTAMO -->
-
       <div class="detail-section">
-
-        <h3>
-          Información del préstamo actual
-        </h3>
-
+        <h3>Información del préstamo actual</h3>
         <div id="detalle-prestamo">
-
-          <p class="card-subtitle">
-            Cargando información...
-          </p>
-
+          <p class="card-subtitle">Cargando información...</p>
         </div>
-
       </div>
-
     </div>
-
-
     <div class="modal-footer">
-
-      <button
-        class="button button-secondary"
-        onclick="closeModal('detalle-equipo-modal')"
-      >
-        Cerrar
-      </button>
-
+      <button class="button button-secondary" onclick="closeModal('detalle-equipo-modal')">Cerrar</button>
     </div>
-
   </div>
-
 </div>
-
 
 <!-- ============================================================= -->
 <!-- REGISTRAR ESTUDIANTE -->
 <!-- ============================================================= -->
-
-<div
-  id="student-modal"
-  class="modal-backdrop"
->
-
+<div id="student-modal" class="modal-backdrop">
   <div class="modal">
-
     <div class="modal-header">
-
-      <h2>
-        Registrar estudiante
-      </h2>
-
-      <button
-        class="modal-close"
-        onclick="closeModal('student-modal')"
-      >
-        &times;
-      </button>
-
+      <h2>Registrar estudiante</h2>
+      <button class="modal-close" onclick="closeModal('student-modal')">&times;</button>
     </div>
-
-
     <div class="modal-body">
-
       <div class="form-group">
-
-        <label>
-          Nombre completo
-        </label>
-
-        <input
-          type="text"
-          id="input-estudiante-nombre"
-          class="input"
-          placeholder="Ej. Alberto Hernández Landa"
-        >
-
+        <label>Nombre completo</label>
+        <input type="text" id="input-estudiante-nombre" class="input" placeholder="Ej. Alberto Hernández Landa">
       </div>
-
-
       <div class="form-group">
-
-        <label>
-          Matrícula
-        </label>
-
-        <input
-          type="text"
-          id="input-estudiante-matricula"
-          class="input"
-          placeholder="Ej. S23013959"
-        >
-
+        <label>Matrícula</label>
+        <input type="text" id="input-estudiante-matricula" class="input" placeholder="Ej. S23013959">
       </div>
-
     </div>
-
-
     <div class="modal-footer">
-
-      <button
-        class="button button-secondary"
-        onclick="closeModal('student-modal')"
-      >
-        Cancelar
-      </button>
-
-      <button
-        class="button button-primary"
-        onclick="guardarEstudiante()"
-      >
-        Guardar estudiante
-      </button>
-
+      <button class="button button-secondary" onclick="closeModal('student-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="guardarEstudiante()">Guardar estudiante</button>
     </div>
-
   </div>
-
 </div>
-
 
 <!-- ============================================================= -->
 <!-- DETALLE DEL ESTUDIANTE -->
 <!-- ============================================================= -->
-
-<div
-  id="detalle-estudiante-modal"
-  class="modal-backdrop"
->
-
+<div id="detalle-estudiante-modal" class="modal-backdrop">
   <div class="modal modal-large">
-
     <div class="modal-header">
-
       <div>
-
-        <h2>
-          Detalles del estudiante
-        </h2>
-
-        <p class="card-subtitle">
-          Información e historial relacionado con el estudiante.
-        </p>
-
+        <h2>Detalles del estudiante</h2>
+        <p class="card-subtitle">Información e historial relacionado con el estudiante.</p>
       </div>
-
-      <button
-        class="modal-close"
-        onclick="closeModal('detalle-estudiante-modal')"
-      >
-        &times;
-      </button>
-
+      <button class="modal-close" onclick="closeModal('detalle-estudiante-modal')">&times;</button>
     </div>
-
-
     <div class="modal-body">
-
       <div class="info-list">
-
         <div>
-
-          <div class="info-item-label">
-            Nombre
-          </div>
-
-          <div
-            class="info-item-value"
-            id="detalle-estudiante-nombre"
-          ></div>
-
+          <div class="info-item-label">Nombre</div>
+          <div class="info-item-value" id="detalle-estudiante-nombre"></div>
         </div>
-
-
         <div>
-
-          <div class="info-item-label">
-            Matrícula
-          </div>
-
-          <div
-            class="info-item-value"
-            id="detalle-estudiante-matricula"
-          ></div>
-
+          <div class="info-item-label">Matrícula</div>
+          <div class="info-item-value" id="detalle-estudiante-matricula"></div>
         </div>
-
-
         <div>
-
-          <div class="info-item-label">
-            RFID
-          </div>
-
-          <div
-            class="info-item-value"
-            id="detalle-estudiante-rfid"
-          ></div>
-
+          <div class="info-item-label">RFID</div>
+          <div class="info-item-value" id="detalle-estudiante-rfid"></div>
         </div>
-
-
         <div>
-
-          <div class="info-item-label">
-            Sesión
-          </div>
-
-          <div
-            class="info-item-value"
-            id="detalle-estudiante-sesion"
-          ></div>
-
+          <div class="info-item-label">Sesión</div>
+          <div class="info-item-value" id="detalle-estudiante-sesion"></div>
         </div>
-
       </div>
-
-
       <div class="detail-section">
-
-        <h3>
-          Equipos asociados
-        </h3>
-
+        <h3>Equipos asociados</h3>
         <div id="detalle-estudiante-equipos">
-
-          <p class="card-subtitle">
-            Cargando equipos...
-          </p>
-
+          <p class="card-subtitle">Cargando equipos...</p>
         </div>
-
       </div>
-
-
       <div class="detail-section">
-
-        <h3>
-          Historial
-        </h3>
-
+        <h3>Historial</h3>
         <div id="detalle-estudiante-historial">
-
-          <p class="card-subtitle">
-            Cargando historial...
-          </p>
-
+          <p class="card-subtitle">Cargando historial...</p>
         </div>
-
       </div>
-
     </div>
-
-
     <div class="modal-footer">
-
-      <button
-        class="button button-secondary"
-        onclick="closeModal('detalle-estudiante-modal')"
-      >
-        Cerrar
-      </button>
-
+      <button class="button button-secondary" onclick="closeModal('detalle-estudiante-modal')">Cerrar</button>
     </div>
-
   </div>
-
 </div>
-
 
 <!-- ============================================================= -->
 <!-- RFID — SIMULADOR -->
 <!-- ============================================================= -->
-
-<div
-  id="rfid-modal"
-  class="modal-backdrop"
->
-
+<div id="rfid-modal" class="modal-backdrop">
   <div class="modal">
-
     <div class="modal-header">
-
-      <h2>
-        Esperando lectura RFID
-      </h2>
-
-      <button
-        class="modal-close"
-        onclick="closeModal('rfid-modal')"
-      >
-        &times;
-      </button>
-
+      <h2>Esperando lectura RFID</h2>
+      <button class="modal-close" onclick="closeModal('rfid-modal')">&times;</button>
     </div>
-
-
     <div class="modal-body">
-
-      <p
-        style="
-          color: var(--muted);
-          font-size: 13px;
-          margin-bottom: 15px;
-        "
-      >
-        Simula la lectura física del ESP32 o de la
-        aplicación Android.
+      <p style="color: var(--muted); font-size: 13px; margin-bottom: 15px;">
+        Simula la lectura física del ESP32 o de la aplicación Android.
       </p>
-
-
       <div class="form-group">
-
-        <input
-          type="text"
-          id="input-rfid-simulado"
-          class="input"
-          placeholder="Ej. A1B2C3D4"
-          autocomplete="off"
-        >
-
+        <input type="text" id="input-rfid-simulado" class="input" placeholder="Ej. A1B2C3D4" autocomplete="off">
       </div>
-
     </div>
-
-
     <div class="modal-footer">
-
-      <button
-        class="button button-secondary"
-        onclick="closeModal('rfid-modal')"
-      >
-        Cancelar
-      </button>
-
-      <button
-        class="button button-primary"
-        onclick="procesarRFID()"
-      >
-        Procesar lectura
-      </button>
-
+      <button class="button button-secondary" onclick="closeModal('rfid-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="procesarRFID()">Procesar lectura</button>
     </div>
-
   </div>
-
 </div>
-
 
 <!-- ============================================================= -->
 <!-- RFID — ENROLAMIENTO (tarjeta no registrada) -->
 <!-- ============================================================= -->
-
-<div
-  id="enrolar-rfid-modal"
-  class="modal-backdrop"
->
-
+<div id="enrolar-rfid-modal" class="modal-backdrop">
   <div class="modal">
-
     <div class="modal-header">
-
       <div>
-
-        <h2>
-          Enrolar tarjeta RFID
-        </h2>
-
-        <p class="card-subtitle">
-          Esta tarjeta no está registrada. Vincúlala a un
-          estudiante para continuar.
-        </p>
-
+        <h2>Enrolar tarjeta RFID</h2>
+        <p class="card-subtitle">Esta tarjeta no está registrada. Vincúlala a un estudiante para continuar.</p>
       </div>
-
-      <button
-        class="modal-close"
-        onclick="closeModal('enrolar-rfid-modal')"
-      >
-        &times;
-      </button>
-
+      <button class="modal-close" onclick="closeModal('enrolar-rfid-modal')">&times;</button>
     </div>
-
-
     <div class="modal-body">
-
       <div class="form-group">
-
-        <label>
-          UID detectado
-        </label>
-
-        <input
-          type="text"
-          id="enrolar-rfid-uid"
-          class="input"
-          readonly
-        >
-
+        <label>UID detectado</label>
+        <input type="text" id="enrolar-rfid-uid" class="input" readonly>
       </div>
-
-
       <div class="form-group">
-
-        <label>
-          Matrícula del estudiante
-        </label>
-
-        <input
-          type="text"
-          id="input-enrolar-matricula"
-          class="input"
-          placeholder="Ej. S23013959"
-          autocomplete="off"
-        >
-
+        <label>Matrícula del estudiante</label>
+        <input type="text" id="input-enrolar-matricula" class="input" placeholder="Ej. S23013959" autocomplete="off">
       </div>
-
-
-      <div
-        id="enrolar-rfid-resultado"
-        class="operacion-resultado"
-      ></div>
-
+      <div id="enrolar-rfid-resultado" class="operacion-resultado"></div>
     </div>
-
-
     <div class="modal-footer">
-
-      <button
-        class="button button-secondary"
-        onclick="closeModal('enrolar-rfid-modal')"
-      >
-        Cancelar
-      </button>
-
-      <button
-        class="button button-primary"
-        onclick="confirmarEnrolamientoRFID()"
-      >
-        Enrolar tarjeta
-      </button>
-
+      <button class="button button-secondary" onclick="closeModal('enrolar-rfid-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="confirmarEnrolamientoRFID()">Enrolar tarjeta</button>
     </div>
-
   </div>
-
 </div>
 
+<!-- ============================================================= -->
+<!-- DEVOLUCIÓN DE EQUIPO (RFID/QR) -->
+<!-- ============================================================= -->
+<div id="devolucion-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Recibir equipo</h2>
+      <button class="modal-close" onclick="closeModal('devolucion-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 15px;">¿En qué estado se devuelve el equipo <strong id="devolucion-codigo-label"></strong>?</p>
+      <input type="hidden" id="input-devolucion-codigo">
+      <div class="form-group">
+        <label>Estado de entrega</label>
+        <select class="select" id="input-devolucion-estado" onchange="toggleFallaDevolucion()">
+          <option value="Disponible">Completo y funcional (Disponible)</option>
+          <option value="En revisión">Presenta fallas o faltantes (En revisión)</option>
+        </select>
+      </div>
+      <div class="form-group" id="grupo-devolucion-falla" style="display: none;">
+        <label>Descripción de la falla / incidencia</label>
+        <input type="text" id="input-devolucion-falla" class="input" placeholder="Ej. Perilla rota o falta cable de poder...">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="closeModal('devolucion-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="confirmarDevolucion()">Confirmar recepción</button>
+    </div>
+  </div>
+</div>
 
 <!-- ============================================================= -->
 <!-- SCRIPTS -->

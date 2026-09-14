@@ -110,6 +110,7 @@ class DevolucionService:
             )
 
         equipo = prestamo.equipo
+        self.repo_sesion.registrar_devolucion(db, prestamo)
 
         if request.hubo_falla:
             # La validación de que 'descripcion' venga presente ya la

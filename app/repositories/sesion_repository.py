@@ -1,5 +1,7 @@
 """Repositorio de Sesiones (app/repositories/sesion_repository.py)."""
 
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session, selectinload
 
@@ -114,6 +116,20 @@ class SesionRepository:
     ) -> SesionEquipo | None:
         """Busca un préstamo de equipo por su ID."""
         return db.get(SesionEquipo, sesion_equipo_id)
+
+    def registrar_devolucion(
+        self,
+        db: Session,
+        prestamo: SesionEquipo,
+) -> SesionEquipo:
+        """Marca un préstamo como devuelto y registra la fecha de devolución."""
+        prestamo.estado = "Devuelto"
+        prestamo.fecha_devolucion = datetime.utcnow()
+
+        db.commit()
+        db.refresh(prestamo)
+
+        return prestamo
 
     def get_equipos_by_sesion(self, db: Session, sesion_id: int) -> list[SesionEquipo]:
         """Obtiene todos los equipos vinculados a una sesión."""
