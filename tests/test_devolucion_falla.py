@@ -71,6 +71,9 @@ def test_registrar_falla_marca_equipo_en_revision(db_session: Session):
     assert falla.descripcion == "Falso contacto en canal 1"
     assert falla.estado == "Pendiente"
     assert falla.equipo_id == equipo.id
+    db_session.refresh(sesion_equipo)
+    assert sesion_equipo.estado == "Devuelto"
+    assert sesion_equipo.fecha_devolucion is not None
 
 
 def test_devolucion_sin_fallas_marca_equipo_disponible(db_session: Session):
@@ -92,6 +95,9 @@ def test_devolucion_sin_fallas_marca_equipo_disponible(db_session: Session):
     equipo = db_session.get(Equipo, sesion_equipo.equipo_id)
     db_session.refresh(equipo)
     assert equipo.estado == "Disponible"
+    db_session.refresh(sesion_equipo)
+    assert sesion_equipo.estado == "Devuelto"
+    assert sesion_equipo.fecha_devolucion is not None
 
 
 def test_registrar_falla_sin_descripcion_falla_validacion(db_session: Session):
@@ -139,3 +145,51 @@ def test_fallas_anteriores_no_se_sobrescriben(db_session: Session):
         db_session.query(Falla).filter(Falla.equipo_id == equipo_id).all()
     )
     assert len(fallas) == 2
+
+def test_equipo_devuelto_puede_volverse_a_prestar(
+    db_session: Session,
+):
+    """Un equipo devuelto no debe conservar un préstamo activo anterior."""
+    app.dependency_overrides[get_db] = lambda: db_session
+
+    sesion_equipo = _crear_prestamo_en_curso(db_session)
+
+    # Finalizar la devolución sin falla.
+    response = client.patch(
+        f"/api/devoluciones/{sesion_equipo.id}/falla",
+        json={"hubo_falla": False},
+    )
+
+    assert response.status_code == 200
+
+    # El préstamo anterior debe estar cerrado.
+    db_session.refresh(sesion_equipo)
+    assert sesion_equipo.estado == "Devuelto"
+    assert sesion_equipo.fecha_devolucion is not None
+
+    # El equipo vuelve a estar disponible.
+    equipo = db_session.get(Equipo, sesion_equipo.equipo_id)
+    db_session.refresh(equipo)
+    assert equipo.estado == "Disponible"
+
+    # El mismo equipo puede recibir un nuevo préstamo.
+    nuevo_prestamo = SesionEquipo(
+        sesion_id=sesion_equipo.sesion_id,
+        equipo_id=sesion_equipo.equipo_id,
+        estado="Prestado",
+    )
+    db_session.add(nuevo_prestamo)
+    db_session.commit()
+    db_session.refresh(nuevo_prestamo)
+
+    # El préstamo activo debe ser únicamente el nuevo.
+    from app.repositories.sesion_repository import SesionRepository
+
+    repo = SesionRepository()
+    prestamo_activo = repo.get_prestamo_activo_by_equipo(
+        db_session,
+        equipo.id,
+    )
+
+    assert prestamo_activo is not None
+    assert prestamo_activo.id == nuevo_prestamo.id
