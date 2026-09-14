@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LABTRACK — Panel del encargado</title>
+
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
@@ -214,86 +219,105 @@
       <!-- 03 SESIÓN DE PRÉSTAMO -->
       <!-- ===================================================== -->
 
-      <section class="view" id="view-prestamo-rfid">
-        <div class="page-header">
-          <div>
-            <h1>Sesión de préstamo</h1>
-            <p id="rfid-flow-subtitle">Esperando identificación del estudiante.</p>
-          </div>
-          <div style="display: flex; gap: 10px;">
-            <button class="button button-secondary" onclick="cancelarFlujoRFID()">Cancelar</button>
-            <button id="btn-terminar-operacion" class="button button-primary" style="display: none;" onclick="terminarOperacion()">Terminar operación</button>
-          </div>
+<section class="view" id="view-prestamo-rfid">
+
+  <div class="page-header">
+    <div>
+      <h1>Sesión de préstamo</h1>
+      <p id="rfid-flow-subtitle">Esperando identificación del estudiante.</p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+      <button class="button button-secondary" onclick="cancelarFlujoRFID()">Cancelar</button>
+      <button id="btn-terminar-operacion" class="button button-primary" style="display: none;" onclick="terminarOperacion()">Terminar operación</button>
+    </div>
+  </div>
+
+  <!-- BARRA DE PROGRESO DEL FLUJO -->
+  <div class="rfid-progress">
+    <div class="rfid-progress-step" id="rfid-step-1">
+      <span class="rfid-progress-dot">1</span>
+      <span class="rfid-progress-label">Identificar estudiante</span>
+    </div>
+    <div class="rfid-progress-line"></div>
+    <div class="rfid-progress-step" id="rfid-step-2">
+      <span class="rfid-progress-dot">2</span>
+      <span class="rfid-progress-label">Escanear equipos</span>
+    </div>
+    <div class="rfid-progress-line"></div>
+    <div class="rfid-progress-step" id="rfid-step-3">
+      <span class="rfid-progress-dot">3</span>
+      <span class="rfid-progress-label">Terminar sesión</span>
+    </div>
+  </div>
+
+  <!-- ESTADO -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">Estado de la sesión</h2>
+        <p class="card-subtitle" id="rfid-flow-status">Esperando identificación del estudiante...</p>
+      </div>
+      <span class="status status-available" id="rfid-flow-badge">
+        <span class="status-dot"></span> Esperando estudiante
+      </span>
+    </div>
+  </div>
+
+  <!-- ESTUDIANTE -->
+  <div class="card card-spaced rfid-student-card" id="rfid-flow-estudiante" hidden>
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">Estudiante identificado</h2>
+        <p class="card-subtitle">La sesión quedó vinculada correctamente.</p>
+      </div>
+      <span class="rfid-check-icon">✓</span>
+    </div>
+    <div class="info-list">
+      <div>
+        <div class="info-item-label">Estudiante</div>
+        <div class="info-item-value" id="rfid-flow-nombre"></div>
+      </div>
+      <div>
+        <div class="info-item-label">Matrícula</div>
+        <div class="info-item-value" id="rfid-flow-matricula"></div>
+      </div>
+      <div>
+        <div class="info-item-label">Sesión</div>
+        <div class="info-item-value" id="rfid-flow-sesion"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESPERANDO QR -->
+  <div class="card card-spaced" id="rfid-flow-esperando-qr" hidden>
+    <div class="operation-step">
+      <div class="operation-step-icon operation-step-icon-scan">▣</div>
+      <div class="operation-step-content">
+        <h3>Listo para prestar equipos</h3>
+        <p>Escanea el código QR del equipo para agregarlo a esta sesión. El registro se hace automáticamente.</p>
+        <div class="waiting-indicator">
+          <span class="waiting-dot"></span> Esperando el siguiente equipo…
         </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- ESTADO -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Estado de la sesión</h2>
-              <p class="card-subtitle" id="rfid-flow-status">Esperando identificación del estudiante...</p>
-            </div>
-            <span class="status status-available" id="rfid-flow-badge">
-              <span class="status-dot"></span> Esperando estudiante
-            </span>
-          </div>
-        </div>
+  <!-- EQUIPOS ESCANEADOS -->
+  <div class="card card-spaced" id="rfid-flow-equipos" hidden>
+    <div class="card-header">
+      <div>
+        <h2 class="card-title">Equipos de esta sesión</h2>
+        <p class="card-subtitle">Lo que se va a prestar en esta sesión.</p>
+      </div>
+    </div>
+    <div id="rfid-flow-equipo-list">
+      <!-- JavaScript -->
+    </div>
+  </div>
 
-        <!-- ESTUDIANTE -->
-        <div class="card card-spaced" id="rfid-flow-estudiante" hidden>
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Estudiante identificado</h2>
-              <p class="card-subtitle">La sesión quedó vinculada correctamente.</p>
-            </div>
-          </div>
-          <div class="info-list">
-            <div>
-              <div class="info-item-label">Estudiante</div>
-              <div class="info-item-value" id="rfid-flow-nombre"></div>
-            </div>
-            <div>
-              <div class="info-item-label">Matrícula</div>
-              <div class="info-item-value" id="rfid-flow-matricula"></div>
-            </div>
-            <div>
-              <div class="info-item-label">Sesión</div>
-              <div class="info-item-value" id="rfid-flow-sesion"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ESPERANDO QR -->
-        <div class="card card-spaced" id="rfid-flow-esperando-qr" hidden>
-          <div class="operation-step">
-            <div class="operation-step-icon">▣</div>
-            <div class="operation-step-content">
-              <h3>Listo para prestar equipos</h3>
-              <p>Escanea el código QR del equipo para agregarlo a esta sesión. El registro se hace automáticamente.</p>
-              <div class="waiting-indicator">
-                <span class="waiting-dot"></span> Esperando el siguiente equipo…
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- EQUIPOS ESCANEADOS -->
-        <div class="card card-spaced" id="rfid-flow-equipos" hidden>
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Equipos de esta sesión</h2>
-              <p class="card-subtitle">Lo que se va a prestar en esta sesión.</p>
-            </div>
-          </div>
-          <div id="rfid-flow-equipo-list">
-            <!-- JavaScript -->
-          </div>
-        </div>
-
-        <!-- RESULTADO -->
-        <div id="rfid-flow-resultado" class="operacion-resultado card-spaced"></div>
-      </section>
-
+  <!-- RESULTADO -->
+  <div id="rfid-flow-resultado" class="operacion-resultado card-spaced"></div>
+</section>
       <!-- ===================================================== -->
       <!-- 04 ESTUDIANTES -->
       <!-- ===================================================== -->

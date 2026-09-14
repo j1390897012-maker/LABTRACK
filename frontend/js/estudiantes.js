@@ -204,7 +204,7 @@ function pintarDetalleEstudiante(data) {
                 </div>
                 <div>
                   <div class="info-item-label">Tipo</div>
-                  <div class="operation-student-data">${e.tipo}</div>
+                  <div class="operation-student-data">${e.tipo || "—"}</div>
                 </div>
               </div>
             `
@@ -213,6 +213,9 @@ function pintarDetalleEstudiante(data) {
       : `<p class="card-subtitle">Sin equipos prestados actualmente.</p>`;
   }
 
+  // ============================================================
+  // NUEVA LÓGICA DE RENDERIZADO DEL HISTORIAL VERTICAL
+  // ============================================================
   const historialEl = document.getElementById("detalle-estudiante-historial");
   if (historialEl) {
     if (sesiones.length === 0) {
@@ -222,18 +225,62 @@ function pintarDetalleEstudiante(data) {
         .slice()
         .reverse()
         .map((s) => {
-          const equiposTexto =
-            (s.equipos || [])
-              .map((e) => `${e.codigo} (${e.estado_prestamo})`)
-              .join(", ") || "Sin equipos";
+          // Formateo correcto de fecha UTC a hora local (igual que en historial.js)
+          const fechaFija = s.fecha_apertura.endsWith("Z") ? s.fecha_apertura : s.fecha_apertura + "Z";
+          const fechaObj = new Date(fechaFija);
+          const fechaFormat = fechaObj.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
+          const horaFormat = fechaObj.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+          
+          const estadoSesion = s.fecha_cierre ? "Cerrada" : "Activa";
+          const colorEstadoSesion = s.fecha_cierre ? "var(--muted)" : "var(--primary, #3b82f6)";
 
+          // Iterar los equipos de esta sesión en formato de lista vertical
+          let equiposHTML = "";
+          if (s.equipos && s.equipos.length > 0) {
+            equiposHTML = s.equipos.map(e => {
+              const esDevuelto = e.estado_prestamo === "Devuelto";
+              const tipoEvento = esDevuelto ? "Devolución" : "Préstamo";
+              
+              // Colores de los badges
+              const badgeColor = esDevuelto ? "var(--success)" : "var(--warning)";
+              const colorBg = esDevuelto ? "var(--success-light, #d1fae5)" : "var(--warning-light, #fef3c7)";
+
+              return `
+                <div class="history-item" style="display: flex; align-items: flex-start; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border-color, #e2e8f0); margin-left: 12px;">
+                  <div style="flex: 1;">
+                    <div class="history-main" style="color: var(--text); font-weight: 500; font-size: 14px;">
+                      ${tipoEvento} de <strong>${e.codigo}</strong>
+                    </div>
+                    <div class="history-secondary" style="color: var(--muted); font-size: 12px; margin-top: 4px;">
+                      Tipo: ${e.tipo || "No especificado"}
+                    </div>
+                  </div>
+                  <span class="history-type" style="background-color: ${colorBg}; color: ${badgeColor}; padding: 4px 8px; border-radius: 99px; font-size: 11px; font-weight: 600;">
+                    ${e.estado_prestamo}
+                  </span>
+                </div>
+              `;
+            }).join("");
+          } else {
+            equiposHTML = `<div style="font-size: 13px; color: var(--muted); padding: 12px;">Sin operaciones en esta sesión.</div>`;
+          }
+
+          // Envoltura de la sesión agrupando sus equipos
           return `
-            <div class="history-item">
-              <div class="info-item-label">
-                Sesión #${s.sesion_id} — ${s.fecha_cierre ? "Cerrada" : "Activa"}
+            <div style="margin-bottom: 24px;">
+              <div style="display: flex; align-items: center; gap: 16px; padding-bottom: 12px; border-bottom: 2px solid var(--border-color, #e2e8f0);">
+                <div class="history-date" style="min-width: 60px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 600;">
+                  ${fechaFormat}<br>
+                  <span style="font-weight: 400; font-size: 11px;">${horaFormat}</span>
+                </div>
+                <div style="flex: 1;">
+                  <div style="font-weight: 600; font-size: 15px; color: var(--text);">Sesión #${s.sesion_id}</div>
+                  <div style="font-size: 12px; color: ${colorEstadoSesion}; font-weight: 500;">${estadoSesion}</div>
+                </div>
               </div>
-              <div class="stat-description">${new Date(s.fecha_apertura).toLocaleString()}</div>
-              <div class="stat-description">${equiposTexto}</div>
+              <div class="sesion-equipos-lista">
+                ${equiposHTML}
+              </div>
             </div>
           `;
         })
