@@ -134,6 +134,7 @@ button {
   border-radius: 8px;
   text-align: left;
   font-size: 14px;
+  transition: background-color 0.15s, color 0.15s;
 }
 
 .nav-button:hover {
@@ -156,7 +157,7 @@ button {
 .sidebar-footer {
   margin-top: auto;
   border-top: 1px solid var(--border);
-  padding: 17px 10px 0;
+  padding: 18px 10px 0;
 }
 
 .user-name {
@@ -202,6 +203,11 @@ button {
   color: var(--text);
 }
 
+.topbar-meta {
+  color: var(--muted);
+  font-size: 12px;
+}
+
 .content {
   max-width: 1250px;
   margin: 0 auto;
@@ -219,7 +225,8 @@ button {
 .page-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 20px;
   margin-bottom: 26px;
 }
@@ -278,12 +285,21 @@ button {
   border-color: #fecaca;
 }
 
+.button-danger-solid {
+  background-color: var(--danger);
+  color: #fff;
+  border: none;
+}
+
+.button-danger-solid:hover {
+  background-color: #b91c1c;
+}
+
 .button-small {
   padding: 7px 11px;
   font-size: 12px;
 }
 
-/* Clase utilitaria para botones de icono en tablas */
 .btn-icon {
   display: inline-flex;
   align-items: center;
@@ -314,6 +330,10 @@ button {
   border: 1px solid var(--border);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+}
+
+.card-spaced {
+  margin-top: 20px;
 }
 
 .card-header {
@@ -361,6 +381,12 @@ button {
   padding: 18px;
   position: relative;
   overflow: hidden;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
 }
 
 .stat-icon {
@@ -372,6 +398,10 @@ button {
   opacity: 0.15;
   color: currentColor;
 }
+
+.stat-icon-success { color: var(--success); }
+.stat-icon-warning { color: var(--warning); }
+.stat-icon-danger { color: var(--danger); }
 
 .stat-label {
   color: var(--muted);
@@ -385,6 +415,10 @@ button {
   margin-top: 7px;
   letter-spacing: -0.04em;
 }
+
+.stat-value-success { color: var(--success); }
+.stat-value-warning { color: var(--warning); }
+.stat-value-danger { color: var(--danger); }
 
 .stat-description {
   color: var(--muted);
@@ -461,7 +495,6 @@ tbody tr:hover {
   background: #fafcff;
 }
 
-/* Normalización de texto en la tabla de equipos */
 #equipment-table td:nth-child(1),
 #equipment-table td:nth-child(2) {
   text-transform: capitalize;
@@ -534,7 +567,7 @@ tbody tr:hover {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
-  margin: 0 20px 20px; 
+  margin: 0 20px 20px;
   padding: 18px 24px;
   background: var(--surface-soft);
   border: 1px solid var(--border);
@@ -810,6 +843,23 @@ tbody tr:hover {
   padding: 20px;
 }
 
+.modal-help-text {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 15px;
+}
+
+.modal-message {
+  margin-bottom: 15px;
+}
+
+.confirm-message {
+  white-space: pre-line;
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+}
+
 .form-group {
   margin-bottom: 15px;
 }
@@ -837,6 +887,14 @@ tbody tr:hover {
 
 .modal-large {
   max-width: 640px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-large .modal-body {
+  overflow-y: auto;
+  flex: 1;
 }
 
 /* =========================================================
@@ -859,7 +917,7 @@ tbody tr:hover {
 }
 
 /* =========================================================
-   PASO DE OPERACIÓN / FLUJO RFID
+   PASO DE OPERACIÓN / FLUJO DE SESIÓN
    ========================================================= */
 
 .operation-step {
@@ -919,7 +977,7 @@ tbody tr:hover {
 }
 
 /* =========================================================
-   AJUSTES ESPECÍFICOS DE VISTA RFID
+   AJUSTES ESPECÍFICOS DE LA VISTA DE SESIÓN
    ========================================================= */
 
 #view-prestamo-rfid .card {
@@ -998,9 +1056,96 @@ tbody tr:hover {
 
   .page-header {
     flex-direction: column;
+    align-items: flex-start;
   }
 
   .search-input {
     width: 100%;
   }
+}
+
+/* =========================================================
+   SELECCIÓN DE ESTUDIANTE
+   ========================================================= */
+
+.select-list {
+  display: grid;
+  gap: 8px;
+}
+
+.student-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  text-align: left;
+  font-size: 13px;
+}
+
+.student-option:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.student-option .code {
+  color: var(--muted);
+}
+
+/* =========================================================
+   ACCESORIOS EN DEVOLUCIÓN
+   ========================================================= */
+
+.accesorios-list {
+  display: grid;
+  gap: 10px;
+}
+
+.accesorio-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+}
+
+.accesorio-row .accesorio-nombre {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.accesorio-row .accesorio-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.accesorio-row input[type="number"] {
+  width: 70px;
+  text-align: center;
+}
+
+/* =========================================================
+   LISTA DE EQUIPOS DE LA SESIÓN
+   ========================================================= */
+
+.equipo-operacion-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  margin-bottom: 10px;
+}
+
+.equipo-operacion-row:last-child {
+  margin-bottom: 0;
 }

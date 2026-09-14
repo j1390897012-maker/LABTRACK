@@ -5,72 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LABTRACK — Panel del encargado</title>
   <link rel="stylesheet" href="css/styles.css">
-  <style>
-    /* ========================================================= */
-    /* MEJORAS DE DISEÑO UI/UX (Inyectadas sin alterar scripts)  */
-    /* ========================================================= */
-    
-    /* 1. Separador del perfil de usuario en Sidebar */
-    .sidebar-footer {
-      border-top: 1px solid var(--border-color, #e2e8f0);
-      padding-top: 16px;
-      margin-top: auto;
-    }
-
-    /* 2. Alineación perfecta en cabeceras de tarjetas */
-    .card-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .card-header > div:first-child {
-      flex: 1;
-    }
-
-    /* 3. Posicionamiento para íconos de tarjetas de estadística */
-    .stat-card {
-      position: relative;
-      overflow: hidden;
-    }
-    .stat-icon {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 28px;
-      height: 28px;
-      opacity: 0.15;
-      color: currentColor;
-    }
-
-    /* 4. Normalización de texto (Capitalize) para la tabla de equipos */
-    #equipment-table td:nth-child(1),
-    #equipment-table td:nth-child(2) {
-      text-transform: capitalize;
-    }
-
-    /* 5. Clase utilitaria para botones de icono en tablas (Usar en el JS) */
-    .btn-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      padding: 0;
-      border-radius: 6px;
-      background-color: var(--bg-secondary, #f8fafc);
-      color: var(--text-muted, #64748b);
-      border: 1px solid var(--border-color, #e2e8f0);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-icon:hover {
-      background-color: var(--primary-light, #eff6ff);
-      color: var(--primary, #3b82f6);
-      border-color: var(--primary-border, #bfdbfe);
-    }
-  </style>
 </head>
 
 <body>
@@ -132,7 +66,7 @@
       <div class="breadcrumb">
         LABTRACK / <strong id="breadcrumb">Equipos</strong>
       </div>
-      <div style="color: var(--muted); font-size: 12px;">
+      <div class="topbar-meta">
         Laboratorio de Instrumentación
       </div>
     </header>
@@ -145,7 +79,7 @@
 
       <section class="view active" id="view-equipos">
 
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="page-header">
           <div>
             <h1>Equipos</h1>
             <p>Administra y consulta el inventario del laboratorio.</p>
@@ -158,7 +92,6 @@
         <div class="stats">
 
           <div class="card stat-card">
-            <!-- Icono: Caja -->
             <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
             <div class="stat-label">Total de equipos</div>
             <div class="stat-value">0</div>
@@ -166,26 +99,23 @@
           </div>
 
           <div class="card stat-card">
-            <!-- Icono: Check Circle -->
-            <svg class="stat-icon" style="color: var(--success, #10b981);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <svg class="stat-icon stat-icon-success" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             <div class="stat-label">Disponibles</div>
-            <div class="stat-value" style="color: var(--success);">0</div>
+            <div class="stat-value stat-value-success">0</div>
             <div class="stat-description">Listos para préstamo</div>
           </div>
 
           <div class="card stat-card">
-            <!-- Icono: Usuarios/Préstamo -->
-            <svg class="stat-icon" style="color: var(--warning, #f59e0b);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <svg class="stat-icon stat-icon-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
             <div class="stat-label">Prestados</div>
-            <div class="stat-value" style="color: var(--warning);">0</div>
+            <div class="stat-value stat-value-warning">0</div>
             <div class="stat-description">Actualmente en uso</div>
           </div>
 
           <div class="card stat-card">
-            <!-- Icono: Alerta -->
-            <svg class="stat-icon" style="color: var(--danger, #ef4444);" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <svg class="stat-icon stat-icon-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             <div class="stat-label">En revisión</div>
-            <div class="stat-value" style="color: var(--danger);">0</div>
+            <div class="stat-value stat-value-danger">0</div>
             <div class="stat-description">Requieren atención</div>
           </div>
 
@@ -197,7 +127,7 @@
               <h2 class="card-title">Inventario</h2>
               <p class="card-subtitle">Busca por código o filtra por estado.</p>
             </div>
-            <div class="toolbar" style="display: flex; gap: 10px;">
+            <div class="toolbar">
               <input class="input search-input" id="equipment-search" type="text" placeholder="Buscar por código..." oninput="filterEquipment()">
               <select class="select" id="equipment-status" onchange="filterEquipment()">
                 <option value="">Todos los estados</option>
@@ -262,7 +192,7 @@
         </div>
 
         <!-- DEVOLUCIÓN MANUAL -->
-        <div class="card" style="margin-top: 20px;">
+        <div class="card card-spaced">
           <div class="card-header">
             <div>
               <h2 class="card-title">Devolución manual</h2>
@@ -281,13 +211,13 @@
       </section>
 
       <!-- ===================================================== -->
-      <!-- 03 PRÉSTAMO RFID / QR -->
+      <!-- 03 SESIÓN DE PRÉSTAMO -->
       <!-- ===================================================== -->
 
       <section class="view" id="view-prestamo-rfid">
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="page-header">
           <div>
-            <h1>Préstamo RFID</h1>
+            <h1>Sesión de préstamo</h1>
             <p id="rfid-flow-subtitle">Esperando identificación del estudiante.</p>
           </div>
           <div style="display: flex; gap: 10px;">
@@ -300,21 +230,21 @@
         <div class="card">
           <div class="card-header">
             <div>
-              <h2 class="card-title">Estado de operación</h2>
-              <p class="card-subtitle" id="rfid-flow-status">Esperando RFID...</p>
+              <h2 class="card-title">Estado de la sesión</h2>
+              <p class="card-subtitle" id="rfid-flow-status">Esperando identificación del estudiante...</p>
             </div>
             <span class="status status-available" id="rfid-flow-badge">
-              <span class="status-dot"></span> Esperando RFID
+              <span class="status-dot"></span> Esperando estudiante
             </span>
           </div>
         </div>
 
         <!-- ESTUDIANTE -->
-        <div class="card" id="rfid-flow-estudiante" hidden style="margin-top: 20px;">
+        <div class="card card-spaced" id="rfid-flow-estudiante" hidden>
           <div class="card-header">
             <div>
-              <h2 class="card-title">RFID detectada</h2>
-              <p class="card-subtitle">Estudiante identificado correctamente.</p>
+              <h2 class="card-title">Estudiante identificado</h2>
+              <p class="card-subtitle">La sesión quedó vinculada correctamente.</p>
             </div>
           </div>
           <div class="info-list">
@@ -334,25 +264,25 @@
         </div>
 
         <!-- ESPERANDO QR -->
-        <div class="card" id="rfid-flow-esperando-qr" hidden style="margin-top: 20px;">
+        <div class="card card-spaced" id="rfid-flow-esperando-qr" hidden>
           <div class="operation-step">
             <div class="operation-step-icon">▣</div>
             <div class="operation-step-content">
               <h3>Listo para prestar equipos</h3>
-              <p>Escanea el código QR del equipo con el lector para continuar con el préstamo. La lectura se registra automáticamente.</p>
+              <p>Escanea el código QR del equipo para agregarlo a esta sesión. El registro se hace automáticamente.</p>
               <div class="waiting-indicator">
-                <span class="waiting-dot"></span> Esperando lectura del equipo…
+                <span class="waiting-dot"></span> Esperando el siguiente equipo…
               </div>
             </div>
           </div>
         </div>
 
         <!-- EQUIPOS ESCANEADOS -->
-        <div class="card" id="rfid-flow-equipos" hidden style="margin-top: 20px;">
+        <div class="card card-spaced" id="rfid-flow-equipos" hidden>
           <div class="card-header">
             <div>
-              <h2 class="card-title">Equipos de la operación</h2>
-              <p class="card-subtitle">Equipos detectados durante esta operación.</p>
+              <h2 class="card-title">Equipos de esta sesión</h2>
+              <p class="card-subtitle">Lo que se va a prestar en esta sesión.</p>
             </div>
           </div>
           <div id="rfid-flow-equipo-list">
@@ -361,7 +291,7 @@
         </div>
 
         <!-- RESULTADO -->
-        <div id="rfid-flow-resultado" class="operacion-resultado" style="margin-top: 20px;"></div>
+        <div id="rfid-flow-resultado" class="operacion-resultado card-spaced"></div>
       </section>
 
       <!-- ===================================================== -->
@@ -369,12 +299,12 @@
       <!-- ===================================================== -->
 
       <section class="view" id="view-estudiantes">
-        <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="page-header">
           <div>
             <h1>Estudiantes</h1>
-            <p>Registra estudiantes y administra su identificación RFID.</p>
+            <p>Registra estudiantes y administra su identificación.</p>
           </div>
-          <button class="button button-primary" onclick="openModal('student-modal')">
+          <button class="button button-primary" onclick="abrirModalNuevoEstudiante()">
             + Registrar estudiante
           </button>
         </div>
@@ -393,7 +323,7 @@
                 <tr>
                   <th>Estudiante</th>
                   <th>Matrícula</th>
-                  <th>RFID</th>
+                  <th>Identificación</th>
                   <th>Sesión</th>
                   <th></th>
                 </tr>
@@ -565,7 +495,7 @@
           <div class="info-item-value" id="detalle-estudiante-matricula"></div>
         </div>
         <div>
-          <div class="info-item-label">RFID</div>
+          <div class="info-item-label">Identificación</div>
           <div class="info-item-value" id="detalle-estudiante-rfid"></div>
         </div>
         <div>
@@ -588,22 +518,24 @@
     </div>
     <div class="modal-footer">
       <button class="button button-secondary" onclick="closeModal('detalle-estudiante-modal')">Cerrar</button>
+      <button class="button button-danger" onclick="eliminarEstudianteDesdeDetalle()">Eliminar</button>
+      <button class="button button-primary" onclick="abrirModalEditarEstudiante()">Editar</button>
     </div>
   </div>
 </div>
 
 <!-- ============================================================= -->
-<!-- RFID — SIMULADOR -->
+<!-- IDENTIFICACIÓN — REGISTRO MANUAL -->
 <!-- ============================================================= -->
 <div id="rfid-modal" class="modal-backdrop">
   <div class="modal">
     <div class="modal-header">
-      <h2>Esperando lectura RFID</h2>
+      <h2>Registrar identificación</h2>
       <button class="modal-close" onclick="closeModal('rfid-modal')">&times;</button>
     </div>
     <div class="modal-body">
-      <p style="color: var(--muted); font-size: 13px; margin-bottom: 15px;">
-        Simula la lectura física del ESP32 o de la aplicación Android.
+      <p class="modal-help-text">
+        Ingresa el identificador de la credencial del estudiante para iniciar la sesión.
       </p>
       <div class="form-group">
         <input type="text" id="input-rfid-simulado" class="input" placeholder="Ej. A1B2C3D4" autocomplete="off">
@@ -611,26 +543,26 @@
     </div>
     <div class="modal-footer">
       <button class="button button-secondary" onclick="closeModal('rfid-modal')">Cancelar</button>
-      <button class="button button-primary" onclick="procesarRFID()">Procesar lectura</button>
+      <button class="button button-primary" onclick="procesarRFID()">Registrar identificación</button>
     </div>
   </div>
 </div>
 
 <!-- ============================================================= -->
-<!-- RFID — ENROLAMIENTO (tarjeta no registrada) -->
+<!-- VINCULAR CREDENCIAL (credencial no registrada) -->
 <!-- ============================================================= -->
 <div id="enrolar-rfid-modal" class="modal-backdrop">
   <div class="modal">
     <div class="modal-header">
       <div>
-        <h2>Enrolar tarjeta RFID</h2>
-        <p class="card-subtitle">Esta tarjeta no está registrada. Vincúlala a un estudiante para continuar.</p>
+        <h2>Vincular credencial</h2>
+        <p class="card-subtitle">Esta credencial no está registrada. Vincúlala a un estudiante para continuar.</p>
       </div>
       <button class="modal-close" onclick="closeModal('enrolar-rfid-modal')">&times;</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>UID detectado</label>
+        <label>Identificador detectado</label>
         <input type="text" id="enrolar-rfid-uid" class="input" readonly>
       </div>
       <div class="form-group">
@@ -641,23 +573,29 @@
     </div>
     <div class="modal-footer">
       <button class="button button-secondary" onclick="closeModal('enrolar-rfid-modal')">Cancelar</button>
-      <button class="button button-primary" onclick="confirmarEnrolamientoRFID()">Enrolar tarjeta</button>
+      <button class="button button-primary" onclick="confirmarEnrolamientoRFID()">Vincular credencial</button>
     </div>
   </div>
 </div>
 
 <!-- ============================================================= -->
-<!-- DEVOLUCIÓN DE EQUIPO (RFID/QR) -->
+<!-- DEVOLUCIÓN DE EQUIPO -->
 <!-- ============================================================= -->
 <div id="devolucion-modal" class="modal-backdrop">
   <div class="modal">
     <div class="modal-header">
       <h2>Recibir equipo</h2>
-      <button class="modal-close" onclick="closeModal('devolucion-modal')">&times;</button>
+      <button class="modal-close" onclick="cancelarDevolucion()">&times;</button>
     </div>
     <div class="modal-body">
-      <p style="margin-bottom: 15px;">¿En qué estado se devuelve el equipo <strong id="devolucion-codigo-label"></strong>?</p>
+      <p class="modal-message">¿En qué estado se devuelve el equipo <strong id="devolucion-codigo-label"></strong>?</p>
       <input type="hidden" id="input-devolucion-codigo">
+
+      <div class="form-group" id="grupo-devolucion-accesorios" hidden>
+        <label>Accesorios a devolver</label>
+        <div id="devolucion-accesorios-lista" class="accesorios-list"></div>
+      </div>
+
       <div class="form-group">
         <label>Estado de entrega</label>
         <select class="select" id="input-devolucion-estado" onchange="toggleFallaDevolucion()">
@@ -665,14 +603,119 @@
           <option value="En revisión">Presenta fallas o faltantes (En revisión)</option>
         </select>
       </div>
+
       <div class="form-group" id="grupo-devolucion-falla" style="display: none;">
         <label>Descripción de la falla / incidencia</label>
         <input type="text" id="input-devolucion-falla" class="input" placeholder="Ej. Perilla rota o falta cable de poder...">
       </div>
+
+      <div id="devolucion-modal-resultado" class="operacion-resultado"></div>
     </div>
     <div class="modal-footer">
-      <button class="button button-secondary" onclick="closeModal('devolucion-modal')">Cancelar</button>
+      <button class="button button-secondary" onclick="cancelarDevolucion()">Cancelar</button>
       <button class="button button-primary" onclick="confirmarDevolucion()">Confirmar recepción</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- CONFIRMACIÓN GENÉRICA (reemplaza confirm() nativo) -->
+<!-- ============================================================= -->
+<div id="confirm-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="confirm-modal-titulo">Confirmar acción</h2>
+      <button class="modal-close" onclick="responderConfirmacion(false)">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirm-modal-mensaje" class="confirm-message"></p>
+    </div>
+    <div class="modal-footer">
+      <button
+        class="button button-secondary"
+        id="confirm-modal-cancelar"
+        onclick="responderConfirmacion(false)"
+      >
+        Cancelar
+      </button>
+      <button
+        class="button button-primary"
+        id="confirm-modal-aceptar"
+        onclick="responderConfirmacion(true)"
+      >
+        Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SELECCIÓN DE ESTUDIANTE (reemplaza prompt() con lista) -->
+<!-- ============================================================= -->
+<div id="seleccionar-estudiante-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2>Selecciona el estudiante</h2>
+        <p class="card-subtitle">
+          Hay varias sesiones activas para este equipo.
+        </p>
+      </div>
+      <button class="modal-close" onclick="cerrarSeleccionEstudiante()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="seleccionar-estudiante-lista" class="select-list"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="cerrarSeleccionEstudiante()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- RESOLVER PROBLEMA MODAL -->
+<!-- ============================================================= -->
+<div id="resolver-problema-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Resolver Problema</h2>
+      <button class="modal-close" onclick="closeModal('resolver-problema-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-message">Describe cómo se resolvió la falla del equipo <strong id="resolver-codigo-label"></strong>:</p>
+
+      <input type="hidden" id="input-resolver-codigo">
+      <input type="hidden" id="input-resolver-falla-id">
+
+      <div class="form-group">
+        <input type="text" id="input-resolver-detalle" class="input" placeholder="Ej. Se reemplazó el cable de poder..." autocomplete="off">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="closeModal('resolver-problema-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="confirmarResolucionProblema()">Confirmar resolución</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- ELIMINAR EQUIPO -->
+<!-- ============================================================= -->
+<div id="eliminar-equipo-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Eliminar equipo</h2>
+      <button class="modal-close" onclick="closeModal('eliminar-equipo-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-message">¿Estás seguro de que deseas eliminar el equipo <strong id="eliminar-codigo-label"></strong>? Esta acción lo dará de baja del inventario.</p>
+      <input type="hidden" id="input-eliminar-codigo">
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="closeModal('eliminar-equipo-modal')">Cancelar</button>
+      <button class="button button-danger-solid" onclick="confirmarEliminarEquipo()">Sí, eliminar</button>
     </div>
   </div>
 </div>

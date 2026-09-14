@@ -5,6 +5,8 @@ const STATUS_CLASSES = {
   "Baja": "status-review" 
 };
 
+let equipoDetalleActual = null;
+
 async function guardarEquipo() {
   const codigo = document.getElementById("input-equipo-codigo").value;
   const tipo = document.getElementById("input-equipo-tipo").value;
@@ -106,13 +108,12 @@ async function showEquipment(codigo) {
   try {
     const response = await fetch(`${API_URL}/equipos/${codigo}`);
     const data = await response.json();
-    console.log("DATOS DEL EQUIPO:", data);
-    console.log("QR:", data.qr_base64);
 
     if (!response.ok) {
       console.error("Error al obtener equipo:", data.detail);
       return;
     }
+    equipoDetalleActual = data;
 
     document.getElementById("detalle-codigo").textContent = data.codigo;
     document.getElementById("detalle-tipo").textContent = data.tipo;
@@ -137,23 +138,145 @@ async function showEquipment(codigo) {
         >
       `;
     } else {
-      qrContainer.innerHTML = `
-        <p class="card-subtitle">
-          Este equipo no tiene un código QR disponible.
-        </p>
-      `;
+      qrContainer.innerHTML = `<p class="card-subtitle">Este equipo no tiene un código QR disponible.</p>`;
     }
+
+    const contenedorFallas = document.getElementById("detalle-fallas");
+    if (data.fallas && data.fallas.length > 0) {
+      contenedorFallas.innerHTML = data.fallas.map(falla => `
+      <div style="margin-bottom: 8px; padding: 10px; background: var(--bg-secondary, #f8fafc); border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0);">
+      <div style="font-size: 14px; color: var(--text);"><strong>Falla:</strong> ${falla.descripcion || "Sin descripción"}</div>
+      <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Estado: ${falla.estado || "Pendiente"}</div>
+    </div>
+  `).join('');
+    } else {
+      contenedorFallas.innerHTML = `<p class="card-subtitle">No hay fallas registradas para este equipo.</p>`;
+    }
+
+    const contenedorPrestamo = document.getElementById("detalle-prestamo");
+    const prestamo = data.prestamo_activo;
+
+    if (prestamo) {
+      contenedorPrestamo.innerHTML = `
+        <div style="padding: 10px; background: var(--bg-secondary, #f8fafc); border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0);">
+          <div style="font-size: 14px; color: var(--text);"><strong>Estudiante:</strong> ${prestamo.estudiante_nombre || "Desconocido"}</div>
+          <div style="font-size: 14px; color: var(--text); margin-top: 4px;"><strong>Matrícula:</strong> ${prestamo.matricula || "N/A"}</div>
+          <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Prestado desde: ${prestamo.fecha_prestamo ? new Date(prestamo.fecha_prestamo).toLocaleString() : "N/A"}</div>
+        </div>
+      `;
+    } else {
+      contenedorPrestamo.innerHTML = `<p class="card-subtitle">El equipo se encuentra en el laboratorio (no está prestado).</p>`;
+    }
+
+    const modalFooter = document.querySelector("#detalle-equipo-modal .modal-footer");
+    
+    let footerHTML = `
+      <button class="button" style="margin-right: auto; background-color: var(--danger, #ef4444); color: white; border: none;" onclick="eliminarEquipo('${data.codigo}')">Eliminar equipo</button>
+      <button class="button button-secondary" onclick="closeModal('detalle-equipo-modal')">Cerrar</button>
+    `;
+    
+    if (data.estado === "En revisión") {
+      footerHTML += `<button class="button button-primary" onclick="resolverProblema('${data.codigo}')">Resolver problema</button>`;
+    }
+    modalFooter.innerHTML = footerHTML;
 
     openModal("detalle-equipo-modal");
 
   } catch (error) {
     console.error("Error obteniendo detalles del equipo:", error);
+    document.getElementById("detalle-qr-container").innerHTML = `<p class="card-subtitle">No se pudo cargar la información del equipo.</p>`;
+    document.getElementById("detalle-fallas").innerHTML = `<p class="card-subtitle">Error cargando fallas.</p>`;
+    document.getElementById("detalle-prestamo").innerHTML = `<p class="card-subtitle">Error cargando préstamo.</p>`;
+  }
+}
 
-    document.getElementById("detalle-qr-container").innerHTML = `
-      <p class="card-subtitle">
-        No se pudo cargar la información del equipo.
-      </p>
-    `;
+// ==========================================
+// SECCIÓN CORREGIDA: RESOLVER PROBLEMA
+// ==========================================
+
+function resolverProblema(codigo) {
+  // Buscamos la primera falla que no esté resuelta
+  const fallaPendiente = (equipoDetalleActual?.fallas || []).find(f => f.estado !== "Resuelta");
+
+  if (!fallaPendiente) {
+    alert("No se encontró una falla pendiente para este equipo.");
+    return;
+  }
+
+  // Llenamos los inputs ocultos del modal
+  document.getElementById("resolver-codigo-label").textContent = codigo;
+  document.getElementById("input-resolver-codigo").value = codigo;
+  document.getElementById("input-resolver-falla-id").value = fallaPendiente.id;
+  document.getElementById("input-resolver-detalle").value = "";
+
+  closeModal("detalle-equipo-modal");
+  openModal("resolver-problema-modal");
+
+  setTimeout(() => document.getElementById("input-resolver-detalle").focus(), 100);
+}
+
+async function confirmarResolucionProblema() {
+  const codigo = document.getElementById("input-resolver-codigo").value;
+  const fallaId = document.getElementById("input-resolver-falla-id").value;
+  const detalleResolucion = document.getElementById("input-resolver-detalle").value;
+
+  if (!detalleResolucion.trim()) {
+    alert("Por favor, ingresa los detalles de cómo se resolvió la falla.");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/fallas/${fallaId}/resolver`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ observacion_resolucion: detalleResolucion })
+    });
+
+    if (response.ok) {
+      closeModal("resolver-problema-modal");
+      alert(`El problema del equipo ${codigo} se ha marcado como resuelto.`);
+      cargarEquiposDesdeAPI();
+    } else {
+      const error = await response.json();
+      alert("No se pudo resolver el problema: " + (error.detail || "Error del servidor"));
+    }
+  } catch (error) {
+    console.error("Error al resolver el problema:", error);
+    alert("Ocurrió un error de conexión con el servidor.");
+  }
+}
+// ==========================================
+// ELIMINAR / DAR DE BAJA
+// ==========================================
+
+function eliminarEquipo(codigo) {
+  document.getElementById("eliminar-codigo-label").textContent = codigo;
+  document.getElementById("input-eliminar-codigo").value = codigo;
+  
+  closeModal("detalle-equipo-modal"); 
+  openModal("eliminar-equipo-modal");
+}
+
+async function confirmarEliminarEquipo() {
+  const codigo = document.getElementById("input-eliminar-codigo").value;
+  
+  try {
+    const response = await fetch(`${API_URL}/equipos/${codigo}/baja`, {
+      method: "PATCH", 
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (response.ok) {
+      closeModal("eliminar-equipo-modal");
+      cargarEquiposDesdeAPI(); 
+      setTimeout(() => alert(`El equipo ${codigo} ha sido dado de baja exitosamente.`), 150);
+    } else {
+      const error = await response.json();
+      alert("No se pudo eliminar el equipo: " + (error.detail || "Error del servidor"));
+    }
+  } catch (error) {
+    console.error("Error al eliminar equipo:", error);
+    alert("Ocurrió un error en la conexión con el servidor.");
   }
 }
 
