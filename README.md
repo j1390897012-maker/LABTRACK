@@ -37,13 +37,12 @@ Cadena de conexión: La aplicación construye la conexión a través de la varia
 ## 🏗️ Arquitectura en Diagrama de Flujo
 ```mermaid
 flowchart TD
-    %% Identificación Física
-    RFID[Credencial RFID] -->|Lectura| ESP_RFID[ESP32-S3]
-    QR[Código QR del Equipo] -->|Escaneo de Cámara| ESP_QR[ESP32-S3]
+    %% Identificación Física (Vía App Móvil)
+    RFID[Credencial RFID / NFC] -->|Lectura del Teléfono| App[App Móvil LABTRACK]
+    QR[Código QR del Equipo] -->|Cámara del Teléfono| App
     
     %% Comunicación
-    ESP_RFID -->|POST /api/identificaciones/scan| API[FastAPI Backend - labtrack-api]
-    ESP_QR -->|POST /api/identificaciones/scan| API
+    App -->|POST /api/identificaciones/scan| API[FastAPI Backend - labtrack-api]
     
     %% Lógica y Datos
     API <-->|SQLAlchemy 2.0 / Psycopg 3| DB[(PostgreSQL 16 - labtrack-db)]
