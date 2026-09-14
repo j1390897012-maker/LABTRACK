@@ -83,7 +83,19 @@ async function cargarEstudiantesDesdeAPI() {
     const tbody = document.getElementById("student-table");
     tbody.innerHTML = "";
 
-    estudiantes.forEach(est => {
+    // Consultamos en paralelo si cada estudiante tiene sesión activa
+    const estados = await Promise.all(
+      estudiantes.map(async (est) => {
+        try {
+          const r = await fetch(`${API_URL}/sesiones/activa?matricula=${encodeURIComponent(est.matricula)}`);
+          return r.ok;
+        } catch (e) {
+          return false;
+        }
+      })
+    );
+
+    estudiantes.forEach((est, i) => {
       const tr = document.createElement("tr");
       tr.dataset.student = `${est.nombre} ${est.matricula}`.toLowerCase();
 
@@ -92,6 +104,11 @@ async function cargarEstudiantesDesdeAPI() {
         : `<span class="rfid-badge rfid-missing" style="background: var(--warning-soft); color: var(--warning);">Sin RFID</span>`;
 
       const iniciales = est.nombre.substring(0, 2).toUpperCase();
+
+      const tieneSesionActiva = estados[i];
+      const sesionBadge = tieneSesionActiva
+        ? `<span class="status status-available"><span class="status-dot"></span>Activa</span>`
+        : `<span class="status" style="background: var(--bg-secondary, #f1f5f9); color: var(--muted, #64748b);"><span class="status-dot" style="background: var(--muted, #64748b);"></span>Inactiva</span>`;
 
       tr.innerHTML = `
         <td>
@@ -102,7 +119,7 @@ async function cargarEstudiantesDesdeAPI() {
         </td>
         <td class="code">${est.matricula}</td>
         <td>${rfidBadge}</td>
-        <td><span class="status status-available"><span class="status-dot"></span>Inactiva</span></td>
+        <td>${sesionBadge}</td>
         <td><button class="button button-secondary button-small" onclick="abrirDetalleEstudiante(${est.id})">Ver estudiante</button></td>
       `;
       tbody.appendChild(tr);
