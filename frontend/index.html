@@ -351,8 +351,8 @@
         <div class="card" id="rfid-flow-equipos" hidden style="margin-top: 20px;">
           <div class="card-header">
             <div>
-              <h2 class="card-title">Equipos de la operación</h2>
-              <p class="card-subtitle">Equipos detectados durante esta operación.</p>
+              <h2 class="card-title">Equipos prestados en esta operación</h2>
+              <p class="card-subtitle">Lista de lo que se va a prestar en esta sesión.</p>
             </div>
           </div>
           <div id="rfid-flow-equipo-list">
@@ -647,17 +647,23 @@
 </div>
 
 <!-- ============================================================= -->
-<!-- DEVOLUCIÓN DE EQUIPO (RFID/QR) -->
+<!-- DEVOLUCIÓN DE EQUIPO (RFID/QR/Manual) -->
 <!-- ============================================================= -->
 <div id="devolucion-modal" class="modal-backdrop">
   <div class="modal">
     <div class="modal-header">
       <h2>Recibir equipo</h2>
-      <button class="modal-close" onclick="closeModal('devolucion-modal')">&times;</button>
+      <button class="modal-close" onclick="cancelarDevolucion()">&times;</button>
     </div>
     <div class="modal-body">
       <p style="margin-bottom: 15px;">¿En qué estado se devuelve el equipo <strong id="devolucion-codigo-label"></strong>?</p>
       <input type="hidden" id="input-devolucion-codigo">
+
+      <div class="form-group" id="grupo-devolucion-accesorios" hidden>
+        <label>Accesorios a devolver</label>
+        <div id="devolucion-accesorios-lista" style="display: grid; gap: 10px;"></div>
+      </div>
+
       <div class="form-group">
         <label>Estado de entrega</label>
         <select class="select" id="input-devolucion-estado" onchange="toggleFallaDevolucion()">
@@ -665,17 +671,90 @@
           <option value="En revisión">Presenta fallas o faltantes (En revisión)</option>
         </select>
       </div>
+
       <div class="form-group" id="grupo-devolucion-falla" style="display: none;">
         <label>Descripción de la falla / incidencia</label>
         <input type="text" id="input-devolucion-falla" class="input" placeholder="Ej. Perilla rota o falta cable de poder...">
       </div>
+
+      <div id="devolucion-modal-resultado" class="operacion-resultado"></div>
     </div>
     <div class="modal-footer">
-      <button class="button button-secondary" onclick="closeModal('devolucion-modal')">Cancelar</button>
+      <button class="button button-secondary" onclick="cancelarDevolucion()">Cancelar</button>
       <button class="button button-primary" onclick="confirmarDevolucion()">Confirmar recepción</button>
     </div>
   </div>
 </div>
+
+
+
+
+
+
+
+
+
+
+<!-- ============================================================= -->
+<!-- CONFIRMACIÓN GENÉRICA (reemplaza confirm() nativo) -->
+<!-- ============================================================= -->
+<div id="confirm-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="confirm-modal-titulo">Confirmar acción</h2>
+      <button class="modal-close" onclick="responderConfirmacion(false)">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p
+        id="confirm-modal-mensaje"
+        style="white-space: pre-line; font-size: 14px; color: var(--text); margin: 0;"
+      ></p>
+    </div>
+    <div class="modal-footer">
+      <button
+        class="button button-secondary"
+        id="confirm-modal-cancelar"
+        onclick="responderConfirmacion(false)"
+      >
+        Cancelar
+      </button>
+      <button
+        class="button button-primary"
+        id="confirm-modal-aceptar"
+        onclick="responderConfirmacion(true)"
+      >
+        Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SELECCIÓN DE ESTUDIANTE (reemplaza prompt() con lista) -->
+<!-- ============================================================= -->
+<div id="seleccionar-estudiante-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2>Selecciona el estudiante</h2>
+        <p class="card-subtitle">
+          Hay varias sesiones activas para este equipo.
+        </p>
+      </div>
+      <button class="modal-close" onclick="cerrarSeleccionEstudiante()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div id="seleccionar-estudiante-lista" style="display: grid; gap: 8px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="cerrarSeleccionEstudiante()">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+
+
 
 <!-- ============================================================= -->
 <!-- SCRIPTS -->

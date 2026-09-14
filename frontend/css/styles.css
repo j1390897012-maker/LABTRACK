@@ -1004,3 +1004,80 @@ tbody tr:hover {
     width: 100%;
   }
 }
+
+
+/* =========================================================
+   SELECCIÓN DE ESTUDIANTE
+   ========================================================= */
+
+.student-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  text-align: left;
+  font-size: 13px;
+}
+
+.student-option:hover {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.student-option .code {
+  color: var(--muted);
+}
+
+/* =========================================================
+   ACCESORIOS EN DEVOLUCIÓN
+   ========================================================= */
+
+.accesorio-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+}
+
+.accesorio-row .accesorio-nombre {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.accesorio-row .accesorio-meta {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.accesorio-row input[type="number"] {
+  width: 70px;
+  text-align: center;
+}
+
+/* =========================================================
+   LISTA DE EQUIPOS DE LA OPERACIÓN
+   ========================================================= */
+
+.equipo-operacion-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  margin-bottom: 10px;
+}
+
+.equipo-operacion-row:last-child {
+  margin-bottom: 0;
+}
