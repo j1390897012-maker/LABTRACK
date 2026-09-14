@@ -537,9 +537,9 @@ async function manejarRespuestaRFID(valor, data) {
     );
 
     if (!confirmar) {
-      mostrarResultadoRFID(
-        `Tarjeta ${valor} no registrada. No se realizó el enrolamiento.`
-      );
+      //mostrarResultadoRFID(
+      //  `Tarjeta ${valor} no registrada. No se realizó el enrolamiento.`
+      //);
       return;
     }
 
@@ -586,11 +586,12 @@ async function manejarRespuestaRFID(valor, data) {
   if (botonTerminar) {
     botonTerminar.style.display = "block";
   }
-
-  mostrarResultadoRFID(
-    `${data.nombre} (${data.matricula}) — ` +
-    `${data.mensaje || "Estudiante identificado correctamente."}`
-  );
+// Ya no mostramos texto de depuración; la tarjeta de estudiante
+// identificado (rfid-flow-estudiante) ya cubre esta información.
+// mostrarResultadoRFID(
+//   `${data.nombre} (${data.matricula}) — ` +
+//   `${data.mensaje || "Estudiante identificado correctamente."}`
+//  );
 }
 
 // ============================================================
