@@ -70,6 +70,16 @@
       color: var(--primary, #3b82f6);
       border-color: var(--primary-border, #bfdbfe);
     }
+    /* Ajuste para que la caja de detalles no tape los botones y permita scroll interno */
+    .modal-large {
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .modal-large .modal-body {
+      overflow-y: auto;
+      flex: 1;
+    }
   </style>
 </head>
 
@@ -374,7 +384,7 @@
             <h1>Estudiantes</h1>
             <p>Registra estudiantes y administra su identificación RFID.</p>
           </div>
-          <button class="button button-primary" onclick="openModal('student-modal')">
+          <button class="button button-primary" onclick="abrirModalNuevoEstudiante()">
             + Registrar estudiante
           </button>
         </div>
@@ -588,6 +598,8 @@
     </div>
     <div class="modal-footer">
       <button class="button button-secondary" onclick="closeModal('detalle-estudiante-modal')">Cerrar</button>
+      <button class="button button-danger" onclick="eliminarEstudianteDesdeDetalle()">Eliminar</button>
+      <button class="button button-primary" onclick="abrirModalEditarEstudiante()">Editar</button>
     </div>
   </div>
 </div>
@@ -754,7 +766,47 @@
   </div>
 </div>
 
+<!-- ============================================================= -->
+<!-- RESOLVER PROBLEMA MODAL -->
+<!-- ============================================================= -->
+<div id="resolver-problema-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Resolver Problema</h2>
+      <button class="modal-close" onclick="closeModal('resolver-problema-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 15px;">Describe cómo se resolvió la falla del equipo <strong id="resolver-codigo-label"></strong>:</p>
+      
+      <input type="hidden" id="input-resolver-codigo">
+      
+      <div class="form-group">
+        <input type="text" id="input-resolver-detalle" class="input" placeholder="Ej. Se reemplazó el cable de poder..." autocomplete="off">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="closeModal('resolver-problema-modal')">Cancelar</button>
+      <button class="button button-primary" onclick="confirmarResolucionProblema()">Confirmar resolución</button>
+    </div>
+  </div>
+</div>
 
+<div id="eliminar-equipo-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Eliminar equipo</h2>
+      <button class="modal-close" onclick="closeModal('eliminar-equipo-modal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-bottom: 15px;">¿Estás seguro de que deseas eliminar el equipo <strong id="eliminar-codigo-label"></strong>? Esta acción lo dará de baja del inventario.</p>
+      <input type="hidden" id="input-eliminar-codigo">
+    </div>
+    <div class="modal-footer">
+      <button class="button button-secondary" onclick="closeModal('eliminar-equipo-modal')">Cancelar</button>
+      <button class="button" style="background-color: var(--danger, #ef4444); color: white; border: none;" onclick="confirmarEliminarEquipo()">Sí, eliminar</button>
+    </div>
+  </div>
+</div>
 
 <!-- ============================================================= -->
 <!-- SCRIPTS -->

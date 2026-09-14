@@ -224,7 +224,6 @@ async function devolverEquipoManual() {
     resultado.innerHTML = "";
     document.getElementById("manual-devolucion-codigo").value = "";
 
-    // El resto (accesorios, estado, falla) se completa dentro del modal.
     abrirModalDevolucion(respuesta, "manual");
   } catch (error) {
     resultado.innerHTML = `
@@ -363,6 +362,7 @@ async function completarDevolucion(datosDevolucion, estado, descripcionFalla, ac
   }
 
   await peticionAPI("/devoluciones/accesorios", "POST", {
+    sesion_id: sesionEquipoId, // O sesion_equipo_id según tu API
     sesion_equipo_id: sesionEquipoId,
     accesorios: accesoriosDevueltos,
   });
@@ -672,130 +672,99 @@ function mostrarResultadoRFID(texto) {
 // ============================================================
 
 async function manejarRespuestaQR(data) {
+  const candidatos = data.estudiantes || (data.estudiante ? [data.estudiante] : []);
+
+  // ----------------------------------------------------------
+  // NO HAY SESIÓN EN EL FRONTEND, PERO EL EQUIPO SE PUEDE PRESTAR
+  // ----------------------------------------------------------
+  if (!sesionActual && (data.accion === "confirmar_prestamo" || data.accion === "seleccionar_estudiante")) {
+    if (candidatos.length === 0) {
+      mostrarResultadoRFID(
+        "Se detectó un QR de un equipo libre, pero primero debes identificar al estudiante mediante RFID o tener una sesión activa."
+      );
+      return;
+    }
+
+    if (candidatos.length === 1) {
+      await confirmarAsignacionAEstudiante(candidatos[0], data);
+    } else {
+      const elegido = await mostrarSeleccionEstudiante(candidatos);
+
+      if (!elegido) {
+        mostrarResultadoRFID("No se seleccionó ningún estudiante. No se registró el préstamo.");
+        return;
+      }
+
+      await confirmarAsignacionAEstudiante(elegido, data);
+    }
+
+    return;
+  }
+
+  // ----------------------------------------------------------
+  // EQUIPO EN REVISIÓN
+  // ----------------------------------------------------------
+  if (data.accion === "revisar_fallas") {
+    const fallas = (data.fallas || []).map((f) => f.descripcion).join("; ");
+    agregarEquipoOperacion({
+      codigo: data.codigo,
+      tipo: data.tipo,
+      estado: "En revisión",
+      accion: "revisar_fallas",
+    });
+
+    mostrarResultadoRFID(`${data.codigo} está EN REVISIÓN. Fallas registradas: ${fallas || "sin descripción"}`);
+    actualizarEstadoRFID("Equipo en revisión", "El encargado debe decidir si desea prestar el equipo.");
+    return;
+  }
+
+  // ----------------------------------------------------------
+  // DEVOLUCIÓN
+  // ----------------------------------------------------------
   if (data.accion === "iniciar_devolucion") {
     await manejarDevolucionQR(data);
     return;
   }
 
-  if (!sesionActual || !inicioOperacionRFID) {
-    return;
-  }
+  // ----------------------------------------------------------
+  // CONFIRMAR PRÉSTAMO (con sesión ya activa en el frontend)
+  // ----------------------------------------------------------
+  if (data.accion === "confirmar_prestamo") {
+    const estudiantes = data.estudiantes || [];
 
-  // ==========================================================
-  // EQUIPO EN REVISIÓN
-  // ==========================================================
-
-  if (data.accion === "revisar_fallas") {
-    const fallas = (data.fallas || [])
-      .map((f) => f.descripcion)
-      .join("; ");
+    const esSesionActual = sesionActual && (
+      estudiantes.some((e) => e.matricula === sesionActual.matricula) ||
+      (data.estudiante && data.estudiante.matricula === sesionActual.matricula)
+    );
 
     agregarEquipoOperacion({
       codigo: data.codigo,
       tipo: data.tipo,
-      estado: "En revisión",
+      estado: data.estado || "Disponible",
       equipo_id: data.equipo_id,
-      accion: "revisar_fallas",
+      accion: "confirmar_prestamo",
     });
 
-    mostrarResultadoRFID(
-      `${data.codigo} está EN REVISIÓN.\n\n` +
-      `Fallas registradas: ${fallas || "sin descripción"}`
-    );
-
-    actualizarEstadoRFID(
-      "Equipo en revisión",
-      "El encargado debe decidir si desea prestar el equipo."
-    );
-
-    const prestar = await mostrarConfirmacion(
-      `El equipo ${data.codigo} está EN REVISIÓN.\n\n` +
-      `Fallas registradas:\n${fallas || "Sin descripción registrada."}\n\n` +
-      `¿Deseas prestar el equipo de todos modos?`,
-      { titulo: "Equipo en revisión", textoAceptar: "Prestar de todos modos", peligro: true }
-    );
-
-    if (!prestar) {
-      mostrarResultadoRFID(
-        `${data.codigo}: no se realizó el préstamo. El equipo permanece en revisión.`
-      );
-
-      actualizarEstadoRFID(
-        "Préstamo cancelado",
-        "El equipo permanece en revisión."
-      );
-
-      return;
-    }
-
-    if (!sesionActual) {
-      mostrarResultadoRFID(
-        "No existe una sesión activa para realizar el préstamo."
-      );
-      return;
-    }
-
-    await registrarPrestamo(sesionActual.sesion_id, data);
-    return;
-  }
-
-  // ==========================================================
-  // CONFIRMAR PRÉSTAMO
-  // ==========================================================
-
-  if (data.accion === "confirmar_prestamo") {
-    const estudiantes = data.estudiantes || [];
-
-    const esSesionActual =
-      sesionActual &&
-      estudiantes.some(
-        (e) => e.matricula === sesionActual.matricula
-      );
-
     if (esSesionActual) {
-      const confirmar = await mostrarConfirmacion(
-        `El equipo ${data.codigo} está disponible.\n\n` +
-        `¿Deseas prestar este equipo a ${sesionActual.nombre} (${sesionActual.matricula})?`,
-        { titulo: "Confirmar préstamo", textoAceptar: "Prestar equipo" }
-      );
-
-      if (!confirmar) {
-        mostrarResultadoRFID(
-          `Préstamo cancelado. El equipo ${data.codigo} permanece disponible.`
-        );
-
-        actualizarEstadoRFID(
-          "Préstamo cancelado",
-          "El equipo permanece disponible."
-        );
-
-        return;
-      }
-
       await registrarPrestamo(sesionActual.sesion_id, data);
       return;
     }
 
-    mostrarResultadoRFID(
-      `${data.codigo}: ${data.mensaje || "Equipo listo para préstamo."}`
-    );
-
+    mostrarResultadoRFID(`${data.codigo}: ${data.mensaje || "Equipo listo para préstamo."}`);
     return;
   }
 
-  // ==========================================================
-  // SELECCIONAR ESTUDIANTE
-  // ==========================================================
-
+  // ----------------------------------------------------------
+  // SELECCIONAR ESTUDIANTE (con sesión ya activa en el frontend)
+  // ----------------------------------------------------------
   if (data.accion === "seleccionar_estudiante") {
     await seleccionarEstudianteYPrestar(data);
     return;
   }
 
-  // ==========================================================
+  // ----------------------------------------------------------
   // RESPUESTA GENÉRICA
-  // ==========================================================
-
+  // ----------------------------------------------------------
   agregarEquipoOperacion({
     codigo: data.codigo,
     tipo: data.tipo,
@@ -804,9 +773,77 @@ async function manejarRespuestaQR(data) {
     accion: data.accion,
   });
 
-  mostrarResultadoRFID(
-    `${data.codigo || "Equipo"}: ${data.mensaje || "Operación procesada."}`
+  mostrarResultadoRFID(`${data.codigo || "Equipo"}: ${data.mensaje || "Operación procesada."}`);
+}
+
+// ============================================================
+// RECONECTAR SESIÓN EXISTENTE Y CONFIRMAR ASIGNACIÓN
+// ============================================================
+
+async function confirmarAsignacionAEstudiante(estudiante, dataEquipo) {
+  let sesionId = estudiante.sesion_id || dataEquipo.sesion_id;
+  let equiposActuales = [];
+
+  try {
+    const sesionDetalle = await peticionAPI(
+      `/sesiones/activa?matricula=${encodeURIComponent(estudiante.matricula)}`
+    );
+    sesionId = sesionDetalle.sesion_id || sesionId;
+    equiposActuales = sesionDetalle.equipos || [];
+  } catch (error) {
+    // Si falla la consulta, seguimos sin la lista previa
+  }
+
+  const listaEquipos = equiposActuales.length
+    ? equiposActuales.map((e) => `• ${e.codigo} (${e.tipo || "—"})`).join("\n")
+    : "Sin equipos prestados por ahora.";
+
+  const confirmar = await mostrarConfirmacion(
+    `Sesión activa de ${estudiante.nombre} (${estudiante.matricula})\n\n` +
+    `Equipos actuales en su sesión:\n${listaEquipos}\n\n` +
+    `¿Deseas agregar el equipo ${dataEquipo.codigo} a esta sesión?`,
+    { titulo: "Asignar equipo", textoAceptar: "Sí, asignar" }
   );
+
+  if (!confirmar) {
+    mostrarResultadoRFID(`Operación cancelada para el equipo ${dataEquipo.codigo}.`);
+    return;
+  }
+
+  sesionActual = {
+    sesion_id: sesionId,
+    matricula: estudiante.matricula,
+    nombre: estudiante.nombre,
+  };
+
+  equiposOperacion = [];
+  inicioOperacionRFID = new Date().toISOString();
+
+  abrirVistaPrestamoRFID();
+  mostrarEstudianteRFID({
+    nombre: sesionActual.nombre,
+    matricula: sesionActual.matricula,
+    sesion_id: sesionActual.sesion_id,
+  });
+
+  equiposActuales.forEach((e) =>
+    agregarEquipoOperacion({
+      codigo: e.codigo,
+      tipo: e.tipo,
+      estado: "Prestado",
+      accion: "ya_en_sesion",
+    })
+  );
+
+  const btnTerminar = document.getElementById("btn-terminar-operacion");
+  if (btnTerminar) btnTerminar.style.display = "block";
+
+  const esperandoQR = document.getElementById("rfid-flow-esperando-qr");
+  if (esperandoQR) esperandoQR.hidden = false;
+
+  actualizarEstadoRFID("Sesión recuperada", "Procesando préstamo...");
+
+  await registrarPrestamo(sesionActual.sesion_id, dataEquipo);
 }
 
 // ============================================================
@@ -814,9 +851,6 @@ async function manejarRespuestaQR(data) {
 // ============================================================
 
 async function manejarDevolucionQR(data) {
-  // Si el equipo ya fue prestado como parte de ESTA misma operación
-  // (lo acabas de prestar tú, en esta sesión), no se pregunta por su
-  // devolución todavía — solo cuando termines la operación actual.
   const yaPrestadoEnEstaOperacion =
     sesionActual &&
     equiposOperacion.some(
@@ -848,7 +882,7 @@ async function manejarDevolucionQR(data) {
       );
       sesionId = sesion.sesion_id;
     } catch (error) {
-      // Si no se puede resolver la sesión, igual mostramos al estudiante.
+      // Ignorar error de sesión
     }
 
     mostrarEstudianteRFID({
@@ -1243,27 +1277,17 @@ async function revisarUltimoScan() {
     }
 
     if (evento.tipo === "qr") {
-      if (evento.datos && evento.datos.accion === "iniciar_devolucion") {
-        await manejarRespuestaQR(evento.datos);
-        return;
-      }
-
       if (!inicioOperacionRFID) {
+        await manejarRespuestaQR(evento.datos);
         return;
       }
 
       const timestampQR = new Date(evento.timestamp).getTime();
       const timestampRFID = new Date(inicioOperacionRFID).getTime();
 
-      if (Number.isNaN(timestampQR) || Number.isNaN(timestampRFID)) {
-        return;
+      if (!Number.isNaN(timestampQR) && !Number.isNaN(timestampRFID) && timestampQR > timestampRFID) {
+        await manejarRespuestaQR(evento.datos);
       }
-
-      if (timestampQR <= timestampRFID) {
-        return;
-      }
-
-      await manejarRespuestaQR(evento.datos);
     }
   } catch (error) {
     // El polling debe ser silencioso.
