@@ -165,12 +165,9 @@ async function prestarEquipoManual() {
   }
 
   try {
-    const sesion = await peticionAPI(`/sesiones/activa?matricula=${encodeURIComponent(matricula)}`);
-    const equipo = await peticionAPI(`/equipos/${encodeURIComponent(codigo)}`);
-
-    const respuesta = await peticionAPI("/equipos/prestar", "POST", {
-      sesion_id: sesion.sesion_id,
-      equipo_id: equipo.id,
+    const respuesta = await peticionAPI("/sesiones/prestamo-manual", "POST", {
+      matricula: matricula,
+      codigo_equipo: codigo,
       accesorios: [],
     });
 
@@ -187,6 +184,10 @@ async function prestarEquipoManual() {
     document.getElementById("manual-prestamo-codigo").value = "";
 
     await cargarEquiposDesdeAPI();
+
+    if (typeof cargarEstudiantesDesdeAPI === "function") {
+      cargarEstudiantesDesdeAPI();
+    }
   } catch (error) {
     resultado.innerHTML = `
       <div class="card stat-card" style="border-left: 4px solid var(--danger);">

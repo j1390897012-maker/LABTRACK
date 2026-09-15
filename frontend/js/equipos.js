@@ -194,20 +194,45 @@ async function showEquipment(codigo) {
       contenedorFallas.innerHTML = `<p class="card-subtitle">No hay fallas registradas para este equipo.</p>`;
     }
 
-    const contenedorPrestamo = document.getElementById("detalle-prestamo");
-    const prestamo = data.prestamo_activo;
+const contenedorPrestamo = document.getElementById("detalle-prestamo");
 
-    if (prestamo) {
-      contenedorPrestamo.innerHTML = `
-        <div style="padding: 10px; background: var(--bg-secondary, #f8fafc); border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0);">
-          <div style="font-size: 14px; color: var(--text);"><strong>Estudiante:</strong> ${prestamo.estudiante_nombre || "Desconocido"}</div>
-          <div style="font-size: 14px; color: var(--text); margin-top: 4px;"><strong>Matrícula:</strong> ${prestamo.matricula || "N/A"}</div>
-          <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Prestado desde: ${prestamo.fecha_prestamo ? new Date(prestamo.fecha_prestamo).toLocaleString() : "N/A"}</div>
-        </div>
-      `;
-    } else {
-      contenedorPrestamo.innerHTML = `<p class="card-subtitle">El equipo se encuentra en el laboratorio (no está prestado).</p>`;
-    }
+const prestamo =
+  data.prestamo_activo ||
+  data.prestamo_actual ||
+  data.prestamo ||
+  null;
+
+if (prestamo) {
+  const estudiante = prestamo.estudiante || null;
+
+  const nombreEstudiante =
+    (estudiante && estudiante.nombre) ||
+    prestamo.estudiante_nombre ||
+    prestamo.nombre ||
+    "Desconocido";
+
+  const matriculaEstudiante =
+    (estudiante && estudiante.matricula) ||
+    prestamo.matricula ||
+    "N/A";
+
+  const fechaPrestamo = prestamo.fecha_prestamo || null;
+
+  contenedorPrestamo.innerHTML = `
+    <div style="padding: 10px; background: var(--bg-secondary, #f8fafc); border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0);">
+      <div style="font-size: 14px; color: var(--text);"><strong>Estudiante:</strong> ${nombreEstudiante}</div>
+      <div style="font-size: 14px; color: var(--text); margin-top: 4px;"><strong>Matrícula:</strong> ${matriculaEstudiante}</div>
+      <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Prestado desde: ${fechaPrestamo ? new Date(fechaPrestamo).toLocaleString() : "N/A"}</div>
+    </div>
+  `;
+} else if (data.estado === "Prestado") {
+  // El equipo figura como prestado pero no vino información del préstamo:
+  // ayuda a diagnosticar en consola sin romper la interfaz.
+  console.warn("Equipo marcado como 'Prestado' pero sin datos de préstamo en la respuesta:", data);
+  contenedorPrestamo.innerHTML = `<p class="card-subtitle">El equipo está prestado, pero no se recibió la información del préstamo desde el servidor.</p>`;
+} else {
+  contenedorPrestamo.innerHTML = `<p class="card-subtitle">El equipo se encuentra en el laboratorio (no está prestado).</p>`;
+}
 
     const modalFooter = document.querySelector("#detalle-equipo-modal .modal-footer");
     

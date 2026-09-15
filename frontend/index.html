@@ -166,55 +166,72 @@
       <!-- 02 OPERACIÓN MANUAL -->
       <!-- ===================================================== -->
 
-      <section class="view" id="view-operacion">
-        <div class="page-header">
-          <div>
-            <h1>Operación</h1>
-            <p>Realiza préstamos y devoluciones manualmente.</p>
-          </div>
-        </div>
+<section class="view" id="view-operacion">
+  <div class="page-header">
+    <div>
+      <h1>Operación</h1>
+      <p>Realiza préstamos y devoluciones manualmente.</p>
+    </div>
+  </div>
 
-        <!-- PRÉSTAMO MANUAL -->
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Préstamo manual</h2>
-              <p class="card-subtitle">Registra un préstamo seleccionando la sesión y el equipo.</p>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="manual-prestamo-matricula">Matrícula del estudiante</label>
-            <input id="manual-prestamo-matricula" class="input" type="text" placeholder="Ej. S23013959" autocomplete="off">
-          </div>
-          <div class="form-group">
-            <label for="manual-prestamo-codigo">Código del equipo</label>
-            <input id="manual-prestamo-codigo" class="input" type="text" placeholder="Ej. OSC-0307" autocomplete="off">
-          </div>
-          <div id="manual-prestamo-resultado" class="operacion-resultado"></div>
-          <div class="modal-footer">
-            <button class="button button-primary" onclick="prestarEquipoManual()">Registrar préstamo</button>
-          </div>
-        </div>
+  <div class="operacion-grid-manual">
 
-        <!-- DEVOLUCIÓN MANUAL -->
-        <div class="card card-spaced">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Devolución manual</h2>
-              <p class="card-subtitle">Inicia la devolución indicando el código del equipo.</p>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="manual-devolucion-codigo">Código del equipo</label>
-            <input id="manual-devolucion-codigo" class="input" type="text" placeholder="Ej. OSC-0307" autocomplete="off">
-          </div>
-          <div id="manual-devolucion-resultado" class="operacion-resultado"></div>
-          <div class="modal-footer">
-            <button class="button button-primary" onclick="devolverEquipoManual()">Iniciar devolución</button>
-          </div>
+    <!-- PRÉSTAMO MANUAL -->
+    <div class="card operacion-card-manual">
+      <div class="operacion-card-header">
+        <div class="operacion-card-icon operacion-card-icon-prestamo">↦</div>
+        <div>
+          <h2 class="card-title">Préstamo manual</h2>
+          <p class="card-subtitle">Registra un préstamo con matrícula y código de equipo.</p>
         </div>
-      </section>
+      </div>
 
+      <div class="operacion-card-body">
+        <div class="form-group">
+          <label for="manual-prestamo-matricula">Matrícula del estudiante</label>
+          <input id="manual-prestamo-matricula" class="input" type="text" placeholder="Ej. S23013959" autocomplete="off">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="manual-prestamo-codigo">Código del equipo</label>
+          <input id="manual-prestamo-codigo" class="input" type="text" placeholder="Ej. OSC-0307" autocomplete="off">
+        </div>
+        <div id="manual-prestamo-resultado" class="operacion-resultado"></div>
+      </div>
+
+      <div class="modal-footer operacion-card-footer">
+        <button class="button button-primary" onclick="prestarEquipoManual()">
+          Registrar préstamo
+        </button>
+      </div>
+    </div>
+
+    <!-- DEVOLUCIÓN MANUAL -->
+    <div class="card operacion-card-manual">
+      <div class="operacion-card-header">
+        <div class="operacion-card-icon operacion-card-icon-devolucion">↤</div>
+        <div>
+          <h2 class="card-title">Devolución manual</h2>
+          <p class="card-subtitle">Inicia la devolución indicando el código del equipo.</p>
+        </div>
+      </div>
+
+      <div class="operacion-card-body">
+        <div class="form-group" style="margin-bottom: 0;">
+          <label for="manual-devolucion-codigo">Código del equipo</label>
+          <input id="manual-devolucion-codigo" class="input" type="text" placeholder="Ej. OSC-0307" autocomplete="off">
+        </div>
+        <div id="manual-devolucion-resultado" class="operacion-resultado"></div>
+      </div>
+
+      <div class="modal-footer operacion-card-footer">
+        <button class="button button-primary" onclick="devolverEquipoManual()">
+          Iniciar devolución
+        </button>
+      </div>
+    </div>
+
+  </div>
+</section>
       <!-- ===================================================== -->
       <!-- 03 SESIÓN DE PRÉSTAMO -->
       <!-- ===================================================== -->
