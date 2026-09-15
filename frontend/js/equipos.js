@@ -7,6 +7,38 @@ const STATUS_CLASSES = {
 
 let equipoDetalleActual = null;
 
+// ==========================================
+// NOTIFICACIONES GLOBALES (TOAST)
+// ==========================================
+function mostrarMensajeEquipos(mensaje, tipo = "success") {
+  let toastContainer = document.getElementById("toast-container");
+  
+  if (!toastContainer) {
+    toastContainer = document.createElement("div");
+    toastContainer.id = "toast-container";
+    document.body.appendChild(toastContainer);
+  }
+
+  const alertaContenedor = document.createElement("div");
+  alertaContenedor.className = "ui-alert-container";
+  alertaContenedor.innerHTML = `
+    <div class="ui-alert ui-alert-${tipo}">
+      ${mensaje}
+    </div>
+  `;
+
+  toastContainer.appendChild(alertaContenedor);
+
+  setTimeout(() => {
+    if (alertaContenedor.parentNode) {
+      alertaContenedor.remove();
+    }
+  }, 4000);
+}
+
+// ==========================================
+// REGISTRO DE EQUIPOS
+// ==========================================
 async function guardarEquipo() {
   const codigo = document.getElementById("input-equipo-codigo").value;
   const tipo = document.getElementById("input-equipo-tipo").value;
@@ -25,15 +57,22 @@ async function guardarEquipo() {
       document.getElementById("input-equipo-codigo").value = "";
       document.getElementById("input-equipo-tipo").value = "";
       cargarEquiposDesdeAPI();
+      mostrarMensajeEquipos(`El equipo ${codigo} fue registrado exitosamente.`, "success");
     } else {
       const error = await response.json();
-      alert("Error: " + error.detail);
+      closeModal("equipo-modal");
+      mostrarMensajeEquipos("Error: " + (error.detail || "No se pudo registrar el equipo"), "danger");
     }
   } catch (e) {
     console.error("Error al guardar equipo:", e);
+    closeModal("equipo-modal");
+    mostrarMensajeEquipos("Ocurrió un error en la conexión con el servidor.", "danger");
   }
 }
 
+// ==========================================
+// CARGA Y RENDERIZADO DE INVENTARIO
+// ==========================================
 async function cargarEquiposDesdeAPI() {
   try {
     const response = await fetch(`${API_URL}/equipos`);
@@ -84,7 +123,6 @@ async function cargarEquiposDesdeAPI() {
       statValues[2].textContent = prestados;
       statValues[3].textContent = revision;
     }
-
   } catch (error) {
     console.error("Error cargando el inventario:", error);
   }
@@ -104,6 +142,9 @@ function filterEquipment() {
   });
 }
 
+// ==========================================
+// DETALLES DEL EQUIPO
+// ==========================================
 async function showEquipment(codigo) {
   try {
     const response = await fetch(`${API_URL}/equipos/${codigo}`);
@@ -191,11 +232,9 @@ async function showEquipment(codigo) {
 }
 
 // ==========================================
-// SECCIÓN CORREGIDA: RESOLVER PROBLEMA
+// RESOLUCIÓN DE FALLAS
 // ==========================================
-
 function resolverProblema(codigo) {
-  // Buscamos la primera falla que no esté resuelta
   const fallaPendiente = (equipoDetalleActual?.fallas || []).find(f => f.estado !== "Resuelta");
 
   if (!fallaPendiente) {
@@ -203,7 +242,6 @@ function resolverProblema(codigo) {
     return;
   }
 
-  // Llenamos los inputs ocultos del modal
   document.getElementById("resolver-codigo-label").textContent = codigo;
   document.getElementById("input-resolver-codigo").value = codigo;
   document.getElementById("input-resolver-falla-id").value = fallaPendiente.id;
@@ -234,21 +272,23 @@ async function confirmarResolucionProblema() {
 
     if (response.ok) {
       closeModal("resolver-problema-modal");
-      alert(`El problema del equipo ${codigo} se ha marcado como resuelto.`);
+      mostrarMensajeEquipos(`El problema del equipo ${codigo} se ha marcado como resuelto.`, "success");
       cargarEquiposDesdeAPI();
     } else {
+      closeModal("resolver-problema-modal");
       const error = await response.json();
-      alert("No se pudo resolver el problema: " + (error.detail || "Error del servidor"));
+      mostrarMensajeEquipos("No se pudo resolver el problema: " + (error.detail || "Error del servidor"), "danger");
     }
   } catch (error) {
     console.error("Error al resolver el problema:", error);
-    alert("Ocurrió un error de conexión con el servidor.");
+    closeModal("resolver-problema-modal");
+    mostrarMensajeEquipos("Ocurrió un error de conexión con el servidor.", "danger");
   }
 }
-// ==========================================
-// ELIMINAR / DAR DE BAJA
-// ==========================================
 
+// ==========================================
+// BAJA DE EQUIPOS
+// ==========================================
 function eliminarEquipo(codigo) {
   document.getElementById("eliminar-codigo-label").textContent = codigo;
   document.getElementById("input-eliminar-codigo").value = codigo;
@@ -269,17 +309,22 @@ async function confirmarEliminarEquipo() {
     if (response.ok) {
       closeModal("eliminar-equipo-modal");
       cargarEquiposDesdeAPI(); 
-      setTimeout(() => alert(`El equipo ${codigo} ha sido dado de baja exitosamente.`), 150);
+      mostrarMensajeEquipos(`El equipo ${codigo} ha sido dado de baja exitosamente.`, "success");
     } else {
+      closeModal("eliminar-equipo-modal");
       const error = await response.json();
-      alert("No se pudo eliminar el equipo: " + (error.detail || "Error del servidor"));
+      mostrarMensajeEquipos("No se pudo eliminar el equipo: " + (error.detail || "Error del servidor"), "danger");
     }
   } catch (error) {
     console.error("Error al eliminar equipo:", error);
-    alert("Ocurrió un error en la conexión con el servidor.");
+    closeModal("eliminar-equipo-modal");
+    mostrarMensajeEquipos("Ocurrió un error en la conexión con el servidor.", "danger");
   }
 }
 
+// ==========================================
+// INICIALIZACIÓN
+// ==========================================
 document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("equipment-table")) {
     cargarEquiposDesdeAPI();

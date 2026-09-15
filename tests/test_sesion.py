@@ -58,22 +58,39 @@ def test_cerrar_sesion_con_equipos_exitoso(
     assert sesion.estado == "Cerrada"
 
 
-def test_cerrar_sesion_vacia_falla(client: TestClient, db_session: Session) -> None:
+def test_cerrar_sesion_vacia_cancela(
+    client: TestClient,
+    db_session: Session,
+) -> None:
     # 1. Preparar una sesión sin equipos asignados
     estudiante = Estudiante(nombre="Alex", matricula="S98765")
     db_session.add(estudiante)
     db_session.commit()
 
-    sesion = Sesion(estudiante_id=estudiante.id, estado="Activa")
+    sesion = Sesion(
+        estudiante_id=estudiante.id,
+        estado="Activa",
+    )
     db_session.add(sesion)
     db_session.commit()
 
     # 2. Ejecutar la acción
     response = client.post(f"/api/sesiones/{sesion.id}/cerrar")
 
-    # 3. Validar que la regla de negocio bloquea el cierre
-    assert response.status_code == 400
-    assert response.json()["detail"] == "La sesión está vacía"
+    # 3. Validar que una sesión vacía se cancela correctamente
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["sesion_id"] == sesion.id
+    assert data["estado"] == "Cancelada"
+    assert data["equipos_prestados"] == 0
+
+    # 4. Verificar el estado real en BD
+    db_session.refresh(sesion)
+
+    assert sesion.estado == "Cancelada"
+    assert sesion.fecha_cierre is not None
 
 def test_cerrar_sesion_inexistente(client: TestClient) -> None:
     # Ejecutar la acción con un ID que no existe en la BD

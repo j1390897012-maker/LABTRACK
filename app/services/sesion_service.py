@@ -31,9 +31,31 @@ class SesionService:
         sesion = db.get(Sesion, sesion_id)
         if not sesion:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, 
-                detail="Sesión no encontrada"
-            )
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sesión no encontrada"
+        )
+
+        equipos = self.repo_sesion.get_equipos_by_sesion(db, sesion_id)
+
+        if not equipos:
+        # No hubo ningún préstamo en esta sesión: se cancela en vez de
+        # "cerrar" (evita sesiones vacías atascadas para siempre).
+            self.repo_sesion.cancelar_sesion(db, sesion)
+            return CierreSesionResponse(
+            sesion_id=sesion.id,
+            estado=sesion.estado,
+            mensaje="Sesión sin equipos prestados. Se canceló automáticamente.",
+            equipos_prestados=0
+        )
+
+        self.repo_sesion.cerrar_sesion(db, sesion)
+
+        return CierreSesionResponse(
+        sesion_id=sesion.id,
+        estado=sesion.estado,
+        mensaje="Entrega cerrada exitosamente. Equipos marcados como prestados.",
+        equipos_prestados=len(equipos)
+    )
 
         equipos = self.repo_sesion.get_equipos_by_sesion(db, sesion_id)
         

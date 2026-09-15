@@ -1442,3 +1442,51 @@ tbody tr:hover {
   0%, 100% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 6px var(--primary-soft); }
   50% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 10px var(--primary-ring); }
 }
+
+/* =========================================================
+   TOAST NOTIFICATIONS (Inferior Derecha)
+   ========================================================= */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none; /* Permite hacer clic "a través" si no hay alertas */
+}
+
+.ui-alert-container {
+  pointer-events: auto; /* Reactiva los clics para la alerta */
+  /* Entra desde la derecha y se desvanece al final de sus 4 segundos */
+  animation: slideInRight 0.35s var(--ease-bounce) forwards, fadeOut 0.3s ease 3.7s forwards;
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(120%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.ui-alert {
+  padding: 16px 20px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg); /* Sombra más fuerte porque está flotando */
+  border-left-width: 4px;
+  border-left-style: solid;
+  min-width: 300px;
+  max-width: 400px;
+}
+
+.ui-alert-success { border-left-color: var(--success); }
+.ui-alert-danger { border-left-color: var(--danger); }
+.ui-alert-warning { border-left-color: var(--warning); }

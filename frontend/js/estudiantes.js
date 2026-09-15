@@ -178,7 +178,12 @@ async function abrirDetalleEstudiante(id) {
 
 function pintarDetalleEstudiante(data) {
   const sesiones = data.sesiones || [];
-  const sesionActiva = sesiones.find(s => !s.fecha_cierre);
+  const sesionActiva = sesiones.find((s) => {
+  if (typeof s.estado === "string") {
+    return s.estado !== "Cerrada";
+  }
+  return !s.fecha_cierre;
+});
 
   const sesionEl = document.getElementById("detalle-estudiante-sesion");
   if (sesionEl) {
