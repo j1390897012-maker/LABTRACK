@@ -2,7 +2,7 @@
 
 ## Descripción del producto
 
-Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de laboratorio, con identificación física mediante RFID para estudiantes y códigos QR para equipos.
+Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de laboratorio, con identificación física mediante tecnología NFC/RFID para estudiantes y códigos QR para equipos, gestionado a través de la Aplicación Móvil LABTRACK.
 
 ---
 
@@ -40,21 +40,21 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 ---
 
-## US-02: Identificar estudiante vía RFID
+## US-02: Identificar estudiante vía RFID/NFC
 
 **Story Points:** 5
 
 **Como** encargado del laboratorio,
 
-**quiero** identificar a un estudiante acercando su tarjeta RFID,
+**quiero** identificar a un estudiante acercando su tarjeta RFID/NFC al dispositivo móvil,
 
 **para** abrir o continuar una sesión de préstamo a su nombre sin escribir sus datos manualmente.
 
 **Escenario:** Identificar a un estudiante registrado
 
-**Given** un estudiante "Alberto" tiene una tarjeta RFID asociada en el sistema,
+**Given** un estudiante "Alberto" tiene una tarjeta RFID/NFC asociada en el sistema,
 
-**When** el ESP32 lee su tarjeta y envía el UID a la API,
+**When** la Aplicación móvil lee su tarjeta y envía el UID a la API,
 
 **Then** el sistema identifica a Alberto,
 
@@ -68,9 +68,9 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Escenario:** Leer una tarjeta no registrada
 
-**Given** una tarjeta RFID cuyo UID no está asociado a ningún estudiante,
+**Given** una tarjeta RFID/NFC cuyo UID no está asociado a ningún estudiante,
 
-**When** el ESP32 envía ese UID a la API,
+**When** la Aplicación móvil envía ese UID a la API,
 
 **Then** el sistema informa que la tarjeta no está registrada,
 
@@ -84,7 +84,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Como** encargado del laboratorio,
 
-**quiero** escanear el código QR de un equipo,
+**quiero** escanear el código QR de un equipo con la cámara del dispositivo,
 
 **para** agregarlo automáticamente a la sesión abierta del estudiante.
 
@@ -92,7 +92,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Given** existe una sesión abierta para "Alberto" y un equipo "OSC-0307" con estado "Disponible",
 
-**When** el ESP32-S3 lee el QR de "OSC-0307",
+**When** el encargado escanea el QR de "OSC-0307" con la Aplicación móvil,
 
 **Then** el sistema agrega el equipo a la sesión de Alberto,
 
@@ -178,7 +178,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Como** encargado del laboratorio,
 
-**quiero** escanear el código QR de un equipo,
+**quiero** escanear el código QR de un equipo con la cámara del dispositivo,
 
 **para** iniciar su devolución y conocer automáticamente quién lo tiene.
 
@@ -186,7 +186,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Given** el equipo "OSC-0307" está prestado a Alberto,
 
-**When** el ESP32-S3 lee el QR del equipo,
+**When** el encargado escanea el QR del equipo con la Aplicación móvil,
 
 **Then** el sistema muestra la pantalla de devolución con los datos de Alberto,
 
@@ -272,7 +272,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Como** encargado del laboratorio,
 
-**quiero** asociar una tarjeta RFID a un estudiante previamente registrado,
+**quiero** asociar una tarjeta RFID/NFC a un estudiante previamente registrado,
 
 **para** poder identificarlo mediante su credencial en escaneos futuros.
 
@@ -280,7 +280,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Given** existe un estudiante registrado en LABTRACK,
 
-**And** el sistema recibe un UID RFID que no está asociado a ningún estudiante,
+**And** el sistema recibe un UID RFID/NFC que no está asociado a ningún estudiante,
 
 **When** el encargado asocia el UID al estudiante "Alberto",
 
@@ -366,15 +366,15 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Como** encargado del laboratorio,
 
-**quiero** registrar un préstamo o devolución manualmente desde la web,
+**quiero** registrar un préstamo o devolución manualmente desde la aplicación o web,
 
-**para** seguir operando si algún dispositivo o mecanismo de identificación física no está disponible.
+**para** seguir operando si la cámara o el lector NFC del dispositivo móvil no están disponibles.
 
 **Escenario:** Registrar préstamo manual
 
-**Given** el mecanismo de identificación física no está disponible,
+**Given** la cámara o el lector NFC del dispositivo móvil no están disponibles,
 
-**When** el encargado selecciona manualmente al estudiante y el equipo desde la web,
+**When** el encargado selecciona manualmente al estudiante y el equipo,
 
 **Then** el sistema procesa el préstamo utilizando la misma lógica de negocio que el flujo normal.
 
@@ -408,7 +408,7 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 
 **Then** el sistema crea el registro del estudiante,
 
-**And** el estudiante queda disponible para posteriormente asociarle una tarjeta RFID.
+**And** el estudiante queda disponible para posteriormente asociarle una tarjeta RFID/NFC.
 
 ---
 
@@ -427,14 +427,14 @@ Sistema para digitalizar el préstamo, devolución y seguimiento de equipo de la
 | US    | Descripción                     | SP | Responsable |
 | ----- | ------------------------------- | -: | ----------- |
 | US-01 | Registrar equipo                |  3 | Alberto     |
-| US-02 | Identificar estudiante vía RFID |  5 | Alexander   |
+| US-02 | Identificar estudiante vía NFC  |  5 | Alexander   |
 | US-03 | Agregar equipo vía QR           |  5 | Alberto     |
 | US-04 | Registrar accesorios            |  3 | Alexander   |
 | US-05 | Cerrar entrega de préstamo      |  3 | Alberto     |
 | US-06 | Iniciar devolución vía QR       |  5 | Alejandro   |
 | US-07 | Confirmar accesorios devueltos  |  3 | Alejandro   |
 | US-08 | Registrar falla                 |  3 | Alejandro   |
-| US-09 | Enrolar RFID de estudiante      |  3 | Alejandro   |
+| US-09 | Enrolar RFID/NFC de estudiante  |  3 | Alejandro   |
 | US-10 | Historial de equipo             |  2 | Alexander   |
 | US-11 | Historial de estudiante         |  2 | Alexander   |
 | US-12 | Registro manual de respaldo     |  5 | Equipo      |
