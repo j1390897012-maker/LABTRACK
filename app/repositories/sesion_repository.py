@@ -46,17 +46,26 @@ class SesionRepository:
         db.refresh(sesion_equipo)
         return sesion_equipo
 
-    def get_prestamo_activo_by_equipo(
-        self,
-        db: Session,
-        equipo_id: int,
-    ) -> SesionEquipo | None:
-        """Busca el préstamo activo asociado a un equipo."""
-        stmt = select(SesionEquipo).where(
-        SesionEquipo.equipo_id == equipo_id,
-        SesionEquipo.estado == "Prestado"
+def get_prestamo_activo_by_equipo(
+    self,
+    db: Session,
+    equipo_id: int,
+) -> SesionEquipo | None:
+    """Busca el préstamo activo asociado a un equipo.
+
+    Si por inconsistencia de datos existiera más de un préstamo
+    'Prestado' para el mismo equipo, se toma el más reciente en vez
+    de fallar, para no bloquear el flujo de devolución.
+    """
+    stmt = (
+        select(SesionEquipo)
+        .where(
+            SesionEquipo.equipo_id == equipo_id,
+            SesionEquipo.estado == "Prestado",
+        )
+        .order_by(SesionEquipo.fecha_prestamo.desc())
     )
-        return db.execute(stmt).scalar_one_or_none()
+    return db.execute(stmt).scalars().first()
 
     def get_sesiones_activas(
     self, db: Session,
