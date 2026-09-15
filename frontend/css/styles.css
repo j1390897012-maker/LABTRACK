@@ -1442,3 +1442,205 @@ tbody tr:hover {
   0%, 100% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 6px var(--primary-soft); }
   50% { box-shadow: 0 0 0 4px var(--surface), 0 0 0 10px var(--primary-ring); }
 }
+
+/* =========================================================
+   CLASES EXTRAÍDAS DE EQUIPOS Y DETALLES (JS LIMPÍSIMO)
+   ========================================================= */
+
+.qr-image {
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+}
+
+.detalle-item {
+  margin-bottom: 8px;
+  padding: 10px;
+  background: var(--surface-soft);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+.detalle-titulo {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.detalle-subtitulo {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.button-danger-left {
+  margin-right: auto;
+  background-color: var(--danger);
+  color: white;
+  border: none;
+}
+
+.button-danger-left:hover {
+  background-color: var(--danger-dark);
+  transform: translateY(-1px);
+}
+
+.mt-1 { margin-top: 4px; }
+
+/* ========================================= */
+/* CLASES EXTRAÍDAS DE OPERACION.JS */
+/* ========================================= */
+.border-left-danger {
+  border-left: 4px solid var(--danger) !important;
+}
+
+.border-left-success {
+  border-left: 4px solid var(--success) !important;
+}
+
+.text-main {
+  color: var(--text) !important;
+}
+
+/* ========================================= */
+/* CLASES EXTRAÍDAS DE HISTORIAL.JS */
+/* ========================================= */
+
+.text-danger {
+  color: var(--danger) !important;
+}
+
+.history-date-col {
+  min-width: 60px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.history-time {
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.history-title {
+  color: var(--text);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.history-subtitle {
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.history-detail-pill {
+  font-size: 12px;
+  color: var(--text);
+  margin-top: 6px;
+  padding: 4px 8px;
+  background-color: var(--surface-soft);
+  border-radius: 4px;
+  display: inline-block;
+  border: 1px solid var(--border);
+}
+
+.history-badge {
+  padding: 4px 8px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-success {
+  background-color: var(--success-soft);
+  color: var(--success-dark);
+}
+
+.badge-warning {
+  background-color: var(--warning-soft);
+  color: var(--warning-dark);
+}
+
+.badge-danger {
+  background-color: var(--danger-soft);
+  color: var(--danger-dark);
+}
+
+/* ========================================= */
+/* CLASES EXTRAÍDAS DE ESTUDIANTES.JS */
+/* ========================================= */
+
+.badge-gray {
+  background-color: var(--surface-soft);
+  color: var(--muted);
+}
+
+.bg-gray-dot {
+  background-color: var(--muted);
+}
+
+.history-item-nested {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+  margin-left: 12px;
+}
+
+.history-item-nested-main {
+  color: var(--text);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.history-item-nested-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.history-item-badge {
+  padding: 4px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.history-empty {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 12px;
+}
+
+.session-container {
+  margin-bottom: 24px;
+}
+
+.session-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid var(--border);
+}
+
+.session-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.session-status {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-active {
+  color: var(--primary);
+}
+
+.status-closed {
+  color: var(--muted);
+}

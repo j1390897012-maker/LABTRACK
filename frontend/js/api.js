@@ -15,6 +15,12 @@ async function peticionAPI(endpoint, metodo = "GET", body = null) {
 
   try {
     const respuesta = await fetch(`${API_URL}${endpoint}`, opciones);
+    
+    // Si la respuesta es 204 (No Content), no intentamos parsear JSON
+    if (respuesta.status === 204) {
+      return null;
+    }
+
     const data = await respuesta.json();
     
     if (!respuesta.ok) {

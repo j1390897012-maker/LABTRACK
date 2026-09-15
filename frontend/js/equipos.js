@@ -134,7 +134,7 @@ async function showEquipment(codigo) {
         <img
           src="${data.qr_base64}"
           alt="Código QR de ${data.codigo}"
-          style="width: 220px; height: 220px; object-fit: contain;"
+          class="qr-image"
         >
       `;
     } else {
@@ -144,11 +144,11 @@ async function showEquipment(codigo) {
     const contenedorFallas = document.getElementById("detalle-fallas");
     if (data.fallas && data.fallas.length > 0) {
       contenedorFallas.innerHTML = data.fallas.map(falla => `
-      <div style="margin-bottom: 8px; padding: 10px; background: var(--bg-secondary, #f8fafc); border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0);">
-      <div style="font-size: 14px; color: var(--text);"><strong>Falla:</strong> ${falla.descripcion || "Sin descripción"}</div>
-      <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Estado: ${falla.estado || "Pendiente"}</div>
-    </div>
-  `).join('');
+      <div class="detalle-item">
+        <div class="detalle-titulo"><strong>Falla:</strong> ${falla.descripcion || "Sin descripción"}</div>
+        <div class="detalle-subtitulo">Estado: ${falla.estado || "Pendiente"}</div>
+      </div>
+      `).join('');
     } else {
       contenedorFallas.innerHTML = `<p class="card-subtitle">No hay fallas registradas para este equipo.</p>`;
     }
@@ -158,10 +158,10 @@ async function showEquipment(codigo) {
 
     if (prestamo) {
       contenedorPrestamo.innerHTML = `
-        <div style="padding: 10px; background: var(--bg-secondary, #f8fafc); border-radius: 6px; border: 1px solid var(--border-color, #e2e8f0);">
-          <div style="font-size: 14px; color: var(--text);"><strong>Estudiante:</strong> ${prestamo.estudiante_nombre || "Desconocido"}</div>
-          <div style="font-size: 14px; color: var(--text); margin-top: 4px;"><strong>Matrícula:</strong> ${prestamo.matricula || "N/A"}</div>
-          <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">Prestado desde: ${prestamo.fecha_prestamo ? new Date(prestamo.fecha_prestamo).toLocaleString() : "N/A"}</div>
+        <div class="detalle-item">
+          <div class="detalle-titulo"><strong>Estudiante:</strong> ${prestamo.estudiante_nombre || "Desconocido"}</div>
+          <div class="detalle-titulo mt-1"><strong>Matrícula:</strong> ${prestamo.matricula || "N/A"}</div>
+          <div class="detalle-subtitulo">Prestado desde: ${prestamo.fecha_prestamo ? new Date(prestamo.fecha_prestamo).toLocaleString() : "N/A"}</div>
         </div>
       `;
     } else {
@@ -171,7 +171,7 @@ async function showEquipment(codigo) {
     const modalFooter = document.querySelector("#detalle-equipo-modal .modal-footer");
     
     let footerHTML = `
-      <button class="button" style="margin-right: auto; background-color: var(--danger, #ef4444); color: white; border: none;" onclick="eliminarEquipo('${data.codigo}')">Eliminar equipo</button>
+      <button class="button button-danger-left" onclick="eliminarEquipo('${data.codigo}')">Eliminar equipo</button>
       <button class="button button-secondary" onclick="closeModal('detalle-equipo-modal')">Cerrar</button>
     `;
     
@@ -195,7 +195,6 @@ async function showEquipment(codigo) {
 // ==========================================
 
 function resolverProblema(codigo) {
-  // Buscamos la primera falla que no esté resuelta
   const fallaPendiente = (equipoDetalleActual?.fallas || []).find(f => f.estado !== "Resuelta");
 
   if (!fallaPendiente) {
@@ -203,7 +202,6 @@ function resolverProblema(codigo) {
     return;
   }
 
-  // Llenamos los inputs ocultos del modal
   document.getElementById("resolver-codigo-label").textContent = codigo;
   document.getElementById("input-resolver-codigo").value = codigo;
   document.getElementById("input-resolver-falla-id").value = fallaPendiente.id;
@@ -245,6 +243,7 @@ async function confirmarResolucionProblema() {
     alert("Ocurrió un error de conexión con el servidor.");
   }
 }
+
 // ==========================================
 // ELIMINAR / DAR DE BAJA
 // ==========================================

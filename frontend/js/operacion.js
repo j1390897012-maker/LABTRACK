@@ -153,8 +153,8 @@ async function prestarEquipoManual() {
 
   if (!matricula || !codigo) {
     resultado.innerHTML = `
-      <div class="card stat-card" style="border-left: 4px solid var(--danger);">
-        <div class="stat-description" style="color: var(--text);">
+      <div class="card stat-card border-left-danger">
+        <div class="stat-description text-main">
           Debes proporcionar la matrícula y el código del equipo.
         </div>
       </div>
@@ -173,9 +173,9 @@ async function prestarEquipoManual() {
     });
 
     resultado.innerHTML = `
-      <div class="card stat-card" style="border-left: 4px solid var(--success);">
+      <div class="card stat-card border-left-success">
         <div class="stat-label">Préstamo registrado</div>
-        <div class="stat-description" style="color: var(--text);">
+        <div class="stat-description text-main">
           ${respuesta.mensaje || "Préstamo registrado correctamente."}
         </div>
       </div>
@@ -187,9 +187,9 @@ async function prestarEquipoManual() {
     await cargarEquiposDesdeAPI();
   } catch (error) {
     resultado.innerHTML = `
-      <div class="card stat-card" style="border-left: 4px solid var(--danger);">
+      <div class="card stat-card border-left-danger">
         <div class="stat-label">No se pudo registrar el préstamo</div>
-        <div class="stat-description" style="color: var(--text);">
+        <div class="stat-description text-main">
           ${error.detail || "Ocurrió un error."}
         </div>
       </div>
@@ -207,8 +207,8 @@ async function devolverEquipoManual() {
 
   if (!codigo) {
     resultado.innerHTML = `
-      <div class="card stat-card" style="border-left: 4px solid var(--danger);">
-        <div class="stat-description" style="color: var(--text);">
+      <div class="card stat-card border-left-danger">
+        <div class="stat-description text-main">
           Debes proporcionar el código del equipo.
         </div>
       </div>
@@ -227,9 +227,9 @@ async function devolverEquipoManual() {
     abrirModalDevolucion(respuesta, "manual");
   } catch (error) {
     resultado.innerHTML = `
-      <div class="card stat-card" style="border-left: 4px solid var(--danger);">
+      <div class="card stat-card border-left-danger">
         <div class="stat-label">No se pudo iniciar la devolución</div>
-        <div class="stat-description" style="color: var(--text);">
+        <div class="stat-description text-main">
           ${error.detail || "Ocurrió un error."}
         </div>
       </div>
@@ -338,8 +338,8 @@ function mostrarErrorDevolucionModal(texto) {
 
   if (el) {
     el.innerHTML = `
-      <div class="card stat-card" style="border-left: 4px solid var(--danger);">
-        <div class="stat-description" style="color: var(--text);">${texto}</div>
+      <div class="card stat-card border-left-danger">
+        <div class="stat-description text-main">${texto}</div>
       </div>
     `;
   }
@@ -443,9 +443,9 @@ async function confirmarDevolucion() {
 
       if (resultado) {
         resultado.innerHTML = `
-          <div class="card stat-card" style="border-left: 4px solid var(--success);">
+          <div class="card stat-card border-left-success">
             <div class="stat-label">Devolución procesada</div>
-            <div class="stat-description" style="color: var(--text);">${mensaje}</div>
+            <div class="stat-description text-main">${mensaje}</div>
           </div>
         `;
       }
@@ -537,9 +537,6 @@ async function manejarRespuestaRFID(valor, data) {
     );
 
     if (!confirmar) {
-      //mostrarResultadoRFID(
-      //  `Tarjeta ${valor} no registrada. No se realizó el enrolamiento.`
-      //);
       return;
     }
 
@@ -586,12 +583,6 @@ async function manejarRespuestaRFID(valor, data) {
   if (botonTerminar) {
     botonTerminar.style.display = "block";
   }
-// Ya no mostramos texto de depuración; la tarjeta de estudiante
-// identificado (rfid-flow-estudiante) ya cubre esta información.
-// mostrarResultadoRFID(
-//   `${data.nombre} (${data.matricula}) — ` +
-//   `${data.mensaje || "Estudiante identificado correctamente."}`
-//  );
 }
 
 // ============================================================
@@ -649,23 +640,15 @@ function actualizarEstadoRFID(estado, subtitulo) {
 }
 
 // ============================================================
-// RESULTADO DEL FLUJO RFID
+// RESULTADO DEL FLUJO RFID (Logs ocultos por petición)
 // ============================================================
 
 function mostrarResultadoRFID(texto) {
   const el = document.getElementById("rfid-flow-resultado");
-
-  if (!el) {
-    return;
+  if (el) {
+    el.style.display = "none";
+    el.innerHTML = "";
   }
-
-  el.innerHTML = `
-    <div class="card stat-card" style="border-left: 4px solid var(--primary); margin-top: 20px;">
-      <div class="stat-description" style="color: var(--text); font-size: 14px;">
-        ${texto}
-      </div>
-    </div>
-  `;
 }
 
 // ============================================================
@@ -1125,7 +1108,10 @@ async function cancelarFlujoRFID() {
   if (estudiante) estudiante.hidden = true;
   if (esperando) esperando.hidden = true;
   if (equipos) equipos.hidden = true;
-  if (resultado) resultado.innerHTML = "";
+  if (resultado) {
+    resultado.innerHTML = "";
+    resultado.style.display = "none";
+  }
   if (lista) lista.innerHTML = "";
   if (botonTerminar) botonTerminar.style.display = "none";
 
@@ -1154,7 +1140,10 @@ function finalizarVistaSiNoHaySesion() {
     if (estudiante) estudiante.hidden = true;
     if (esperando) esperando.hidden = true;
     if (equipos) equipos.hidden = true;
-    if (resultado) resultado.innerHTML = "";
+    if (resultado) {
+      resultado.innerHTML = "";
+      resultado.style.display = "none";
+    }
     if (lista) lista.innerHTML = "";
     if (botonTerminar) botonTerminar.style.display = "none";
 
@@ -1333,7 +1322,10 @@ async function terminarOperacion() {
     if (estudiante) estudiante.hidden = true;
     if (esperando) esperando.hidden = true;
     if (equipos) equipos.hidden = true;
-    if (resultado) resultado.innerHTML = "";
+    if (resultado) {
+      resultado.innerHTML = "";
+      resultado.style.display = "none";
+    }
     if (lista) lista.innerHTML = "";
 
     regresarDesdePrestamoRFID();

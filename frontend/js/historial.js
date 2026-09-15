@@ -31,7 +31,7 @@ async function cargarHistorialDesdeAPI() {
   } catch (error) {
     console.error("Fallo la consulta real al backend:", error);
     contenedor.innerHTML = `
-      <p class="card-subtitle" style="color: var(--danger);">
+      <p class="card-subtitle text-danger">
         No se pudo cargar el historial. Revisa la consola para más detalles.
       </p>
     `;
@@ -49,16 +49,12 @@ function renderizarHistorial(registros, contenedor) {
     // Capitalizar la primera letra del evento
     const tipoEvento = registro.tipo_evento ? registro.tipo_evento.charAt(0).toUpperCase() + registro.tipo_evento.slice(1) : "Evento";
     
-    // Determinar colores del badge
-    let badgeColor = "var(--success)";
-    let colorBg = "var(--success-light, #d1fae5)";
-    
+    // Determinar la clase de color del badge
+    let badgeClass = "badge-success";
     if (registro.tipo_evento === "prestamo") {
-      badgeColor = "var(--warning)";
-      colorBg = "var(--warning-light, #fef3c7)";
+      badgeClass = "badge-warning";
     } else if (registro.tipo_evento === "falla") {
-      badgeColor = "var(--danger)";
-      colorBg = "var(--danger-light, #fee2e2)";
+      badgeClass = "badge-danger";
     }
 
     // Manejo inteligente de datos nulos para fallas
@@ -74,24 +70,25 @@ function renderizarHistorial(registros, contenedor) {
       infoUsuario = "Operación de sistema";
     }
 
+    // Aprovechamos la clase global .history-item que ya tienes en tu CSS principal
     return `
-      <div class="history-item" style="display: flex; align-items: flex-start; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border-color, #e2e8f0);">
-        <div class="history-date" style="min-width: 60px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 600;">
+      <div class="history-item">
+        <div class="history-date-col">
           ${fechaFormat}<br>
-          <span style="font-weight: 400; font-size: 11px;">${horaFormat}</span>
+          <span class="history-time">${horaFormat}</span>
         </div>
         
-        <div style="flex: 1;">
-          <div class="history-main" style="color: var(--text); font-weight: 500; font-size: 15px;">
+        <div>
+          <div class="history-title">
             ${tipoEvento} de <strong>${registro.codigo_equipo || "N/A"}</strong>
           </div>
-          <div class="history-secondary" style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+          <div class="history-subtitle">
             ${infoUsuario}
           </div>
-          ${registro.detalle ? `<div style="font-size: 12px; color: var(--text); margin-top: 6px; padding: 4px 8px; background-color: var(--bg-secondary, #f1f5f9); border-radius: 4px; display: inline-block;">${registro.detalle}</div>` : ''}
+          ${registro.detalle ? `<div class="history-detail-pill">${registro.detalle}</div>` : ''}
         </div>
         
-        <span class="history-type" style="background-color: ${colorBg}; color: ${badgeColor}; padding: 4px 8px; border-radius: 99px; font-size: 12px; font-weight: 600;">
+        <span class="history-badge ${badgeClass}">
           ${tipoEvento}
         </span>
       </div>
