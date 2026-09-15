@@ -179,6 +179,15 @@ class SesionRepository:
     def cerrar_sesion(self, db: Session, sesion: Sesion) -> Sesion:
         """Actualiza el estado de la sesión a Cerrada."""
         sesion.estado = "Cerrada"
+        sesion.fecha_cierre = datetime.utcnow()
+        db.commit()
+        db.refresh(sesion)
+        return sesion
+
+    def cancelar_sesion(self, db: Session, sesion: Sesion) -> Sesion:
+        """Cancela una sesión que nunca tuvo equipos prestados."""
+        sesion.estado = "Cancelada"
+        sesion.fecha_cierre = datetime.utcnow()
         db.commit()
         db.refresh(sesion)
         return sesion

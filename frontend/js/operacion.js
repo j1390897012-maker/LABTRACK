@@ -6,6 +6,8 @@ let sesionActual = null;
 let equiposOperacion = [];
 let ultimoScanVisto = null;
 let uidPendienteEnrolar = null;
+// Matrícula del estudiante dueño del equipo que se está devolviendo actualmente.
+let matriculaDevolucionActual = null;
 
 // Información de la devolución actualmente en curso.
 let devolucionActual = null;
@@ -216,10 +218,15 @@ async function devolverEquipoManual() {
     return;
   }
 
+  matriculaDevolucionActual = null;
+
   try {
     const respuesta = await peticionAPI("/devoluciones", "POST", {
       codigo_equipo: codigo,
     });
+
+    matriculaDevolucionActual =
+      obtenerMatriculaDeDevolucion(respuesta) || (await obtenerMatriculaEquipoActual(codigo));
 
     resultado.innerHTML = "";
     document.getElementById("manual-devolucion-codigo").value = "";
@@ -380,6 +387,69 @@ async function completarDevolucion(datosDevolucion, estado, descripcionFalla, ac
 
   return resultadoFalla;
 }
+// ============================================================
+// CIERRE AUTOMÁTICO DE SESIÓN CUANDO YA NO QUEDAN EQUIPOS
+// ============================================================
+
+function quedanEquiposPendientes(equipos) {
+  if (!Array.isArray(equipos) || equipos.length === 0) {
+    return false;
+  }
+
+  return equipos.some((e) => {
+    if (typeof e.fecha_devolucion !== "undefined") {
+      return !e.fecha_devolucion;
+    }
+    if (typeof e.estado_prestamo !== "undefined") {
+      return e.estado_prestamo !== "Devuelto";
+    }
+    // Si no podemos determinar el estado, asumimos que sigue prestado (por seguridad).
+    return true;
+  });
+}
+
+async function verificarYCerrarSesionSiVacia(matricula) {
+  if (!matricula) {
+    return false;
+  }
+
+  try {
+    const sesion = await peticionAPI(`/sesiones/activa?matricula=${encodeURIComponent(matricula)}`);
+    const equipos = sesion.equipos || [];
+
+    if (!quedanEquiposPendientes(equipos)) {
+      await peticionAPI(`/sesiones/${sesion.sesion_id}/cerrar`, "POST");
+      return true;
+    }
+  } catch (error) {
+    // Si no hay sesión activa (404) o falla la consulta, no hay nada que cerrar.
+  }
+
+  return false;
+}
+
+function obtenerMatriculaDeDevolucion(datos) {
+  if (!datos) {
+    return null;
+  }
+
+  return (
+    datos.matricula ||
+    (datos.estudiante && datos.estudiante.matricula) ||
+    (datos.prestamo && datos.prestamo.estudiante && datos.prestamo.estudiante.matricula) ||
+    (datos.prestamo_actual && datos.prestamo_actual.estudiante && datos.prestamo_actual.estudiante.matricula) ||
+    null
+  );
+}
+
+async function obtenerMatriculaEquipoActual(codigo) {
+  try {
+    const detalle = await peticionAPI(`/equipos/${encodeURIComponent(codigo)}`);
+    return obtenerMatriculaDeDevolucion(detalle);
+  } catch (error) {
+    return null;
+  }
+}
 
 async function confirmarDevolucion() {
   if (!devolucionActual) {
@@ -414,10 +484,12 @@ async function confirmarDevolucion() {
     const codigo = devolucionActual.codigo_equipo;
     const equipoId = devolucionActual.equipo_id;
     const origen = origenDevolucion;
+    const matriculaAsociada = matriculaDevolucionActual;
 
     closeModal("devolucion-modal");
     devolucionActual = null;
     origenDevolucion = null;
+    matriculaDevolucionActual = null;
 
     const mensaje = resultadoFalla.mensaje || `Devolución de ${codigo} procesada.`;
 
@@ -451,6 +523,34 @@ async function confirmarDevolucion() {
       }
     }
 
+    // ------------------------------------------------------------
+    // Si el estudiante ya no tiene equipos pendientes, cerramos su sesión.
+    // ------------------------------------------------------------
+    if (matriculaAsociada) {
+      const sesionCerrada = await verificarYCerrarSesionSiVacia(matriculaAsociada);
+
+      if (sesionCerrada) {
+        if (sesionActual && sesionActual.matricula === matriculaAsociada) {
+          actualizarEstadoRFID(
+            "Sesión finalizada",
+            "Todos los equipos fueron devueltos. La sesión se cerró automáticamente."
+          );
+
+          sesionActual = null;
+          inicioOperacionRFID = null;
+
+          const botonTerminar = document.getElementById("btn-terminar-operacion");
+          if (botonTerminar) botonTerminar.style.display = "none";
+
+          finalizarVistaSiNoHaySesion();
+        }
+
+        if (typeof cargarEstudiantesDesdeAPI === "function") {
+          cargarEstudiantesDesdeAPI();
+        }
+      }
+    }
+
     await cargarEquiposDesdeAPI();
   } catch (error) {
     mostrarErrorDevolucionModal(error.detail || "Error desconocido al procesar la devolución.");
@@ -474,16 +574,16 @@ function cancelarDevolucion() {
 // MODAL DE SIMULACIÓN RFID
 // ============================================================
 
-function simularRFID() {
-  openModal("rfid-modal");
+//function simularRFID() {
+//  openModal("rfid-modal");
 
-  setTimeout(() => {
-    const input = document.getElementById("input-rfid-simulado");
-    if (input) {
-      input.focus();
-    }
-  }, 100);
-}
+//  setTimeout(() => {
+//    const input = document.getElementById("input-rfid-simulado");
+//    if (input) {
+//      input.focus();
+//    }
+//  }, 100);
+//}
 
 async function procesarRFID() {
   const input = document.getElementById("input-rfid-simulado");
@@ -537,9 +637,6 @@ async function manejarRespuestaRFID(valor, data) {
     );
 
     if (!confirmar) {
-      //mostrarResultadoRFID(
-      //  `Tarjeta ${valor} no registrada. No se realizó el enrolamiento.`
-      //);
       return;
     }
 
@@ -586,12 +683,6 @@ async function manejarRespuestaRFID(valor, data) {
   if (botonTerminar) {
     botonTerminar.style.display = "block";
   }
-// Ya no mostramos texto de depuración; la tarjeta de estudiante
-// identificado (rfid-flow-estudiante) ya cubre esta información.
-// mostrarResultadoRFID(
-//   `${data.nombre} (${data.matricula}) — ` +
-//   `${data.mensaje || "Estudiante identificado correctamente."}`
-//  );
 }
 
 // ============================================================
@@ -649,23 +740,14 @@ function actualizarEstadoRFID(estado, subtitulo) {
 }
 
 // ============================================================
-// RESULTADO DEL FLUJO RFID
+// RESULTADO DEL FLUJO RFID (Logs ocultos por petición)
 // ============================================================
 
 function mostrarResultadoRFID(texto) {
   const el = document.getElementById("rfid-flow-resultado");
-
-  if (!el) {
-    return;
+  if (el) {
+    el.innerHTML = ""; // Se deja vacío para eliminar la caja de logs
   }
-
-  el.innerHTML = `
-    <div class="card stat-card" style="border-left: 4px solid var(--primary); margin-top: 20px;">
-      <div class="stat-description" style="color: var(--text); font-size: 14px;">
-        ${texto}
-      </div>
-    </div>
-  `;
 }
 
 // ============================================================
@@ -866,6 +948,7 @@ async function manejarDevolucionQR(data) {
   }
 
   const estudiante = data.prestamo ? data.prestamo.estudiante : null;
+  matriculaDevolucionActual = estudiante ? estudiante.matricula : null;
 
   abrirVistaPrestamoRFID();
 
@@ -1110,6 +1193,18 @@ async function cancelarFlujoRFID() {
     return;
   }
 
+  if (sesionActual && sesionActual.matricula) {
+    try {
+      const sesionCerrada = await verificarYCerrarSesionSiVacia(sesionActual.matricula);
+
+      if (sesionCerrada && typeof cargarEstudiantesDesdeAPI === "function") {
+        cargarEstudiantesDesdeAPI();
+      }
+    } catch (error) {
+      console.error("No se pudo verificar/cerrar la sesión al cancelar:", error);
+    }
+  }
+
   sesionActual = null;
   equiposOperacion = [];
   devolucionActual = null;
@@ -1309,7 +1404,30 @@ async function terminarOperacion() {
     return;
   }
 
-  mostrarResultadoRFID("Operación terminada con éxito. Se puede retirar la credencial.");
+  let mensajeFinal = "Operación terminada con éxito. Se puede retirar la credencial.";
+
+  if (sesionActual && sesionActual.matricula) {
+    try {
+      const sesionCerrada = await verificarYCerrarSesionSiVacia(sesionActual.matricula);
+
+      if (sesionCerrada) {
+        mensajeFinal = "Operación terminada. La sesión del estudiante quedó cerrada.";
+
+        if (typeof cargarEstudiantesDesdeAPI === "function") {
+          cargarEstudiantesDesdeAPI();
+        }
+      } else {
+        mensajeFinal =
+          "Operación terminada en el panel. La sesión del estudiante sigue activa porque " +
+          "todavía tiene equipo(s) prestado(s) sin devolver.";
+      }
+    } catch (error) {
+      mensajeFinal =
+        "Operación terminada en el panel, pero no se pudo verificar el estado de la sesión en el servidor.";
+    }
+  }
+
+  mostrarResultadoRFID(mensajeFinal);
   actualizarEstadoRFID("Finalizado", "Listo para el siguiente estudiante.");
 
   const botonTerminar = document.getElementById("btn-terminar-operacion");
@@ -1337,9 +1455,8 @@ async function terminarOperacion() {
     if (lista) lista.innerHTML = "";
 
     regresarDesdePrestamoRFID();
-  }, 2000);
+  }, 2500);
 }
-
 // ============================================================
 // INICIAR POLLING
 // ============================================================
