@@ -1,17 +1,17 @@
 # LABTRACK: Sistema de Trazabilidad de Laboratorio
 
 ## 📖 Descripción
-Sistema de gestión y trazabilidad de préstamos de equipo de laboratorio mediante tecnología RFID. El sistema está diseñado para digitalizar el préstamo, devolución y seguimiento de equipos, integrando identificación física mediante tarjetas RFID para los estudiantes y códigos QR físicos adheridos a los equipos.
+Sistema de gestión y trazabilidad de préstamos de equipo de laboratorio mediante tecnología RFID y QR. El sistema está diseñado para digitalizar el préstamo, devolución y seguimiento de equipos, integrando identificación física mediante tarjetas NFC/RFID para los estudiantes y lectura de códigos QR físicos generados y adheridos a los equipos a través de una aplicación móvil centralizada.
 
 ## 🚧 Estado del Proyecto
 * **Fase actual:** Construcción del Producto Mínimo Viable (MVP).
 * **Alcance definido:** El backlog del producto consta de 13 Historias de Usuario, sumando un total de 45 Story Points.
-* **Configuración base:** Entorno de Docker, migraciones de base de datos y flujos de CI/CD iniciales ya establecidos.
+* **Configuración base:** Entorno de Docker, migraciones de base de datos (Alembic), flujos de Integración Continua (CI) establecidos y arquitectura de backend finalizada.
 
 ## 🚀 API en Producción
 * **Infraestructura en la nube:** Desplegada utilizando la plataforma Render.
-* **Servicios activos:** La infraestructura incluye el servicio web `labtrack-api` y la base de datos `labtrack-db`, ambos configurados bajo planes gratuitos.
-* **Health Check:** Monitoreo de estado configurado en la ruta `/health`.
+* **Servicios activos:** La infraestructura incluye el servicio web `labtrack-api` y la base de datos `labtrack-db`, configurados con inyección dinámica de la variable `DATABASE_URL` (adaptador `postgresql+psycopg`).
+* **Health Check:** Monitoreo de estado configurado en la ruta genérica `/health`.
 
 ## 📋 Requisitos
 Para levantar este proyecto en un entorno local, se requiere:
@@ -25,16 +25,26 @@ Para levantar este proyecto en un entorno local, se requiere:
    docker-compose up --build
 
 Este comando levantará la API de FastAPI en el puerto `8000` y la base de datos PostgreSQL en el puerto `5432`.
-3. Las migraciones de la base de datos se ejecutarán automáticamente al iniciar el contenedor de producción mediante el comando alembic `upgrade head`.
+3. Las migraciones de la base de datos se ejecutarán automáticamente al iniciar el contenedor de producción mediante el comando `alembic upgrade head`.
 
 ## ⚙️ Configuración
 El sistema utiliza variables de entorno administradas localmente o inyectadas por el entorno de despliegue.
 
-Base de datos: `POSTGRES_USER` (por defecto: `labtrack`), `POSTGRES_PASSWORD` (por defecto: `secret`), `POSTGRES_DB` (por defecto: `labtrack`).
+- Base de datos: `POSTGRES_USER` (por defecto: `labtrack`), `POSTGRES_PASSWORD` (por defecto: `secret`), `POSTGRES_DB` (por defecto: `labtrack`).
 
-Cadena de conexión: La aplicación construye la conexión a través de la variable `DATABASE_URL` utilizando el formato `postgresql+psycopg://`.
+- Cadena de conexión: La aplicación construye la conexión a través de la variable `DATABASE_URL` utilizando el formato `postgresql+psycopg://`.
 
-## 🏗️ Arquitectura en Diagrama de Flujo
+## 🏗️ Arquitectura y Patrones de Diseño
+El backend está contruido con FastAPI y aplica estrictamente el Patrón Repositorio (Repository Pattern) y el Patrón Servicio (Service Pattern) para desacoplar la lógica de acceso a datos y las reglas de negocio de la capa de enrutamiento (Routers).
+
+- **Validación:** Modelos de Pydantic (`app/schemas/`) actúan como un escudo, garantizando que el contrato de la API se cumpla antes de tocar la lógica del sistema.
+
+- **ORM:** Utiliza SQLAlchemy 2.0 con mapeo declarativo estricto (`Mapped`, `mapped_column`).
+
+- **Migraciones:** Alembic gestiona el versionado del esquema de base de datos de manera incremental.
+
+- **Frontend Integrado:** La interfaz gráfica es servida directamente por FastAOI a través de `StaticFiles`.
+
 ```mermaid
 flowchart TD
     %% Identificación Física (Vía App Móvil)
@@ -44,82 +54,104 @@ flowchart TD
     %% Comunicación
     App -->|POST /api/identificaciones/scan| API[FastAPI Backend - labtrack-api]
     
-    %% Lógica y Datos
-    API <-->|SQLAlchemy 2.0 / Psycopg 3| DB[(PostgreSQL 16 - labtrack-db)]
+    %% Capas Internas Backend
+    API -->|Routers| Services[Capa de Servicios]
+    Services -->|Repositorios| Models[Modelos SQLAlchemy 2.0]
+    Models <-->|Psycopg 3| DB[(PostgreSQL 16 - labtrack-db)]
     
     %% Flujos de Decisión Backend
-    API -->|Validación| FlujoEstudiante{¿Existe Estudiante?}
-    API -->|Validación| FlujoEquipo{¿Estado del Equipo?}
+    Services -->|Validación| FlujoEstudiante{¿Existe Estudiante?}
+    Services -->|Validación| FlujoEquipo{¿Estado del Equipo?}
     
     FlujoEstudiante -->|Sí| Sesion[Abrir / Continuar Sesión]
     FlujoEquipo -->|Disponible| Prestamo[Agregar a Sesión Actual]
     FlujoEquipo -->|Prestado| Devolucion[Iniciar Devolución y Revisión]
 ```
 
-*(Diagrama basado en el flujo principal del MVP y la arquitectura de contenedores).*
+*(Diagrama basado en el flujo principal del MVP).*
 
-## 🔌 Todos los Endpoints
-La API REST centraliza toda la lógica de negocio, recibiendo las lecturas de los dispositivos físicos y gestionando el estado de la base de datos.
+## 🔌Documentación de Endpoints
+La API expone las siguientes rutas categorizadas por dominio de negocio:
 
-### Estudiantes
-- `POST /api/estudiantes`: Registra un estudiante con nombre y matrícula.
+### 🎓 Estudiantes
+- `POST /api/estudiantes`: Registra un estudiante nuevo.
 
-- `GET /api/estudiantes/{id}`: Consulta los datos de un estudiante.
+- `GET /api/estudiantes`: Lista estudiantes con filtros opcionales (nombre, matrícula).
 
-- `GET /api/estudiantes/{id}/historial`: Consulta el historial de préstamos del estudiante.
+- `PUT /api/estudiantes/{id}`: Corrige errores de captura (matrícula/nombre).
 
-- `GET /api/estudiantes/{id}/actuales`: Consulta los equipos que tiene actualmente en préstamo.
+- `DELETE /api/estudiantes/{id}`: Elimina un estudiante (restringido si posee historial).
 
-### Equipos
-- `POST /api/equipos`: Registra un equipo nuevo con código y tipo.
+- `GET /api/estudiantes/{id}/historial`: Consulta el historial completo de préstamos (US-11).
 
-- `GET /api/equipos`: Lista equipos con filtro opcional por estado.
+### 🔬 Equipos
+- `POST /api/equipos`: Registra un equipo (autogenera QR en Base64).
 
-- `GET /api/equipos/{codigo}`: Consulta la ficha técnica, estado, fallas e historial de un equipo.
+- `GET /api/equipos`: Lista equipos con filtro por código, estado y tipo.
 
-- `PATCH /api/equipos/{codigo}/estado`: Cambia manualmente el estado de un equipo (`Disponible`, `Prestado`, `En revisión`).
+- `POST /api/equipos/prestar`: Confirma el préstamo y accesorios entregados.
 
-### Identificación Física y Enrolamiento
-- `POST /api/identificaciones/scan`: Recibe una lectura (RFID o QR) desde el ESP32-S3 y determina el flujo a seguir (abrir sesión, agregar equipo, iniciar devolución).
+- `GET /api/equipos/{codigo}`: Detalle completo de un equipo y sus préstamos activos.
 
-- `POST /api/identificaciones/enrolar`: Asocia un nuevo UID de tarjeta RFID a un estudiante previamente registrado.
+- `PUT /api/equipos/{codigo}`: Actualiza el tipo de equipo (protegiendo el código físico).
 
-### Sesiones de Préstamo
-- `POST /api/sesiones`: Abre manualmente una sesión para un estudiante.
+- `PATCH /api/equipos/{codigo}/estado`: Cambia manualmente el estado (Disponible, En revisión).
 
-- `GET /api/sesiones/activas`: Consulta la sesión activa de un estudiante mediante su ID.
+- `PATCH /api/equipos/{codigo}/baja`: Da de baja el equipo conservando su historial.
 
-- `POST /api/sesiones/{id}/equipos`: Agrega manualmente un equipo a una sesión abierta.
+- `GET /api/equipos/{codigo}/historial`: Historial de uso, accesorios y fallas de un equipo (US-10).
 
-- `PUT /api/sesiones/{id}/equipos/{equipo_id}/accesorios`: Registra los accesorios incluidos con un equipo prestado.
+### 📡 Identificaciones y Escaneos
+- `POST /api/identificaciones/scan`: Punto de entrada unificado para lecturas de la App (RFID/QR).
 
-- `POST /api/sesiones/{id}/cerrar`: Finaliza la etapa de entrega marcando los equipos como prestados.
+- `GET /api/identificaciones/ultimo-scan`: Polling para que la web lea el último escaneo global.
 
-### Devoluciones y Fallas
-- `POST /api/devoluciones`: Inicia el flujo de devolución de un equipo.
+- `POST /api/identificaciones/enrolar`: Asocia un UID RFID a un estudiante existente (US-09).
 
-- `PATCH /api/devoluciones/{id}/accesorios`: Registra los accesorios entregados y reporta los faltantes.
+### ⏱️ Sesiones (Flujos y Respaldos)
+- `GET /api/sesiones/activa`: Consulta la sesión activa y equipos actuales de un estudiante.
 
-- `PATCH /api/devoluciones/{id}/falla`: Registra una falla detectada al devolver el equipo, pasándolo a estado "En revisión".
+- `POST /api/sesiones`: Abre una sesión manual por matrícula (Respaldo US-12).
 
-- `POST /api/devoluciones/{id}/cerrar`: Finaliza la devolución y actualiza el estado general del equipo.
+- `POST /api/sesiones/prestamo-manual`: Registra un préstamo en un solo paso (matrícula + código) (US-12).
 
-- `PATCH /api/fallas/{id}`: Marca una falla histórica como resuelta.
+- `POST /api/sesiones/{id}/equipos`: Agrega un equipo manualmente a una sesión abierta.
 
-## 🧪 Pruebas y Calidad
-El aseguramiento de calidad del código está estandarizado mediante las siguientes herramientas:
+- `POST /api/sesiones/{id}/cerrar`: Cierra la etapa de entrega de equipos.
 
-- Pruebas Unitarias y Cobertura: Se utiliza `pytest` junto con `pytest-cov`, exigiendo una cobertura mínima de código del 80% (`--cov-fail-under=80`) en el directorio `app`.
+### 🔄 Devoluciones
+- `POST /api/devoluciones`: Inicia manualmente la devolución seleccionando el equipo.
 
-Linting y Formateo: Integración de `ruff` (con soporte para validaciones `E`, `F`, `I`, `UP`, y `B`) definiendo una longitud de línea máxima de 88 caracteres.
+- `POST /api/devoluciones/accesorios`: Confirma accesorios entregados y reporta faltantes.
 
-Tipado Estático: Validación estricta activada mediante `mypy` para la versión de Python 3.12 (`strict = true`).
+- `PATCH /api/devoluciones/{id}/falla`: Finaliza la devolución registrando fallas o marcando el equipo como Disponible (US-08).
+
+### ⚠️ Fallas e Historial Global
+- `GET /api/fallas`: Lista fallas registradas y sus estados.
+
+- `GET /api/fallas/{id}`: Detalle de una incidencia.
+
+- `PATCH /api/fallas/{id}/resolver`: Marca una falla como resuelta y evalúa si el equipo vuelve a estar disponible.
+
+- `GET /api/historial`: Feed cronológico global del laboratorio (Préstamos, devoluciones y fallas).
+
+### 🗂️ Catálogos
+- `GET /api/tipos-equipo`: Retorna las clasificaciones lógicas de los equipos.
+
+- `GET /api/tipos-accesorio`: Retorna los tipos de accesorios, opcionalmente filtrados por equipo.
+
+## 🧪 Pruebas y Calidad (CI)
+El aseguramiento de calidad del código está estandarizado mediante un pipeline de Integración Continua (CI) en GitHub Actions (`.github/workflows/ci.yml`). Este flujo se ejecuta automáticamente en ramas `main`, `config/**`, y `feature/**`:
+
+Linting y Formateo: Integración de `ruff` (con soporte para validaciones E, F, I, UP, y B) evaluando toda la base de código (`ruff check .`).
+
+Tipado Estático: Validación estricta activada mediante `mypy` evaluando la carpeta `app/`.
+
+Pruebas Unitarias y Cobertura: Se utiliza `pytest` junto con `pytest-cov`, exigiendo una cobertura mínima de código del 80% en el directorio de la aplicación.
 
 ## ☁️ Despliegue
 La aplicación está preparada para su empaquetado y despliegue automatizado:
 
 - **Construcción Multi-etapa:** El archivo `Dockerfile` utiliza un patrón Builder apoyado en la imagen `python:3.12-slim`. Este método instala las dependencias en un entorno virtual aislado (`/opt/venv`), descartando herramientas de construcción (como `pip` y `wheel`) en la imagen final para reducir vulnerabilidades y tamaño.
-
-- **Actualización de Seguridad O.S.:** Las actualizaciones de paquetes de Debian (`apt-get update && apt-get upgrade`) se ejecutan tanto en la etapa de construcción como de producción para mitigar avisos de herramientas de escaneo como Trivy.
 
 - **Infraestructura como Código (IaC):** Render administra el despliegue a través de `render.yaml`, conectando automáticamente el servicio web con la cadena de conexión de la base de datos aprovisionada.
