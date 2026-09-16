@@ -217,3 +217,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Android / Gradle
+android/.gradle/
+android/**/build/
+android/**/generated/
+android/**/intermediates/
+android/**/reports/
+
+# Android Studio
+.idea/
+android/.idea/
+android/local.properties
+
+# Kotlin / Android generated files
+*.hprof
