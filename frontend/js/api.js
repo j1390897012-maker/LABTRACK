@@ -15,13 +15,38 @@ async function peticionAPI(endpoint, metodo = "GET", body = null) {
 
   try {
     const respuesta = await fetch(`${API_URL}${endpoint}`, opciones);
-    const data = await respuesta.json();
-    
+
+    // Respuestas sin contenido (204) o sin body no se pueden parsear como JSON.
+    if (respuesta.status === 204) {
+      if (!respuesta.ok) {
+        throw { status: respuesta.status, detail: "Error sin contenido en la respuesta." };
+      }
+      return null;
+    }
+
+    const textoBruto = await respuesta.text();
+    let data = null;
+
+    if (textoBruto) {
+      try {
+        data = JSON.parse(textoBruto);
+      } catch (parseError) {
+        // El servidor no devolvió JSON válido; se conserva el texto crudo
+        // para no perder información útil en el mensaje de error.
+        data = { detail: textoBruto };
+      }
+    }
+
     if (!respuesta.ok) {
       console.error(`Error ${respuesta.status}:`, data);
-      throw data; // Lanza el error para que el archivo JS específico lo maneje
+      const error = data && typeof data === "object" ? data : {};
+      error.status = respuesta.status;
+      if (!error.detail) {
+        error.detail = "Error desconocido.";
+      }
+      throw error;
     }
-    
+
     return data;
   } catch (error) {
     console.error("Fallo de conexión con Render:", error);
