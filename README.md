@@ -1,15 +1,24 @@
+<div align="center">
+
 # 🔬 LABTRACK
 
 **Sistema de trazabilidad de laboratorio mediante RFID/NFC y QR**
 
 Digitaliza el préstamo, devolución y seguimiento de equipos de laboratorio, sustituyendo el control en papel por identificación física (tarjeta RFID/NFC) y códigos QR en los equipos.
 
-[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](.github/workflows/ci.yml)
-[![License](https://img.shields.io/badge/status-MVP%20en%20construcción-yellow)]()
+<!-- Badges de Tecnologías y Estado -->
+[![Python](https://img.shields.io/badge/Python-3.12+-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED?style=flat&logo=docker&logoColor=white)](https://www.docker.com/)
+[![CI](https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?style=flat&logo=githubactions&logoColor=white)](.github/workflows/ci.yml)
+[![Estado](https://img.shields.io/badge/Estado-MVP%20en%20construcción-yellow?style=flat)]()
+
+<br>
+
+<!-- Enlaces Principales -->
+[![Deploy on Render](https://img.shields.io/badge/Render-Live_API_Docs-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://labtrack-api-pvuh.onrender.com/docs)
+[![YouTube Demo](https://img.shields.io/badge/YouTube-Video_Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/_kouN0ju6p0)
 
 </div>
 
