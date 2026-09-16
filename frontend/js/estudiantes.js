@@ -13,29 +13,20 @@ async function guardarEstudiante() {
   if (!nombre || !matricula) return alert("Completa todos los campos.");
 
   const esEdicion = estudianteEditandoId !== null;
-  const url = esEdicion
-    ? `${API_URL}/estudiantes/${estudianteEditandoId}`
-    : `${API_URL}/estudiantes`;
+  const endpoint = esEdicion
+    ? `/estudiantes/${estudianteEditandoId}`
+    : `/estudiantes`;
 
   try {
-    const response = await fetch(url, {
-      method: esEdicion ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ nombre, matricula })
-    });
+    await peticionAPI(endpoint, esEdicion ? "PUT" : "POST", { nombre, matricula });
 
-    if (response.ok) {
-      closeModal("student-modal");
-      document.getElementById("input-estudiante-nombre").value = "";
-      document.getElementById("input-estudiante-matricula").value = "";
-      estudianteEditandoId = null;
-      cargarEstudiantesDesdeAPI();
-    } else {
-      const error = await response.json().catch(() => ({}));
-      alert("Error: " + (error.detail || "No se pudo guardar."));
-    }
-  } catch (e) {
-    console.error("Error al guardar estudiante:", e);
+    closeModal("student-modal");
+    document.getElementById("input-estudiante-nombre").value = "";
+    document.getElementById("input-estudiante-matricula").value = "";
+    estudianteEditandoId = null;
+    cargarEstudiantesDesdeAPI();
+  } catch (error) {
+    alert("Error: " + (error.detail || "No se pudo guardar."));
   }
 }
 
@@ -74,10 +65,7 @@ function abrirModalEditarEstudiante() {
 
 async function cargarEstudiantesDesdeAPI() {
   try {
-    const response = await fetch(`${API_URL}/estudiantes`);
-    if (!response.ok) throw new Error("Error al consultar API");
-
-    const estudiantes = await response.json();
+    const estudiantes = await peticionAPI("/estudiantes");
     estudiantesCache = estudiantes;
 
     const tbody = document.getElementById("student-table");
@@ -87,9 +75,10 @@ async function cargarEstudiantesDesdeAPI() {
     const estados = await Promise.all(
       estudiantes.map(async (est) => {
         try {
-          const r = await fetch(`${API_URL}/sesiones/activa?matricula=${encodeURIComponent(est.matricula)}`);
-          return r.ok;
+          await peticionAPI(`/sesiones/activa?matricula=${encodeURIComponent(est.matricula)}`);
+          return true;
         } catch (e) {
+          // 404 = no tiene sesión activa; se trata como "Inactiva".
           return false;
         }
       })
@@ -163,10 +152,7 @@ async function abrirDetalleEstudiante(id) {
   openModal("detalle-estudiante-modal");
 
   try {
-    const response = await fetch(`${API_URL}/estudiantes/${id}/historial`);
-    if (!response.ok) throw new Error("Error al consultar historial");
-
-    const data = await response.json();
+    const data = await peticionAPI(`/estudiantes/${id}/historial`);
     pintarDetalleEstudiante(data);
   } catch (error) {
     console.error("Error al cargar historial del estudiante:", error);
@@ -309,26 +295,18 @@ async function eliminarEstudianteDesdeDetalle() {
   if (!confirmar) return;
 
   try {
-    const response = await fetch(`${API_URL}/estudiantes/${estudianteDetalleActual.id}`, {
-      method: "DELETE",
-    });
+    await peticionAPI(`/estudiantes/${estudianteDetalleActual.id}`, "DELETE");
 
-    if (response.status === 204) {
-      closeModal("detalle-estudiante-modal");
-      estudianteDetalleActual = null;
-      cargarEstudiantesDesdeAPI();
-      return;
-    }
-
-    if (response.status === 409) {
+    closeModal("detalle-estudiante-modal");
+    estudianteDetalleActual = null;
+    cargarEstudiantesDesdeAPI();
+  } catch (error) {
+    if (error.status === 409) {
       alert("No se puede eliminar: el estudiante ya tiene historial de préstamos registrado.");
       return;
     }
 
-    const error = await response.json().catch(() => ({}));
     alert("Error: " + (error.detail || "No se pudo eliminar al estudiante."));
-  } catch (e) {
-    console.error("Error al eliminar estudiante:", e);
   }
 }
 

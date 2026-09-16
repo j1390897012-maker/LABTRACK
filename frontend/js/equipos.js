@@ -46,27 +46,16 @@ async function guardarEquipo() {
   if (!codigo || !tipo) return alert("Completa todos los campos.");
 
   try {
-    const response = await fetch(`${API_URL}/equipos`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ codigo, tipo })
-    });
-    
-    if (response.ok) {
-      closeModal("equipo-modal");
-      document.getElementById("input-equipo-codigo").value = "";
-      document.getElementById("input-equipo-tipo").value = "";
-      cargarEquiposDesdeAPI();
-      mostrarMensajeEquipos(`El equipo ${codigo} fue registrado exitosamente.`, "success");
-    } else {
-      const error = await response.json();
-      closeModal("equipo-modal");
-      mostrarMensajeEquipos("Error: " + (error.detail || "No se pudo registrar el equipo"), "danger");
-    }
-  } catch (e) {
-    console.error("Error al guardar equipo:", e);
+    await peticionAPI("/equipos", "POST", { codigo, tipo });
+
     closeModal("equipo-modal");
-    mostrarMensajeEquipos("Ocurrió un error en la conexión con el servidor.", "danger");
+    document.getElementById("input-equipo-codigo").value = "";
+    document.getElementById("input-equipo-tipo").value = "";
+    cargarEquiposDesdeAPI();
+    mostrarMensajeEquipos(`El equipo ${codigo} fue registrado exitosamente.`, "success");
+  } catch (error) {
+    closeModal("equipo-modal");
+    mostrarMensajeEquipos("Error: " + (error.detail || "No se pudo registrar el equipo"), "danger");
   }
 }
 
@@ -75,10 +64,7 @@ async function guardarEquipo() {
 // ==========================================
 async function cargarEquiposDesdeAPI() {
   try {
-    const response = await fetch(`${API_URL}/equipos`);
-    if (!response.ok) throw new Error("Error al consultar API");
-    
-    const equipos = await response.json();
+    const equipos = await peticionAPI("/equipos");
     const tbody = document.getElementById("equipment-table");
     tbody.innerHTML = ""; 
 
@@ -147,13 +133,7 @@ function filterEquipment() {
 // ==========================================
 async function showEquipment(codigo) {
   try {
-    const response = await fetch(`${API_URL}/equipos/${codigo}`);
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error("Error al obtener equipo:", data.detail);
-      return;
-    }
+    const data = await peticionAPI(`/equipos/${codigo}`);
     equipoDetalleActual = data;
 
     document.getElementById("detalle-codigo").textContent = data.codigo;
@@ -289,25 +269,16 @@ async function confirmarResolucionProblema() {
   }
 
   try {
-    const response = await fetch(`${API_URL}/fallas/${fallaId}/resolver`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ observacion_resolucion: detalleResolucion })
+    await peticionAPI(`/fallas/${fallaId}/resolver`, "PATCH", {
+      observacion_resolucion: detalleResolucion,
     });
 
-    if (response.ok) {
-      closeModal("resolver-problema-modal");
-      mostrarMensajeEquipos(`El problema del equipo ${codigo} se ha marcado como resuelto.`, "success");
-      cargarEquiposDesdeAPI();
-    } else {
-      closeModal("resolver-problema-modal");
-      const error = await response.json();
-      mostrarMensajeEquipos("No se pudo resolver el problema: " + (error.detail || "Error del servidor"), "danger");
-    }
-  } catch (error) {
-    console.error("Error al resolver el problema:", error);
     closeModal("resolver-problema-modal");
-    mostrarMensajeEquipos("Ocurrió un error de conexión con el servidor.", "danger");
+    mostrarMensajeEquipos(`El problema del equipo ${codigo} se ha marcado como resuelto.`, "success");
+    cargarEquiposDesdeAPI();
+  } catch (error) {
+    closeModal("resolver-problema-modal");
+    mostrarMensajeEquipos("No se pudo resolver el problema: " + (error.detail || "Error del servidor"), "danger");
   }
 }
 
@@ -326,24 +297,14 @@ async function confirmarEliminarEquipo() {
   const codigo = document.getElementById("input-eliminar-codigo").value;
   
   try {
-    const response = await fetch(`${API_URL}/equipos/${codigo}/baja`, {
-      method: "PATCH", 
-      headers: { "Content-Type": "application/json" }
-    });
+    await peticionAPI(`/equipos/${codigo}/baja`, "PATCH");
 
-    if (response.ok) {
-      closeModal("eliminar-equipo-modal");
-      cargarEquiposDesdeAPI(); 
-      mostrarMensajeEquipos(`El equipo ${codigo} ha sido dado de baja exitosamente.`, "success");
-    } else {
-      closeModal("eliminar-equipo-modal");
-      const error = await response.json();
-      mostrarMensajeEquipos("No se pudo eliminar el equipo: " + (error.detail || "Error del servidor"), "danger");
-    }
-  } catch (error) {
-    console.error("Error al eliminar equipo:", error);
     closeModal("eliminar-equipo-modal");
-    mostrarMensajeEquipos("Ocurrió un error en la conexión con el servidor.", "danger");
+    cargarEquiposDesdeAPI();
+    mostrarMensajeEquipos(`El equipo ${codigo} ha sido dado de baja exitosamente.`, "success");
+  } catch (error) {
+    closeModal("eliminar-equipo-modal");
+    mostrarMensajeEquipos("No se pudo eliminar el equipo: " + (error.detail || "Error del servidor"), "danger");
   }
 }
 

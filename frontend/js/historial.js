@@ -10,14 +10,8 @@ async function cargarHistorialDesdeAPI() {
   contenedor.innerHTML = `<p class="card-subtitle">Cargando historial de operaciones...</p>`;
 
   try {
-    const response = await fetch(`${API_URL}/historial`);
-    
-    if (!response.ok) {
-      throw new Error(`Error HTTP: ${response.status}`);
-    }
+    const data = await peticionAPI("/historial");
 
-    const data = await response.json();
-    
     // Extraemos el arreglo real de la propiedad "items" dictada por el backend
     const registros = data.items || [];
     
