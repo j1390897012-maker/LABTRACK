@@ -17,8 +17,9 @@ Digitaliza el préstamo, devolución y seguimiento de equipos de laboratorio, su
 <br>
 
 <!-- Enlaces Principales -->
-[![Deploy on Render](https://img.shields.io/badge/Render-Live_API_Docs-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://labtrack-api-pvuh.onrender.com/docs)
-[![YouTube Demo](https://img.shields.io/badge/YouTube-Video_Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/_kouN0ju6p0)
+[![Panel del Encargado](https://img.shields.io/badge/Interfaz-Panel_del_Encargado-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://labtrack-api-pvuh.onrender.com/)
+[![API Docs](https://img.shields.io/badge/API-Swagger_Docs-85EA2D?style=for-the-badge&logo=swagger&logoColor=white)](https://labtrack-api-pvuh.onrender.com/docs)
+[![YouTube Demo](https://img.shields.io/badge/Video-Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/_kouN0ju6p0)
 
 </div>
 
