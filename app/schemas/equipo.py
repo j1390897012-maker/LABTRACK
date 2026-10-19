@@ -34,6 +34,9 @@ class EquipoListItem(BaseModel):
     codigo: str
     tipo: str
     estado: str
+    numero_inventario: str | None = None
+    marca: str | None = None
+    modelo: str | None = None
 
 
 class PrestamoActivoEquipoInfo(BaseModel):
@@ -51,6 +54,9 @@ class EquipoDetalleResponse(BaseModel):
     codigo: str
     tipo: str
     estado: str
+    numero_inventario: str | None = None
+    marca: str | None = None
+    modelo: str | None = None
     qr_base64: str
     prestamo_activo: PrestamoActivoEquipoInfo | None = None
     fallas: list[HistorialFalla] = []

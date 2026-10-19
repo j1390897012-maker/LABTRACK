@@ -1,6 +1,6 @@
-from typing import Any
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.orm import Session
 
 # Asegúrate de que la importación de get_db coincida con tu proyecto
@@ -11,8 +11,10 @@ from app.schemas.estudiante import (
     EstudianteUpdate,
 )
 from app.schemas.historial import HistorialEstudianteResponse
+from app.schemas.importacion import ImportacionResponse
 from app.services.estudiante import crear_estudiante
 from app.services.estudiante_service import EstudianteService
+from app.services.importacion_service import ImportacionService
 
 router = APIRouter(
     prefix="/api/estudiantes",
@@ -20,6 +22,7 @@ router = APIRouter(
 )
 
 estudiante_service = EstudianteService()
+importacion_service = ImportacionService()
 
 @router.post("", response_model=EstudianteResponse, status_code=status.HTTP_201_CREATED)
 def registrar_estudiante(
@@ -31,6 +34,20 @@ def registrar_estudiante(
     """
     nuevo_estudiante = crear_estudiante(db=db, estudiante_in=estudiante_in)
     return nuevo_estudiante
+
+@router.post("/importar", response_model=ImportacionResponse)
+async def importar_estudiantes(
+    archivo: Annotated[UploadFile, File(description="Archivo .xlsx o .csv")],
+    db: Session = Depends(get_db),
+    dry_run: bool = False,
+) -> ImportacionResponse:
+    """Carga masiva de estudiantes. Columnas: matricula, nombre.
+    Con `dry_run=true` solo valida, sin guardar."""
+    contenido = await archivo.read()
+    return importacion_service.importar_estudiantes(
+        db, archivo.filename or "", contenido, dry_run
+    )
+
 
 @router.get("", response_model=list[EstudianteResponse], status_code=status.HTTP_200_OK)
 def listar_estudiantes(

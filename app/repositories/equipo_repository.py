@@ -115,3 +115,39 @@ class EquipoRepository:
             stmt = stmt.where(TipoAccesorio.tipo_equipo_id == tipo_equipo_id)
         stmt = stmt.order_by(TipoAccesorio.nombre)
         return list(db.execute(stmt).scalars().all())
+
+    # --- Importación masiva: no hacen commit, el servicio decide ---------
+
+    def get_by_numero_inventario(
+        self, db: Session, numero_inventario: str
+    ) -> Equipo | None:
+        stmt = select(Equipo).where(Equipo.numero_inventario == numero_inventario)
+        return db.execute(stmt).scalar_one_or_none()
+
+    def crear_tipo_sin_commit(self, db: Session, nombre: str) -> TipoEquipo:
+        tipo = TipoEquipo(nombre=nombre)
+        db.add(tipo)
+        db.flush()
+        return tipo
+
+    def crear_sin_commit(
+        self,
+        db: Session,
+        codigo: str,
+        tipo_equipo_id: int,
+        estado: str,
+        numero_inventario: str | None,
+        marca: str | None,
+        modelo: str | None,
+    ) -> Equipo:
+        equipo = Equipo(
+            codigo=codigo,
+            tipo_equipo_id=tipo_equipo_id,
+            estado=estado,
+            numero_inventario=numero_inventario,
+            marca=marca,
+            modelo=modelo,
+        )
+        db.add(equipo)
+        db.flush()
+        return equipo

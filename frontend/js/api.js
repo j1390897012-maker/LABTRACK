@@ -1,5 +1,5 @@
 // Reemplaza con la URL pública que te dio Render
-const API_URL = "https://labtrack-api-pvuh.onrender.com/api";
+const API_URL = "http://127.0.0.1:8000/api";
 
 async function peticionAPI(endpoint, metodo = "GET", body = null) {
   const opciones = {

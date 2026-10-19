@@ -112,3 +112,10 @@ class EstudianteRepository:
             .order_by(Estudiante.id) 
         )
         return db.execute(stmt).scalar_one_or_none()
+
+    def crear_sin_commit(self, db: Session, nombre: str, matricula: str) -> Estudiante:
+        """Igual que create pero sin commit (importación masiva)."""
+        estudiante = Estudiante(nombre=nombre, matricula=matricula)
+        db.add(estudiante)
+        db.flush()
+        return estudiante

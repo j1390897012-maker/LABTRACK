@@ -91,3 +91,35 @@ class FallaRepository:
         db.commit()
         db.refresh(falla)
         return falla
+
+    def existe_descripcion(
+        self, db: Session, equipo_id: int, descripcion: str
+    ) -> bool:
+        """True si el equipo ya tiene una falla con esa descripción exacta
+        (evita duplicar al repetir una importación)."""
+        stmt = (
+            select(Falla.id)
+            .where(Falla.equipo_id == equipo_id, Falla.descripcion == descripcion)
+            .limit(1)
+        )
+        return db.execute(stmt).first() is not None
+
+    def crear_sin_commit(
+        self,
+        db: Session,
+        equipo_id: int,
+        descripcion: str,
+        fecha: datetime | None = None,
+    ) -> Falla:
+        """Falla 'Pendiente' sin commit (importación masiva)."""
+        falla = Falla(
+            equipo_id=equipo_id,
+            sesion_equipo_id=None,
+            descripcion=descripcion,
+            estado="Pendiente",
+        )
+        if fecha is not None:
+            falla.fecha = fecha
+        db.add(falla)
+        db.flush()
+        return falla
