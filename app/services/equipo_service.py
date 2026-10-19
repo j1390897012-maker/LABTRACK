@@ -106,6 +106,9 @@ class EquipoService:
                 codigo=e.codigo,
                 tipo=e.tipo_equipo.nombre,
                 estado=e.estado,
+                numero_inventario=e.numero_inventario,
+                marca=e.marca,
+                modelo=e.modelo,
             )
             for e in equipos
         ]
@@ -141,6 +144,9 @@ class EquipoService:
             codigo=equipo.codigo,
             tipo=equipo.tipo_equipo.nombre,
             estado=equipo.estado,
+            numero_inventario=equipo.numero_inventario,
+            marca=equipo.marca,
+            modelo=equipo.modelo,
             qr_base64=qr_data_uri,
             prestamo_activo=prestamo_activo,
             fallas=[

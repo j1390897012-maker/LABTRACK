@@ -821,15 +821,18 @@ async function manejarRespuestaQR(data) {
       (data.estudiante && data.estudiante.matricula === sesionActual.matricula)
     );
 
-    agregarEquipoOperacion({
-      codigo: data.codigo,
-      tipo: data.tipo,
-      estado: data.estado || "Disponible",
-      equipo_id: data.equipo_id,
-      accion: "confirmar_prestamo",
-    });
-
     if (esSesionActual) {
+      const confirmar = await mostrarConfirmacion(
+        `El equipo ${data.codigo} está disponible.\n\n` +
+        `¿Deseas prestarlo a ${sesionActual.nombre} (${sesionActual.matricula})?`,
+        { titulo: "Confirmar préstamo", textoAceptar: "Prestar equipo" }
+      );
+
+      if (!confirmar) {
+        mostrarResultadoRFID("Préstamo cancelado. No se realizó ningún cambio.");
+        return;
+      }
+
       await registrarPrestamo(sesionActual.sesion_id, data);
       return;
     }

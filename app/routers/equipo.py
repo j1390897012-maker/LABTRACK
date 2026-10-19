@@ -11,7 +11,7 @@ Implementa:
 
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.db import get_db
@@ -26,14 +26,17 @@ from app.schemas.equipo import (
     EquipoUpdate,
 )
 from app.schemas.historial import HistorialEquipoResponse
+from app.schemas.importacion import ImportacionResponse
 from app.schemas.prestamo import ConfirmarPrestamoRequest, ConfirmarPrestamoResponse
 from app.services.equipo_service import EquipoService
+from app.services.importacion_service import ImportacionService
 from app.services.prestamo_service import PrestamoService
 
 # 1. Primero se define el router
 router = APIRouter(prefix="/api/equipos", tags=["Equipos"])
 equipo_service = EquipoService()
 prestamo_service = PrestamoService()
+importacion_service = ImportacionService()
 
 # 2. Luego se usan sus decoradores
 @router.post("", response_model=EquipoOut, status_code=status.HTTP_201_CREATED)
@@ -42,6 +45,21 @@ def registrar_equipo(
     db: Annotated[Session, Depends(get_db)]
 ) -> dict[str, Any]:
     return equipo_service.registrar_equipo(db, equipo_in)
+
+@router.post("/importar", response_model=ImportacionResponse)
+async def importar_equipos(
+    archivo: Annotated[UploadFile, File(description="Archivo .xlsx o .csv")],
+    db: Annotated[Session, Depends(get_db)],
+    dry_run: bool = False,
+) -> ImportacionResponse:
+    """Carga masiva de inventario. Columnas: codigo (inventario del lab,
+    ej. OSC0330), numero_inventario, marca, modelo, tipo, estado.
+    Con `dry_run=true` solo valida, sin guardar."""
+    contenido = await archivo.read()
+    return importacion_service.importar_equipos(
+        db, archivo.filename or "", contenido, dry_run
+    )
+
 
 @router.get("", response_model=list[EquipoListItem], status_code=status.HTTP_200_OK)
 def listar_equipos(

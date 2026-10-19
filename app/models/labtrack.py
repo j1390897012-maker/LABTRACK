@@ -85,6 +85,23 @@ class Equipo(Base):
         String(30),
         default="Disponible",
     )
+    # Datos de inventario (opcionales: se llenan con la importación masiva).
+    # `codigo` es el inventario del laboratorio (ej. OSC0330) y es lo que
+    # codifica el QR; `numero_inventario` es el inventario institucional.
+    numero_inventario: Mapped[str | None] = mapped_column(
+        String(50),
+        unique=True,
+        index=True,
+        nullable=True,
+    )
+    marca: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
+    modelo: Mapped[str | None] = mapped_column(
+        String(100),
+        nullable=True,
+    )
 
     tipo_equipo: Mapped["TipoEquipo"] = relationship(
         back_populates="equipos",
