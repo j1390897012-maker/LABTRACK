@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import Equipo, SesionEquipo, TipoAccesorio, TipoEquipo
@@ -46,11 +46,22 @@ class EquipoRepository:
         db.refresh(nuevo_tipo)
         return nuevo_tipo
 
-    def create(self, db: Session, codigo: str, tipo_equipo_id: int) -> Equipo:
+    def create(
+        self,
+        db: Session,
+        codigo: str,
+        tipo_equipo_id: int,
+        numero_inventario: str | None = None,
+        marca: str | None = None,
+        modelo: str | None = None,
+    ) -> Equipo:
         """Crea el equipo físico asociado a su tipo."""
         nuevo_equipo = Equipo(
             codigo=codigo,
-            tipo_equipo_id=tipo_equipo_id
+            tipo_equipo_id=tipo_equipo_id,
+            numero_inventario=numero_inventario,
+            marca=marca,
+            modelo=modelo,
             # 'estado' toma "Disponible" automáticamente por el modelo
         )
         db.add(nuevo_equipo)
@@ -151,3 +162,8 @@ class EquipoRepository:
         db.add(equipo)
         db.flush()
         return equipo
+
+    def contar_por_estado(self, db: Session) -> dict[str, int]:
+        """Cuenta equipos agrupando por estado (una sola consulta)."""
+        stmt = select(Equipo.estado, func.count()).group_by(Equipo.estado)
+        return {estado: n for estado, n in db.execute(stmt).all()}

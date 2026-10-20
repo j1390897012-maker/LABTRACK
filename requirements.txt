@@ -43,3 +43,4 @@ types-qrcode==8.2.0.20260518
 typing_extensions==4.16.0
 typing-inspection==0.4.4
 uvicorn==0.52.4
+websockets==17.2

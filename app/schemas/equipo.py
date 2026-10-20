@@ -1,17 +1,45 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    field_validator,
+    model_validator,
+)
 
 from app.schemas.historial import HistorialFalla
 
 
 class EquipoBase(BaseModel):
-    codigo: str = Field(..., description="Código único físico del equipo")
-    tipo: str = Field(..., description="Clasificación del equipo")
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    codigo: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        description="Código del laboratorio (ej. OSC-0330). Es el valor del QR.",
+    )
+    tipo: str = Field(
+        ..., min_length=1, max_length=100, description="Clasificación del equipo"
+    )
+
 
 class EquipoCreate(EquipoBase):
     """Esquema para la creación del equipo."""
-    pass
+
+    numero_inventario: str | None = Field(
+        default=None,
+        max_length=50,
+        description="Número oficial de inventario (distinto del código del lab).",
+    )
+    marca: str | None = Field(default=None, max_length=100)
+    modelo: str | None = Field(default=None, max_length=100)
+
+    @field_validator("numero_inventario", "marca", "modelo")
+    @classmethod
+    def vacio_a_none(cls, valor: str | None) -> str | None:
+        return valor or None
 
 class EquipoOut(BaseModel):
     """Esquema de respuesta de la API."""
@@ -19,7 +47,10 @@ class EquipoOut(BaseModel):
     codigo: str
     estado: str
     tipo: str
-    qr_base64: str | None = None 
+    numero_inventario: str | None = None
+    marca: str | None = None
+    modelo: str | None = None
+    qr_base64: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -113,3 +144,18 @@ class BajaEquipoResponse(BaseModel):
     codigo: str
     estado: str
     mensaje: str
+
+
+class ResumenEquipos(BaseModel):
+    """Conteo de equipos por estado (GET /api/equipos/resumen).
+
+    Cada equipo tiene un único estado, así que
+    total == disponibles + prestados + en_revision + baja + otros.
+    """
+
+    total: int
+    disponibles: int
+    prestados: int
+    en_revision: int
+    baja: int
+    otros: int = 0

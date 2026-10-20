@@ -7,13 +7,15 @@ const views = document.querySelectorAll(".view");
 const breadcrumb = document.getElementById("breadcrumb");
 
 const viewNames = {
+  panel: "Panel",
   equipos: "Equipos",
   operacion: "Operación",
   estudiantes: "Estudiantes",
   historial: "Historial",
+  importar: "Importar",
 };
 
-let vistaAnterior = "equipos";
+let vistaAnterior = "panel";
 
 
 // Navegación normal desde el sidebar
@@ -27,11 +29,47 @@ navButtons.forEach((button) => {
       return;
     }
 
-    mostrarVista(view, viewNames[view] || view);
+    // La URL es la fuente de verdad (#/equipos?estado=Prestado), así los
+    // indicadores, el botón "atrás" y los enlaces compartidos coinciden.
+    const destino = `#/${view}`;
+    if (location.hash === destino) {
+      navegarDesdeHash();
+    } else {
+      location.hash = destino;
+    }
 
   });
 
 });
+
+
+// ============================================================
+// RUTAS POR HASH
+// ============================================================
+
+function leerHash() {
+  const texto = location.hash.replace(/^#\/?/, "");
+  const [vista, consulta] = texto.split("?");
+  return { vista: vista || "panel", params: new URLSearchParams(consulta || "") };
+}
+
+function navegarDesdeHash() {
+  let { vista, params } = leerHash();
+
+  if (!viewNames[vista]) {
+    vista = "panel";
+    params = new URLSearchParams();
+  }
+
+  mostrarVista(vista, viewNames[vista]);
+
+  if (vista === "equipos" && typeof aplicarFiltrosInventario === "function") {
+    aplicarFiltrosInventario(params);
+  }
+}
+
+window.addEventListener("hashchange", navegarDesdeHash);
+document.addEventListener("DOMContentLoaded", navegarDesdeHash);
 
 
 // ============================================================
@@ -66,11 +104,16 @@ function mostrarVista(nombre, nombreBreadcrumb = null) {
   vista.classList.add("active");
 
   navButtons.forEach((item) => {
-    item.classList.toggle(
-      "active",
-      item.dataset.view === nombre
-    );
+    const activo = item.dataset.view === nombre;
+    item.classList.toggle("active", activo);
+    if (activo) {
+      item.setAttribute("aria-current", "page");
+    } else {
+      item.removeAttribute("aria-current");
+    }
   });
+
+  document.title = `${viewNames[nombre] || nombre} · LABTRACK`;
 
   if (breadcrumb) {
     breadcrumb.textContent =
@@ -147,7 +190,7 @@ function abrirVistaPrestamoRFID() {
 
 function regresarDesdePrestamoRFID() {
 
-  const destino = vistaAnterior || "equipos";
+  const destino = vistaAnterior || "panel";
 
   mostrarVista(
     destino,
