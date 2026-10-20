@@ -24,6 +24,7 @@ from app.schemas.equipo import (
     EquipoListItem,
     EquipoOut,
     EquipoUpdate,
+    ResumenEquipos,
 )
 from app.schemas.historial import HistorialEquipoResponse
 from app.schemas.importacion import ImportacionResponse
@@ -59,6 +60,12 @@ async def importar_equipos(
     return importacion_service.importar_equipos(
         db, archivo.filename or "", contenido, dry_run
     )
+
+
+@router.get("/resumen", response_model=ResumenEquipos)
+def resumen_equipos(db: Session = Depends(get_db)) -> ResumenEquipos:
+    """Conteo de equipos por estado, para los indicadores del panel."""
+    return equipo_service.resumen(db)
 
 
 @router.get("", response_model=list[EquipoListItem], status_code=status.HTTP_200_OK)

@@ -3,13 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LABTRACK — Panel del encargado</title>
+  <title>LABTRACK — Panel del laboratorio</title>
 
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/panel.css">
 </head>
 
 <body>
@@ -32,25 +33,35 @@
 
     <div class="nav-title">Panel</div>
 
-    <nav class="nav">
-      <button class="nav-button active" data-view="equipos">
-        <span class="nav-icon">▦</span>
+    <nav class="nav" aria-label="Navegación principal">
+      <button class="nav-button active" data-view="panel">
+        <span class="nav-icon" aria-hidden="true">◧</span>
+        <span class="nav-label">Panel</span>
+      </button>
+
+      <button class="nav-button" data-view="equipos">
+        <span class="nav-icon" aria-hidden="true">▦</span>
         <span class="nav-label">Equipos</span>
       </button>
 
       <button class="nav-button" data-view="operacion">
-        <span class="nav-icon">↔</span>
+        <span class="nav-icon" aria-hidden="true">↔</span>
         <span class="nav-label">Operación</span>
       </button>
 
       <button class="nav-button" data-view="estudiantes">
-        <span class="nav-icon">♙</span>
+        <span class="nav-icon" aria-hidden="true">♙</span>
         <span class="nav-label">Estudiantes</span>
       </button>
 
       <button class="nav-button" data-view="historial">
-        <span class="nav-icon">◷</span>
+        <span class="nav-icon" aria-hidden="true">◷</span>
         <span class="nav-label">Historial</span>
+      </button>
+
+      <button class="nav-button" data-view="importar">
+        <span class="nav-icon" aria-hidden="true">⇪</span>
+        <span class="nav-label">Importar</span>
       </button>
     </nav>
 
@@ -69,10 +80,13 @@
 
     <header class="topbar">
       <div class="breadcrumb">
-        LABTRACK / <strong id="breadcrumb">Equipos</strong>
+        LABTRACK / <strong id="breadcrumb">Panel</strong>
       </div>
       <div class="topbar-meta">
-        Laboratorio de Instrumentación
+        <span id="rt-status" class="rt" data-estado="conectando" role="status" aria-live="polite">
+          <span class="rt-dot" aria-hidden="true"></span><span class="rt-text">Conectando…</span>
+        </span>
+        <span class="topbar-lab">Laboratorio de Instrumentación</span>
       </div>
     </header>
 
@@ -82,82 +96,134 @@
       <!-- 01 EQUIPOS -->
       <!-- ===================================================== -->
 
-      <section class="view active" id="view-equipos">
+      <section class="view active" id="view-panel">
 
         <div class="page-header">
           <div>
-            <h1>Equipos</h1>
-            <p>Administra y consulta el inventario del laboratorio.</p>
+            <h1>Panel</h1>
+            <p>Estado actual del inventario del laboratorio.</p>
           </div>
-          <button class="button button-primary" onclick="openModal('equipo-modal')">
-            + Registrar equipo
-          </button>
+          <div class="header-actions">
+            <button class="button button-secondary" onclick="location.hash='#/importar'">Importar inventario</button>
+            <button class="button button-primary" onclick="abrirRegistroEquipo()">+ Registrar equipo</button>
+          </div>
         </div>
 
-        <div class="stats">
+        <div id="panel-error" class="banner banner-danger" role="alert" hidden></div>
 
-          <div class="card stat-card">
-            <svg class="stat-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-            <div class="stat-label">Total de equipos</div>
-            <div class="stat-value">0</div>
-            <div class="stat-description">Equipos registrados</div>
-          </div>
-
-          <div class="card stat-card">
-            <svg class="stat-icon stat-icon-success" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <div class="stat-label">Disponibles</div>
-            <div class="stat-value stat-value-success">0</div>
-            <div class="stat-description">Listos para préstamo</div>
-          </div>
-
-          <div class="card stat-card">
-            <svg class="stat-icon stat-icon-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-            <div class="stat-label">Prestados</div>
-            <div class="stat-value stat-value-warning">0</div>
-            <div class="stat-description">Actualmente en uso</div>
-          </div>
-
-          <div class="card stat-card">
-            <svg class="stat-icon stat-icon-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            <div class="stat-label">En revisión</div>
-            <div class="stat-value stat-value-danger">0</div>
-            <div class="stat-description">Requieren atención</div>
-          </div>
-
+        <div class="kpis" aria-label="Indicadores del inventario">
+          <a class="kpi" href="#/equipos" data-kpi="total">
+            <span class="kpi-label">Total de equipos</span>
+            <span class="kpi-value" data-valor>—</span>
+            <span class="kpi-hint">Ver todo el inventario</span>
+          </a>
+          <a class="kpi kpi-success" href="#/equipos?estado=Disponible" data-kpi="disponibles">
+            <span class="kpi-label">Disponibles</span>
+            <span class="kpi-value" data-valor>—</span>
+            <span class="kpi-hint">Listos para préstamo</span>
+          </a>
+          <a class="kpi kpi-warning" href="#/equipos?estado=Prestado" data-kpi="prestados">
+            <span class="kpi-label">Prestados</span>
+            <span class="kpi-value" data-valor>—</span>
+            <span class="kpi-hint">Actualmente en uso</span>
+          </a>
+          <a class="kpi kpi-danger" href="#/equipos?estado=En%20revisi%C3%B3n" data-kpi="en_revision">
+            <span class="kpi-label">En revisión</span>
+            <span class="kpi-value" data-valor>—</span>
+            <span class="kpi-hint">Requieren atención</span>
+          </a>
         </div>
+        <p class="kpi-note" id="panel-nota" hidden></p>
 
         <div class="card">
           <div class="card-header">
             <div>
-              <h2 class="card-title">Inventario</h2>
-              <p class="card-subtitle">Busca por código o filtra por estado.</p>
+              <h2 class="card-title">Fallas pendientes</h2>
+              <p class="card-subtitle" id="panel-fallas-sub">Reportes sin resolver, los más recientes primero.</p>
             </div>
-            <div class="toolbar">
-              <input class="input search-input" id="equipment-search" type="text" placeholder="Buscar por código..." oninput="filterEquipment()">
-              <select class="select" id="equipment-status" onchange="filterEquipment()">
-                <option value="">Todos los estados</option>
+          </div>
+          <div id="panel-fallas"></div>
+        </div>
+
+      </section>
+
+      <!-- ===================================================== -->
+      <!-- 01 EQUIPOS -->
+      <!-- ===================================================== -->
+
+      <section class="view" id="view-equipos">
+
+        <div class="page-header">
+          <div>
+            <h1>Equipos</h1>
+            <p>Consulta y administra el inventario del laboratorio.</p>
+          </div>
+          <div class="header-actions">
+            <button class="button button-secondary" onclick="location.hash='#/importar'">Importar</button>
+            <button class="button button-primary" onclick="abrirRegistroEquipo()">+ Registrar equipo</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="filters" role="search">
+            <div class="filter filter-grow">
+              <label for="inv-busqueda">Buscar</label>
+              <input class="input" id="inv-busqueda" type="search" autocomplete="off"
+                     placeholder="Código, inventario, marca, modelo o tipo">
+            </div>
+            <div class="filter">
+              <label for="inv-estado">Estado</label>
+              <select class="select" id="inv-estado">
+                <option value="">Todos</option>
                 <option value="Disponible">Disponible</option>
                 <option value="Prestado">Prestado</option>
                 <option value="En revisión">En revisión</option>
+                <option value="Baja">Baja</option>
               </select>
             </div>
+            <div class="filter">
+              <label for="inv-tipo">Tipo</label>
+              <select class="select" id="inv-tipo">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <button class="button button-secondary" id="inv-limpiar" type="button" hidden>Limpiar filtros</button>
+          </div>
+
+          <div class="table-meta">
+            <span id="inv-resumen" aria-live="polite">Cargando…</span>
+            <label class="page-size">Filas
+              <select class="select select-sm" id="inv-por-pagina">
+                <option>25</option>
+                <option>50</option>
+                <option>100</option>
+              </select>
+            </label>
           </div>
 
           <div class="table-wrapper">
-            <table>
+            <table class="table-inv">
               <thead>
                 <tr>
-                  <th>Código</th>
-                  <th>Tipo</th>
-                  <th>Estado</th>
-                  <th></th>
+                  <th aria-sort="none"><button class="th-sort" data-campo="codigo" type="button">Código lab</button></th>
+                  <th aria-sort="none"><button class="th-sort" data-campo="tipo" type="button">Tipo</button></th>
+                  <th aria-sort="none"><button class="th-sort" data-campo="numero_inventario" type="button">N.º de inventario</button></th>
+                  <th aria-sort="none"><button class="th-sort" data-campo="marca" type="button">Marca / modelo</button></th>
+                  <th aria-sort="none"><button class="th-sort" data-campo="estado" type="button">Estado</button></th>
+                  <th><span class="sr-only">Acciones</span></th>
                 </tr>
               </thead>
-              <tbody id="equipment-table">
-                <!-- JavaScript -->
-              </tbody>
+              <tbody id="equipment-table"></tbody>
             </table>
           </div>
+
+          <div id="inv-estado-vista" class="state-box" hidden></div>
+
+          <nav class="pager" id="inv-paginacion" aria-label="Paginación" hidden>
+            <button class="button button-secondary button-small" id="inv-anterior" type="button">Anterior</button>
+            <span id="inv-pagina"></span>
+            <button class="button button-secondary button-small" id="inv-siguiente" type="button">Siguiente</button>
+          </nav>
         </div>
 
       </section>
@@ -401,6 +467,71 @@
         </div>
       </section>
 
+      <!-- ===================================================== -->
+      <!-- 06 IMPORTAR -->
+      <!-- ===================================================== -->
+
+      <section class="view" id="view-importar">
+        <div class="page-header">
+          <div>
+            <h1>Importar</h1>
+            <p>Carga inventario o estudiantes desde un archivo Excel (.xlsx) o CSV.</p>
+          </div>
+        </div>
+
+        <div class="import-grid">
+
+          <div class="card import-card" data-importacion="equipos">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Equipos</h2>
+                <p class="card-subtitle">Una fila por equipo. Si el código ya existe, se actualiza.</p>
+              </div>
+              <a class="button button-secondary button-small" href="plantillas/plantilla_equipos.xlsx" download>Plantilla</a>
+            </div>
+            <div class="import-body">
+              <p class="import-cols"><strong>Columnas:</strong> Código lab <span class="req">(obligatoria)</span>, Equipo (tipo), Marca, Modelo, N° inventario, Estado, Observaciones, Fecha.
+              Las observaciones se registran como fallas pendientes.</p>
+              <div class="form-group">
+                <label for="imp-archivo-equipos">Archivo</label>
+                <input class="input" type="file" id="imp-archivo-equipos" accept=".xlsx,.csv">
+              </div>
+              <div class="import-actions">
+                <button class="button button-secondary" type="button" data-accion="validar" disabled>Validar archivo</button>
+                <button class="button button-primary" type="button" data-accion="importar" disabled>Importar</button>
+              </div>
+              <div class="import-resultado" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div class="card import-card" data-importacion="estudiantes">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title">Estudiantes</h2>
+                <p class="card-subtitle">Si la matrícula ya existe, se actualiza el nombre.</p>
+              </div>
+              <a class="button button-secondary button-small" href="plantillas/plantilla_estudiantes.xlsx" download>Plantilla</a>
+            </div>
+            <div class="import-body">
+              <p class="import-cols"><strong>Columnas:</strong> Matrícula <span class="req">(obligatoria)</span>, Nombre <span class="req">(obligatoria)</span>.
+              La tarjeta RFID de quien ya está registrado no se modifica.</p>
+              <div class="form-group">
+                <label for="imp-archivo-estudiantes">Archivo</label>
+                <input class="input" type="file" id="imp-archivo-estudiantes" accept=".xlsx,.csv">
+              </div>
+              <div class="import-actions">
+                <button class="button button-secondary" type="button" data-accion="validar" disabled>Validar archivo</button>
+                <button class="button button-primary" type="button" data-accion="importar" disabled>Importar</button>
+              </div>
+              <div class="import-resultado" aria-live="polite"></div>
+            </div>
+          </div>
+
+        </div>
+
+        <p class="kpi-note">Todo o nada: si una fila tiene error no se guarda nada y se indica qué fila corregir. «Validar» revisa el archivo sin guardar.</p>
+      </section>
+
     </div>
   </main>
 </div>
@@ -413,24 +544,71 @@
 <!-- REGISTRAR EQUIPO -->
 <!-- ============================================================= -->
 <div id="equipo-modal" class="modal-backdrop">
-  <div class="modal">
+  <div class="modal modal-large" role="dialog" aria-modal="true" aria-labelledby="equipo-modal-titulo">
     <div class="modal-header">
-      <h2>Registrar equipo</h2>
-      <button class="modal-close" onclick="closeModal('equipo-modal')">&times;</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Código del equipo</label>
-        <input type="text" id="input-equipo-codigo" class="input" placeholder="Ej. OSC-0307">
+      <div>
+        <h2 id="equipo-modal-titulo">Registrar equipo</h2>
+        <p class="card-subtitle">Los campos con <span class="req">*</span> son obligatorios.</p>
       </div>
-      <div class="form-group">
-        <label>Tipo de equipo</label>
-        <input type="text" id="input-equipo-tipo" class="input" placeholder="Escribe el tipo de equipo">
-      </div>
+      <button class="modal-close" type="button" aria-label="Cerrar" onclick="closeModal('equipo-modal')">&times;</button>
     </div>
-    <div class="modal-footer">
-      <button class="button button-secondary" onclick="closeModal('equipo-modal')">Cancelar</button>
-      <button class="button button-primary" onclick="guardarEquipo()">Guardar equipo</button>
+
+    <form id="equipo-form" novalidate>
+      <div class="modal-body">
+        <div id="equipo-form-error" class="banner banner-danger" role="alert" hidden></div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="input-equipo-codigo">Código del laboratorio <span class="req">*</span></label>
+            <input type="text" id="input-equipo-codigo" class="input" maxlength="50" autocomplete="off"
+                   placeholder="Ej. 18 u OSC-0330" aria-describedby="ayuda-codigo err-codigo" required>
+            <p class="field-help" id="ayuda-codigo">Número corto con el que se identifica en el lab. Es el valor del QR.</p>
+            <p class="field-error" id="err-codigo" hidden></p>
+          </div>
+          <div class="form-group">
+            <label for="input-equipo-tipo">Tipo de equipo <span class="req">*</span></label>
+            <input type="text" id="input-equipo-tipo" class="input" maxlength="100" autocomplete="off"
+                   list="lista-tipos" placeholder="Ej. Fuente de alimentación" aria-describedby="err-tipo" required>
+            <datalist id="lista-tipos"></datalist>
+            <p class="field-error" id="err-tipo" hidden></p>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="input-equipo-inventario">Número oficial de inventario (rectoría)</label>
+          <input type="text" id="input-equipo-inventario" class="input" maxlength="50" autocomplete="off"
+                 placeholder="Ej. N00122321" aria-describedby="ayuda-inv err-inventario">
+          <p class="field-help" id="ayuda-inv">Identificador institucional. Es distinto del código del laboratorio y no puede repetirse.</p>
+          <p class="field-error" id="err-inventario" hidden></p>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="input-equipo-marca">Marca</label>
+            <input type="text" id="input-equipo-marca" class="input" maxlength="100" autocomplete="off" placeholder="Ej. BK Precision">
+          </div>
+          <div class="form-group">
+            <label for="input-equipo-modelo">Modelo</label>
+            <input type="text" id="input-equipo-modelo" class="input" maxlength="100" autocomplete="off" placeholder="Ej. 1672">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="button button-secondary" type="button" onclick="closeModal('equipo-modal')">Cancelar</button>
+        <button class="button button-primary" type="submit" id="equipo-guardar">Guardar equipo</button>
+      </div>
+    </form>
+
+    <div id="equipo-exito" hidden>
+      <div class="modal-body">
+        <div class="banner banner-success" role="status" id="equipo-exito-texto"></div>
+        <div class="qr-container" id="equipo-exito-qr"></div>
+        <p class="field-help" style="text-align:center">Imprime este QR y pégalo en el equipo.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="button button-secondary" type="button" onclick="closeModal('equipo-modal')">Cerrar</button>
+        <button class="button button-primary" type="button" onclick="prepararRegistroEquipo()">Registrar otro</button>
+      </div>
     </div>
   </div>
 </div>
@@ -450,12 +628,20 @@
     <div class="modal-body">
       <div class="info-list">
         <div>
-          <div class="info-item-label">Código</div>
+          <div class="info-item-label">Código del laboratorio</div>
           <div class="info-item-value" id="detalle-codigo"></div>
         </div>
         <div>
           <div class="info-item-label">Tipo</div>
           <div class="info-item-value" id="detalle-tipo"></div>
+        </div>
+        <div>
+          <div class="info-item-label">N.º de inventario</div>
+          <div class="info-item-value" id="detalle-inventario"></div>
+        </div>
+        <div>
+          <div class="info-item-label">Marca y modelo</div>
+          <div class="info-item-value" id="detalle-marca-modelo"></div>
         </div>
         <div>
           <div class="info-item-label">Estado</div>
@@ -767,10 +953,13 @@
 
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
+<script src="js/realtime.js"></script>
 <script src="js/equipos.js"></script>
 <script src="js/estudiantes.js"></script>
 <script src="js/operacion.js"></script>
 <script src="js/historial.js"></script>
+<script src="js/panel.js"></script>
+<script src="js/importar.js"></script>
 
 </body>
 </html>

@@ -22,6 +22,7 @@ from app.schemas.equipo import (
     EquipoOut,
     EquipoUpdate,
     PrestamoActivoEquipoInfo,
+    ResumenEquipos,
 )
 from app.schemas.historial import (
     HistorialAccesorio,
@@ -71,13 +72,33 @@ class EquipoService:
                 detail="El dispositivo ya se encuentra registrado"
             )
 
+        if equipo_in.numero_inventario:
+            dueno = self.repo.get_by_numero_inventario(
+                db, equipo_in.numero_inventario
+            )
+            if dueno:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail=(
+                        f"El número de inventario '{equipo_in.numero_inventario}' "
+                        f"ya pertenece al equipo {dueno.codigo}."
+                    ),
+                )
+
         # 2. Buscar o crear tipo
         tipo = self.repo.get_tipo_by_nombre(db, equipo_in.tipo)
         if not tipo:
             tipo = self.repo.create_tipo(db, equipo_in.tipo)
 
         # 3. Crear equipo físico
-        nuevo_equipo = self.repo.create(db, equipo_in.codigo, tipo.id)
+        nuevo_equipo = self.repo.create(
+            db,
+            equipo_in.codigo,
+            tipo.id,
+            numero_inventario=equipo_in.numero_inventario,
+            marca=equipo_in.marca,
+            modelo=equipo_in.modelo,
+        )
 
         # 4. Generar el código QR en memoria (Base64)
         qr_data_uri = self._generar_qr_data_uri(nuevo_equipo.codigo)
@@ -88,8 +109,24 @@ class EquipoService:
             "codigo": nuevo_equipo.codigo,
             "estado": nuevo_equipo.estado,
             "tipo": tipo.nombre,
-            "qr_base64": qr_data_uri
+            "numero_inventario": nuevo_equipo.numero_inventario,
+            "marca": nuevo_equipo.marca,
+            "modelo": nuevo_equipo.modelo,
+            "qr_base64": qr_data_uri,
         }
+
+    def resumen(self, db: Session) -> ResumenEquipos:
+        """Conteo por estado para los indicadores del panel."""
+        por_estado = self.repo.contar_por_estado(db)
+        conocidos = {"Disponible", "Prestado", "En revisión", "Baja"}
+        return ResumenEquipos(
+            total=sum(por_estado.values()),
+            disponibles=por_estado.get("Disponible", 0),
+            prestados=por_estado.get("Prestado", 0),
+            en_revision=por_estado.get("En revisión", 0),
+            baja=por_estado.get("Baja", 0),
+            otros=sum(n for e, n in por_estado.items() if e not in conocidos),
+        )
 
 
     def listar(
@@ -183,6 +220,9 @@ class EquipoService:
             codigo=equipo.codigo,
             estado=equipo.estado,
             tipo=tipo.nombre,
+            numero_inventario=equipo.numero_inventario,
+            marca=equipo.marca,
+            modelo=equipo.modelo,
             qr_base64=None,
         )
 
