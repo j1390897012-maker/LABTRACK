@@ -3,538 +3,404 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070b14">
   <title>LABTRACK — Panel del laboratorio</title>
 
-  
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/panel.css">
 </head>
 
-<body>
-<div class="app">
+<body class="intro">
 
-  <!-- ========================================================= -->
-  <!-- SIDEBAR -->
-  <!-- ========================================================= -->
-
-  <aside class="sidebar">
-
-    <div class="brand">
-      <div class="brand-mark">L</div>
-
-      <div class="brand-text">
-        <div class="brand-name">LABTRACK</div>
-        <span class="brand-subtitle">Gestión de laboratorio</span>
-      </div>
+<!-- ========================================================= -->
+<!-- INTRO ANIMADA -->
+<!-- ========================================================= -->
+<div id="splash" aria-hidden="true">
+  <div class="splash-inner">
+    <div class="splash-word" aria-label="LABTRACK">
+      <span style="--i:0">L</span><span style="--i:1">A</span><span style="--i:2">B</span><span style="--i:3">T</span><span style="--i:4">R</span><span style="--i:5">A</span><span style="--i:6">C</span><span style="--i:7">K</span>
     </div>
+    <svg class="splash-wave" viewBox="0 0 400 60" preserveAspectRatio="none">
+      <path d="M0 30 C 25 30, 25 6, 50 6 S 75 54, 100 54 S 125 6, 150 6 S 175 54, 200 54 S 225 6, 250 6 S 275 54, 300 54 S 325 6, 350 6 S 375 30, 400 30" />
+    </svg>
+    <p class="splash-tag">Gestión inteligente de laboratorio</p>
+  </div>
+</div>
 
-    <div class="nav-title">Panel</div>
+<div class="bg-fx" aria-hidden="true"><i></i><i></i><i></i></div>
 
-    <nav class="nav" aria-label="Navegación principal">
-      <button class="nav-button active" data-view="panel">
-        <span class="nav-icon" aria-hidden="true">◧</span>
-        <span class="nav-label">Panel</span>
-      </button>
+<!-- ========================================================= -->
+<!-- BARRA SUPERIOR + MENÚ HAMBURGUESA -->
+<!-- ========================================================= -->
+<header class="topbar">
+  <button class="burger" id="burger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="drawer">
+    <span></span><span></span><span></span>
+  </button>
 
-      <button class="nav-button" data-view="equipos">
-        <span class="nav-icon" aria-hidden="true">▦</span>
-        <span class="nav-label">Equipos</span>
-      </button>
+  <div class="brand-inline">
+    <div class="brand-mark">L</div>
+    <div class="brand-name">LABTRACK</div>
+  </div>
 
-      <button class="nav-button" data-view="operacion">
-        <span class="nav-icon" aria-hidden="true">↔</span>
-        <span class="nav-label">Operación</span>
-      </button>
+  <div class="breadcrumb">/ <strong id="breadcrumb">Panel</strong></div>
 
-      <button class="nav-button" data-view="estudiantes">
-        <span class="nav-icon" aria-hidden="true">♙</span>
-        <span class="nav-label">Estudiantes</span>
-      </button>
+  <div class="topbar-meta">
+    <span id="rt-status" class="rt" data-estado="conectando" role="status" aria-live="polite">
+      <span class="rt-dot" aria-hidden="true"></span><span class="rt-text">Conectando…</span>
+    </span>
+  </div>
+</header>
 
-      <button class="nav-button" data-view="historial">
-        <span class="nav-icon" aria-hidden="true">◷</span>
-        <span class="nav-label">Historial</span>
-      </button>
+<div class="drawer-overlay" id="drawer-overlay"></div>
 
-      <button class="nav-button" data-view="importar">
-        <span class="nav-icon" aria-hidden="true">⇪</span>
-        <span class="nav-label">Importar</span>
-      </button>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="user-name">Encargado</div>
-      <div class="user-role">Laboratorio de Instrumentación · UV</div>
-    </div>
-
-  </aside>
-
-  <!-- ========================================================= -->
-  <!-- MAIN -->
-  <!-- ========================================================= -->
-
-  <main class="main">
-
-    <header class="topbar">
-      <div class="breadcrumb">
-        LABTRACK / <strong id="breadcrumb">Panel</strong>
-      </div>
-      <div class="topbar-meta">
-        <span id="rt-status" class="rt" data-estado="conectando" role="status" aria-live="polite">
-          <span class="rt-dot" aria-hidden="true"></span><span class="rt-text">Conectando…</span>
-        </span>
-        <span class="topbar-lab">Laboratorio de Instrumentación</span>
-      </div>
-    </header>
-
-    <div class="content">
-
-      <!-- ===================================================== -->
-      <!-- 01 EQUIPOS -->
-      <!-- ===================================================== -->
-
-      <section class="view active" id="view-panel">
-
-        <div class="page-header">
-          <div>
-            <h1>Panel</h1>
-            <p>Estado actual del inventario del laboratorio.</p>
-          </div>
-          <div class="header-actions">
-            <button class="button button-secondary" onclick="location.hash='#/importar'">Importar inventario</button>
-            <button class="button button-primary" onclick="abrirRegistroEquipo()">+ Registrar equipo</button>
-          </div>
-        </div>
-
-        <div id="panel-error" class="banner banner-danger" role="alert" hidden></div>
-
-        <div class="kpis" aria-label="Indicadores del inventario">
-          <a class="kpi" href="#/equipos" data-kpi="total">
-            <span class="kpi-label">Total de equipos</span>
-            <span class="kpi-value" data-valor>—</span>
-            <span class="kpi-hint">Ver todo el inventario</span>
-          </a>
-          <a class="kpi kpi-success" href="#/equipos?estado=Disponible" data-kpi="disponibles">
-            <span class="kpi-label">Disponibles</span>
-            <span class="kpi-value" data-valor>—</span>
-            <span class="kpi-hint">Listos para préstamo</span>
-          </a>
-          <a class="kpi kpi-warning" href="#/equipos?estado=Prestado" data-kpi="prestados">
-            <span class="kpi-label">Prestados</span>
-            <span class="kpi-value" data-valor>—</span>
-            <span class="kpi-hint">Actualmente en uso</span>
-          </a>
-          <a class="kpi kpi-danger" href="#/equipos?estado=En%20revisi%C3%B3n" data-kpi="en_revision">
-            <span class="kpi-label">En revisión</span>
-            <span class="kpi-value" data-valor>—</span>
-            <span class="kpi-hint">Requieren atención</span>
-          </a>
-        </div>
-        <p class="kpi-note" id="panel-nota" hidden></p>
-
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <h2 class="card-title">Fallas pendientes</h2>
-              <p class="card-subtitle" id="panel-fallas-sub">Reportes sin resolver, los más recientes primero.</p>
-            </div>
-          </div>
-          <div id="panel-fallas"></div>
-        </div>
-
-      </section>
-
-      <!-- ===================================================== -->
-      <!-- 01 EQUIPOS -->
-      <!-- ===================================================== -->
-
-      <section class="view" id="view-equipos">
-
-        <div class="page-header">
-          <div>
-            <h1>Equipos</h1>
-            <p>Consulta y administra el inventario del laboratorio.</p>
-          </div>
-          <div class="header-actions">
-            <button class="button button-secondary" onclick="location.hash='#/importar'">Importar</button>
-            <button class="button button-primary" onclick="abrirRegistroEquipo()">+ Registrar equipo</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="filters" role="search">
-            <div class="filter filter-grow">
-              <label for="inv-busqueda">Buscar</label>
-              <input class="input" id="inv-busqueda" type="search" autocomplete="off"
-                     placeholder="Código, inventario, marca, modelo o tipo">
-            </div>
-            <div class="filter">
-              <label for="inv-estado">Estado</label>
-              <select class="select" id="inv-estado">
-                <option value="">Todos</option>
-                <option value="Disponible">Disponible</option>
-                <option value="Prestado">Prestado</option>
-                <option value="En revisión">En revisión</option>
-                <option value="Baja">Baja</option>
-              </select>
-            </div>
-            <div class="filter">
-              <label for="inv-tipo">Tipo</label>
-              <select class="select" id="inv-tipo">
-                <option value="">Todos</option>
-              </select>
-            </div>
-            <button class="button button-secondary" id="inv-limpiar" type="button" hidden>Limpiar filtros</button>
-          </div>
-
-          <div class="table-meta">
-            <span id="inv-resumen" aria-live="polite">Cargando…</span>
-            <label class="page-size">Filas
-              <select class="select select-sm" id="inv-por-pagina">
-                <option>25</option>
-                <option>50</option>
-                <option>100</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="table-wrapper">
-            <table class="table-inv">
-              <thead>
-                <tr>
-                  <th aria-sort="none"><button class="th-sort" data-campo="codigo" type="button">Código lab</button></th>
-                  <th aria-sort="none"><button class="th-sort" data-campo="tipo" type="button">Tipo</button></th>
-                  <th aria-sort="none"><button class="th-sort" data-campo="numero_inventario" type="button">N.º de inventario</button></th>
-                  <th aria-sort="none"><button class="th-sort" data-campo="marca" type="button">Marca / modelo</button></th>
-                  <th aria-sort="none"><button class="th-sort" data-campo="estado" type="button">Estado</button></th>
-                  <th><span class="sr-only">Acciones</span></th>
-                </tr>
-              </thead>
-              <tbody id="equipment-table"></tbody>
-            </table>
-          </div>
-
-          <div id="inv-estado-vista" class="state-box" hidden></div>
-
-          <nav class="pager" id="inv-paginacion" aria-label="Paginación" hidden>
-            <button class="button button-secondary button-small" id="inv-anterior" type="button">Anterior</button>
-            <span id="inv-pagina"></span>
-            <button class="button button-secondary button-small" id="inv-siguiente" type="button">Siguiente</button>
-          </nav>
-        </div>
-
-      </section>
-
-      <!-- ===================================================== -->
-      <!-- 02 OPERACIÓN MANUAL -->
-      <!-- ===================================================== -->
-
-<section class="view" id="view-operacion">
-  <div class="page-header">
+<aside class="drawer" id="drawer" aria-label="Navegación principal">
+  <div class="drawer-head">
+    <div class="brand-mark">L</div>
     <div>
-      <h1>Operación</h1>
-      <p>Realiza préstamos y devoluciones manualmente.</p>
+      <div class="brand-name">LABTRACK</div>
+      <span class="brand-subtitle">Gestión de laboratorio</span>
     </div>
   </div>
 
-  <div class="operacion-grid-manual">
+  <nav class="nav">
+    <button class="nav-button active" data-view="panel" style="--i:0">
+      <svg viewBox="0 0 24 24" class="nav-icon"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
+      <span class="nav-label">Panel</span>
+    </button>
+    <button class="nav-button" data-view="equipos" style="--i:1">
+      <svg viewBox="0 0 24 24" class="nav-icon"><path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="M3 7.5v9L12 21l9-4.5v-9"/><path d="M12 12v9"/></svg>
+      <span class="nav-label">Equipos</span>
+    </button>
+    <button class="nav-button" data-view="operacion" style="--i:2">
+      <svg viewBox="0 0 24 24" class="nav-icon"><path d="M7 7h12l-3-3"/><path d="M17 17H5l3 3"/></svg>
+      <span class="nav-label">Operación</span>
+    </button>
+    <button class="nav-button" data-view="estudiantes" style="--i:3">
+      <svg viewBox="0 0 24 24" class="nav-icon"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+      <span class="nav-label">Estudiantes</span>
+    </button>
+    <button class="nav-button" data-view="historial" style="--i:4">
+      <svg viewBox="0 0 24 24" class="nav-icon"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      <span class="nav-label">Historial</span>
+    </button>
+    <button class="nav-button" data-view="importar" style="--i:5">
+      <svg viewBox="0 0 24 24" class="nav-icon"><path d="M12 15V3"/><path d="m7 8 5-5 5 5"/><path d="M4 15v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/></svg>
+      <span class="nav-label">Importar</span>
+    </button>
+  </nav>
 
-    <!-- PRÉSTAMO MANUAL -->
-    <div class="card operacion-card-manual">
-      <div class="operacion-card-header">
-        <div class="operacion-card-icon operacion-card-icon-prestamo">↦</div>
+  <div class="drawer-foot">
+    <div class="user-name">Encargado</div>
+    <div class="user-role">Laboratorio de Instrumentación · UV</div>
+  </div>
+</aside>
+
+<!-- ========================================================= -->
+<!-- CONTENIDO -->
+<!-- ========================================================= -->
+<main class="main">
+  <div class="content">
+
+    <!-- ===================================================== -->
+    <!-- PANEL PRINCIPAL -->
+    <!-- ===================================================== -->
+    <section class="view active" id="view-panel">
+
+      <div class="hero">
         <div>
-          <h2 class="card-title">Préstamo manual</h2>
-          <p class="card-subtitle">Registra un préstamo con matrícula y código de equipo.</p>
+          <p class="eyebrow">Laboratorio de Instrumentación</p>
+          <h1>Panel del <span class="grad">laboratorio</span></h1>
+          <p class="hero-sub">Todo tu inventario de un vistazo. Toca una categoría para ver sus equipos.</p>
         </div>
-      </div>
-
-      <div class="operacion-card-body">
-        <div class="form-group">
-          <label for="manual-prestamo-matricula">Matrícula del estudiante</label>
-          <input id="manual-prestamo-matricula" class="input" type="text" placeholder="Ej. S23013959" autocomplete="off">
-        </div>
-        <div class="form-group" style="margin-bottom: 0;">
-          <label for="manual-prestamo-codigo">Código del equipo</label>
-          <input id="manual-prestamo-codigo" class="input" type="text" placeholder="Ej. OSC-0307" autocomplete="off">
-        </div>
-        <div id="manual-prestamo-resultado" class="operacion-resultado"></div>
-      </div>
-
-      <div class="modal-footer operacion-card-footer">
-        <button class="button button-primary" onclick="prestarEquipoManual()">
-          Registrar préstamo
-        </button>
-      </div>
-    </div>
-
-    <!-- DEVOLUCIÓN MANUAL -->
-    <div class="card operacion-card-manual">
-      <div class="operacion-card-header">
-        <div class="operacion-card-icon operacion-card-icon-devolucion">↤</div>
-        <div>
-          <h2 class="card-title">Devolución manual</h2>
-          <p class="card-subtitle">Inicia la devolución indicando el código del equipo.</p>
-        </div>
-      </div>
-
-      <div class="operacion-card-body">
-        <div class="form-group" style="margin-bottom: 0;">
-          <label for="manual-devolucion-codigo">Código del equipo</label>
-          <input id="manual-devolucion-codigo" class="input" type="text" placeholder="Ej. OSC-0307" autocomplete="off">
-        </div>
-        <div id="manual-devolucion-resultado" class="operacion-resultado"></div>
-      </div>
-
-      <div class="modal-footer operacion-card-footer">
-        <button class="button button-primary" onclick="devolverEquipoManual()">
-          Iniciar devolución
-        </button>
-      </div>
-    </div>
-
-  </div>
-</section>
-      <!-- ===================================================== -->
-      <!-- 03 SESIÓN DE PRÉSTAMO -->
-      <!-- ===================================================== -->
-
-<section class="view" id="view-prestamo-rfid">
-
-  <div class="page-header">
-    <div>
-      <h1>Sesión de préstamo</h1>
-      <p id="rfid-flow-subtitle">Esperando identificación del estudiante.</p>
-    </div>
-    <div style="display: flex; gap: 10px;">
-      <button class="button button-secondary" onclick="cancelarFlujoRFID()">Cancelar</button>
-      <button id="btn-terminar-operacion" class="button button-primary" style="display: none;" onclick="terminarOperacion()">Terminar operación</button>
-    </div>
-  </div>
-
-  <!-- BARRA DE PROGRESO DEL FLUJO -->
-  <div class="rfid-progress">
-    <div class="rfid-progress-step" id="rfid-step-1">
-      <span class="rfid-progress-dot">1</span>
-      <span class="rfid-progress-label">Identificar estudiante</span>
-    </div>
-    <div class="rfid-progress-line"></div>
-    <div class="rfid-progress-step" id="rfid-step-2">
-      <span class="rfid-progress-dot">2</span>
-      <span class="rfid-progress-label">Escanear equipos</span>
-    </div>
-    <div class="rfid-progress-line"></div>
-    <div class="rfid-progress-step" id="rfid-step-3">
-      <span class="rfid-progress-dot">3</span>
-      <span class="rfid-progress-label">Terminar sesión</span>
-    </div>
-  </div>
-
-  <!-- ESTADO -->
-  <div class="card">
-    <div class="card-header">
-      <div>
-        <h2 class="card-title">Estado de la sesión</h2>
-        <p class="card-subtitle" id="rfid-flow-status">Esperando identificación del estudiante...</p>
-      </div>
-      <span class="status status-available" id="rfid-flow-badge">
-        <span class="status-dot"></span> Esperando estudiante
-      </span>
-    </div>
-  </div>
-
-  <!-- ESTUDIANTE -->
-  <div class="card card-spaced rfid-student-card" id="rfid-flow-estudiante" hidden>
-    <div class="card-header">
-      <div>
-        <h2 class="card-title">Estudiante identificado</h2>
-        <p class="card-subtitle">La sesión quedó vinculada correctamente.</p>
-      </div>
-      <span class="rfid-check-icon">✓</span>
-    </div>
-    <div class="info-list">
-      <div>
-        <div class="info-item-label">Estudiante</div>
-        <div class="info-item-value" id="rfid-flow-nombre"></div>
-      </div>
-      <div>
-        <div class="info-item-label">Matrícula</div>
-        <div class="info-item-value" id="rfid-flow-matricula"></div>
-      </div>
-      <div>
-        <div class="info-item-label">Sesión</div>
-        <div class="info-item-value" id="rfid-flow-sesion"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ESPERANDO QR -->
-  <div class="card card-spaced" id="rfid-flow-esperando-qr" hidden>
-    <div class="operation-step">
-      <div class="operation-step-icon operation-step-icon-scan">▣</div>
-      <div class="operation-step-content">
-        <h3>Listo para prestar equipos</h3>
-        <p>Escanea el código QR del equipo para agregarlo a esta sesión. El registro se hace automáticamente.</p>
-        <div class="waiting-indicator">
-          <span class="waiting-dot"></span> Esperando el siguiente equipo…
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- EQUIPOS ESCANEADOS -->
-  <div class="card card-spaced" id="rfid-flow-equipos" hidden>
-    <div class="card-header">
-      <div>
-        <h2 class="card-title">Equipos de esta sesión</h2>
-        <p class="card-subtitle">Lo que se va a prestar en esta sesión.</p>
-      </div>
-    </div>
-    <div id="rfid-flow-equipo-list">
-      <!-- JavaScript -->
-    </div>
-  </div>
-
-  <!-- RESULTADO -->
-  <div id="rfid-flow-resultado" class="operacion-resultado card-spaced"></div>
-</section>
-      <!-- ===================================================== -->
-      <!-- 04 ESTUDIANTES -->
-      <!-- ===================================================== -->
-
-      <section class="view" id="view-estudiantes">
-        <div class="page-header">
-          <div>
-            <h1>Estudiantes</h1>
-            <p>Registra estudiantes y administra su identificación.</p>
-          </div>
-          <button class="button button-primary" onclick="abrirModalNuevoEstudiante()">
-            + Registrar estudiante
+        <div class="header-actions">
+          <button class="button button-primary" onclick="abrirRegistroEquipo()">
+            <svg viewBox="0 0 24 24" class="btn-ico"><path d="M12 5v14M5 12h14"/></svg> Registrar equipo
           </button>
         </div>
+      </div>
 
-        <div class="card">
+      <div id="panel-error" class="banner banner-danger" role="alert" hidden></div>
+
+      <div class="kpis" aria-label="Indicadores del inventario">
+        <a class="kpi" href="#/equipos" data-kpi="total" style="--i:0">
+          <span class="kpi-ico"><svg viewBox="0 0 24 24"><path d="M12 3 3 7.5 12 12l9-4.5L12 3Z"/><path d="M3 7.5v9L12 21l9-4.5v-9"/><path d="M12 12v9"/></svg></span>
+          <span class="kpi-value" data-valor>—</span>
+          <span class="kpi-label">Total de equipos</span>
+        </a>
+        <a class="kpi kpi-success" href="#/equipos?estado=Disponible" data-kpi="disponibles" style="--i:1">
+          <span class="kpi-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16 9.5"/></svg></span>
+          <span class="kpi-value" data-valor>—</span>
+          <span class="kpi-label">Disponibles</span>
+        </a>
+        <a class="kpi kpi-warning" href="#/equipos?estado=Prestado" data-kpi="prestados" style="--i:2">
+          <span class="kpi-ico"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+          <span class="kpi-value" data-valor>—</span>
+          <span class="kpi-label">Prestados</span>
+        </a>
+        <a class="kpi kpi-danger" href="#/equipos?estado=En%20revisi%C3%B3n" data-kpi="en_revision" style="--i:3">
+          <span class="kpi-ico"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4 2.6-2.6Z"/></svg></span>
+          <span class="kpi-value" data-valor>—</span>
+          <span class="kpi-label">En revisión</span>
+        </a>
+      </div>
+      <p class="kpi-note" id="panel-nota" hidden></p>
+
+      <div class="section-title">
+        <h2>Categorías de equipo</h2>
+        <a href="#/equipos" class="link-more">Ver todos →</a>
+      </div>
+      <div class="cat-grid" id="panel-categorias"></div>
+
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- EQUIPOS -->
+    <!-- ===================================================== -->
+    <section class="view" id="view-equipos">
+
+      <div class="page-header">
+        <div>
+          <a class="back-link" id="equipos-volver" href="#/panel" hidden>← Panel</a>
+          <h1 id="equipos-titulo">Equipos</h1>
+          <p id="inv-resumen" aria-live="polite">Cargando…</p>
+        </div>
+        <div class="header-actions">
+          <button class="button button-primary" onclick="abrirRegistroEquipo()">
+            <svg viewBox="0 0 24 24" class="btn-ico"><path d="M12 5v14M5 12h14"/></svg> Registrar equipo
+          </button>
+        </div>
+      </div>
+
+      <div class="toolbar" role="search">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="input" id="inv-busqueda" type="search" autocomplete="off" placeholder="Buscar por código, marca, modelo o tipo…">
+        </div>
+        <div class="chips" id="inv-chips" role="group" aria-label="Filtrar por estado">
+          <button type="button" class="chip" data-estado="">Todos</button>
+          <button type="button" class="chip" data-estado="Disponible">Disponibles</button>
+          <button type="button" class="chip" data-estado="Prestado">Prestados</button>
+          <button type="button" class="chip" data-estado="En revisión">En revisión</button>
+          <button type="button" class="chip" data-estado="Baja">Baja</button>
+        </div>
+        <!-- Los selects se conservan (ocultos) porque equipos.js los lee -->
+        <select class="select" id="inv-estado" hidden>
+          <option value="">Todos</option><option value="Disponible">Disponible</option>
+          <option value="Prestado">Prestado</option><option value="En revisión">En revisión</option>
+          <option value="Baja">Baja</option>
+        </select>
+        <select class="select select-pill" id="inv-tipo" aria-label="Tipo de equipo"><option value="">Todos los tipos</option></select>
+        <button class="button button-secondary button-small" id="inv-limpiar" type="button" hidden>Limpiar</button>
+      </div>
+
+      <div class="equipos-grid" id="equipment-table"></div>
+
+      <div id="inv-estado-vista" class="state-box" hidden></div>
+
+      <nav class="pager" id="inv-paginacion" aria-label="Paginación" hidden>
+        <button class="button button-secondary button-small" id="inv-anterior" type="button">← Anterior</button>
+        <span id="inv-pagina"></span>
+        <button class="button button-secondary button-small" id="inv-siguiente" type="button">Siguiente →</button>
+        <label class="page-size">Por página
+          <select class="select select-sm" id="inv-por-pagina"><option>25</option><option>50</option><option>100</option></select>
+        </label>
+      </nav>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- OPERACIÓN -->
+    <!-- ===================================================== -->
+    <section class="view" id="view-operacion">
+
+      <div class="op-hero">
+        <div class="pulse">
+          <span></span><span></span><span></span>
+          <div class="pulse-core">
+            <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><circle cx="9" cy="11" r="2"/><path d="M6.5 16c.4-1.6 1.5-2.4 2.5-2.4s2.1.8 2.5 2.4M14 10h4M14 13h3"/></svg>
+          </div>
+        </div>
+        <h1>Acerca la credencial del estudiante</h1>
+        <p>Al detectarla se abre el panel del estudiante. Después escanea el QR de cada equipo para agregarlo.</p>
+        <div class="op-wait"><span class="waiting-dot"></span> Esperando credencial…</div>
+      </div>
+
+      <div class="manual">
+        <div class="seg" role="tablist" aria-label="Operación manual">
+          <button type="button" class="seg-btn active" data-tab="prestamo" role="tab">Préstamo manual</button>
+          <button type="button" class="seg-btn" data-tab="devolucion" role="tab">Devolución manual</button>
+        </div>
+
+        <div class="manual-panel active" data-panel="prestamo">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="manual-prestamo-matricula">Matrícula del estudiante</label>
+              <input id="manual-prestamo-matricula" class="input" type="text" placeholder="Ej. S23013959" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label for="manual-prestamo-codigo">Código del equipo</label>
+              <input id="manual-prestamo-codigo" class="input" type="text" placeholder="Ej. OSC-0307" autocomplete="off">
+            </div>
+          </div>
+          <div id="manual-prestamo-resultado" class="operacion-resultado"></div>
+          <button class="button button-primary" onclick="prestarEquipoManual()">Registrar préstamo</button>
+        </div>
+
+        <div class="manual-panel" data-panel="devolucion">
+          <div class="form-group">
+            <label for="manual-devolucion-codigo">Código del equipo</label>
+            <input id="manual-devolucion-codigo" class="input" type="text" placeholder="Ej. OSC-0307" autocomplete="off">
+          </div>
+          <div id="manual-devolucion-resultado" class="operacion-resultado"></div>
+          <button class="button button-primary" onclick="devolverEquipoManual()">Iniciar devolución</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- SESIÓN DE PRÉSTAMO (panel del estudiante) -->
+    <!-- ===================================================== -->
+    <section class="view" id="view-prestamo-rfid">
+
+      <div class="session-student card" id="rfid-flow-estudiante" hidden>
+        <div class="avatar avatar-xl" id="rfid-flow-avatar">··</div>
+        <div class="session-student-info">
+          <span class="status status-available" id="rfid-flow-badge"><span class="status-dot"></span> Esperando estudiante</span>
+          <h1 id="rfid-flow-nombre"></h1>
+          <p><span class="code" id="rfid-flow-matricula"></span> · <span id="rfid-flow-sesion"></span></p>
+        </div>
+        <button class="button button-secondary" onclick="cancelarFlujoRFID()">Cancelar</button>
+      </div>
+
+      <p class="session-status" id="rfid-flow-subtitle">Esperando identificación del estudiante.</p>
+      <p class="session-status" id="rfid-flow-status" hidden></p>
+
+      <div class="scan-card" id="rfid-flow-esperando-qr" hidden>
+        <div class="scan-art">
+          <svg viewBox="0 0 64 64"><path d="M8 20V12a4 4 0 0 1 4-4h8M44 8h8a4 4 0 0 1 4 4v8M56 44v8a4 4 0 0 1-4 4h-8M20 56h-8a4 4 0 0 1-4-4v-8"/><rect x="20" y="20" width="9" height="9" rx="1.5"/><rect x="35" y="20" width="9" height="9" rx="1.5"/><rect x="20" y="35" width="9" height="9" rx="1.5"/><path d="M35 35h4v4h-4zM41 41h3v3h-3z"/></svg>
+          <i class="laser"></i>
+        </div>
+        <div>
+          <h3>Listo para agregar equipos</h3>
+          <p>Escanea el QR de cada equipo. Se irán sumando abajo y los prestas todos juntos al final.</p>
+        </div>
+      </div>
+
+      <div id="rfid-flow-equipos" hidden>
+        <div class="section-title">
+          <h2>Equipos agregados</h2>
+          <span class="count-pill" id="rfid-flow-conteo">0</span>
+        </div>
+        <div id="rfid-flow-equipo-list" class="tray"></div>
+      </div>
+
+      <div id="rfid-flow-resultado" class="operacion-resultado"></div>
+
+      <div class="action-bar">
+        <button id="btn-terminar-operacion" class="button button-primary button-lg" style="display:none" onclick="terminarOperacion()">Terminar operación</button>
+      </div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- ESTUDIANTES -->
+    <!-- ===================================================== -->
+    <section class="view" id="view-estudiantes">
+      <div class="page-header">
+        <div>
+          <h1>Estudiantes</h1>
+          <p>Registra estudiantes y administra su identificación.</p>
+        </div>
+        <div class="header-actions">
+          <button class="button button-primary" onclick="abrirModalNuevoEstudiante()">
+            <svg viewBox="0 0 24 24" class="btn-ico"><path d="M12 5v14M5 12h14"/></svg> Registrar estudiante
+          </button>
+        </div>
+      </div>
+      <div class="toolbar">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input class="input" placeholder="Buscar por nombre o matrícula…" oninput="filterStudents()" id="student-search">
+        </div>
+      </div>
+      <div class="students-grid" id="student-table"></div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- HISTORIAL -->
+    <!-- ===================================================== -->
+    <section class="view" id="view-historial">
+      <div class="page-header">
+        <div>
+          <h1>Historial</h1>
+          <p>Línea de tiempo de las operaciones del laboratorio.</p>
+        </div>
+      </div>
+      <div class="timeline" id="history-list"></div>
+    </section>
+
+    <!-- ===================================================== -->
+    <!-- IMPORTAR -->
+    <!-- ===================================================== -->
+    <section class="view" id="view-importar">
+      <div class="page-header">
+        <div>
+          <h1>Importar</h1>
+          <p>Carga inventario o estudiantes desde un archivo Excel (.xlsx) o CSV.</p>
+        </div>
+      </div>
+
+      <div class="import-grid">
+        <div class="card import-card" data-importacion="equipos">
           <div class="card-header">
             <div>
-              <h2 class="card-title">Estudiantes registrados</h2>
-              <p class="card-subtitle">Busca por matrícula o nombre.</p>
+              <h2 class="card-title">Equipos</h2>
+              <p class="card-subtitle">Una fila por equipo. Si el código ya existe, se actualiza.</p>
             </div>
-            <input class="input search-input" placeholder="Buscar estudiante..." oninput="filterStudents()" id="student-search">
+            <a class="button button-secondary button-small" href="plantillas/plantilla_equipos.xlsx" download>Plantilla</a>
           </div>
-          <div class="table-wrapper">
-            <table>
-              <thead>
-                <tr>
-                  <th>Estudiante</th>
-                  <th>Matrícula</th>
-                  <th>Identificación</th>
-                  <th>Sesión</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody id="student-table">
-                <!-- JavaScript -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ===================================================== -->
-      <!-- 05 HISTORIAL -->
-      <!-- ===================================================== -->
-
-      <section class="view" id="view-historial">
-        <div class="page-header">
-          <div>
-            <h1>Historial</h1>
-            <p>Consulta las operaciones realizadas en el laboratorio.</p>
+          <div class="import-body">
+            <p class="import-cols"><strong>Columnas:</strong> Código lab <span class="req">(obligatoria)</span>, Equipo (tipo), Marca, Modelo, N° inventario, Estado, Observaciones, Fecha. Las observaciones se registran como fallas pendientes.</p>
+            <div class="form-group">
+              <label for="imp-archivo-equipos">Archivo</label>
+              <input class="input" type="file" id="imp-archivo-equipos" accept=".xlsx,.csv">
+            </div>
+            <div class="import-actions">
+              <button class="button button-secondary" type="button" data-accion="validar" disabled>Validar archivo</button>
+              <button class="button button-primary" type="button" data-accion="importar" disabled>Importar</button>
+            </div>
+            <div class="import-resultado" aria-live="polite"></div>
           </div>
         </div>
 
-        <div class="card">
+        <div class="card import-card" data-importacion="estudiantes">
           <div class="card-header">
-            <h2 class="card-title">Actividad reciente</h2>
-          </div>
-          <div class="card-body">
-            <div class="history-list" id="history-list">
-              <!-- JavaScript -->
+            <div>
+              <h2 class="card-title">Estudiantes</h2>
+              <p class="card-subtitle">Si la matrícula ya existe, se actualiza el nombre.</p>
             </div>
+            <a class="button button-secondary button-small" href="plantillas/plantilla_estudiantes.xlsx" download>Plantilla</a>
           </div>
-        </div>
-      </section>
-
-      <!-- ===================================================== -->
-      <!-- 06 IMPORTAR -->
-      <!-- ===================================================== -->
-
-      <section class="view" id="view-importar">
-        <div class="page-header">
-          <div>
-            <h1>Importar</h1>
-            <p>Carga inventario o estudiantes desde un archivo Excel (.xlsx) o CSV.</p>
+          <div class="import-body">
+            <p class="import-cols"><strong>Columnas:</strong> Matrícula <span class="req">(obligatoria)</span>, Nombre <span class="req">(obligatoria)</span>. La tarjeta RFID de quien ya está registrado no se modifica.</p>
+            <div class="form-group">
+              <label for="imp-archivo-estudiantes">Archivo</label>
+              <input class="input" type="file" id="imp-archivo-estudiantes" accept=".xlsx,.csv">
+            </div>
+            <div class="import-actions">
+              <button class="button button-secondary" type="button" data-accion="validar" disabled>Validar archivo</button>
+              <button class="button button-primary" type="button" data-accion="importar" disabled>Importar</button>
+            </div>
+            <div class="import-resultado" aria-live="polite"></div>
           </div>
         </div>
+      </div>
+      <p class="kpi-note">Todo o nada: si una fila tiene error no se guarda nada y se indica qué fila corregir. «Validar» revisa el archivo sin guardar.</p>
+    </section>
 
-        <div class="import-grid">
-
-          <div class="card import-card" data-importacion="equipos">
-            <div class="card-header">
-              <div>
-                <h2 class="card-title">Equipos</h2>
-                <p class="card-subtitle">Una fila por equipo. Si el código ya existe, se actualiza.</p>
-              </div>
-              <a class="button button-secondary button-small" href="plantillas/plantilla_equipos.xlsx" download>Plantilla</a>
-            </div>
-            <div class="import-body">
-              <p class="import-cols"><strong>Columnas:</strong> Código lab <span class="req">(obligatoria)</span>, Equipo (tipo), Marca, Modelo, N° inventario, Estado, Observaciones, Fecha.
-              Las observaciones se registran como fallas pendientes.</p>
-              <div class="form-group">
-                <label for="imp-archivo-equipos">Archivo</label>
-                <input class="input" type="file" id="imp-archivo-equipos" accept=".xlsx,.csv">
-              </div>
-              <div class="import-actions">
-                <button class="button button-secondary" type="button" data-accion="validar" disabled>Validar archivo</button>
-                <button class="button button-primary" type="button" data-accion="importar" disabled>Importar</button>
-              </div>
-              <div class="import-resultado" aria-live="polite"></div>
-            </div>
-          </div>
-
-          <div class="card import-card" data-importacion="estudiantes">
-            <div class="card-header">
-              <div>
-                <h2 class="card-title">Estudiantes</h2>
-                <p class="card-subtitle">Si la matrícula ya existe, se actualiza el nombre.</p>
-              </div>
-              <a class="button button-secondary button-small" href="plantillas/plantilla_estudiantes.xlsx" download>Plantilla</a>
-            </div>
-            <div class="import-body">
-              <p class="import-cols"><strong>Columnas:</strong> Matrícula <span class="req">(obligatoria)</span>, Nombre <span class="req">(obligatoria)</span>.
-              La tarjeta RFID de quien ya está registrado no se modifica.</p>
-              <div class="form-group">
-                <label for="imp-archivo-estudiantes">Archivo</label>
-                <input class="input" type="file" id="imp-archivo-estudiantes" accept=".xlsx,.csv">
-              </div>
-              <div class="import-actions">
-                <button class="button button-secondary" type="button" data-accion="validar" disabled>Validar archivo</button>
-                <button class="button button-primary" type="button" data-accion="importar" disabled>Importar</button>
-              </div>
-              <div class="import-resultado" aria-live="polite"></div>
-            </div>
-          </div>
-
-        </div>
-
-        <p class="kpi-note">Todo o nada: si una fila tiene error no se guarda nada y se indica qué fila corregir. «Validar» revisa el archivo sin guardar.</p>
-      </section>
-
-    </div>
-  </main>
-</div>
+  </div>
+</main>
 
 <!-- ============================================================= -->
 <!-- MODALES -->
@@ -626,6 +492,7 @@
       <button class="modal-close" onclick="closeModal('detalle-equipo-modal')">&times;</button>
     </div>
     <div class="modal-body">
+      <div class="detalle-hero" id="detalle-ilustracion"></div>
       <div class="info-list">
         <div>
           <div class="info-item-label">Código del laboratorio</div>
@@ -947,12 +814,14 @@
   </div>
 </div>
 
+
 <!-- ============================================================= -->
 <!-- SCRIPTS -->
 <!-- ============================================================= -->
 
 <script src="js/api.js"></script>
 <script src="js/app.js"></script>
+<script src="js/ui.js"></script>
 <script src="js/realtime.js"></script>
 <script src="js/equipos.js"></script>
 <script src="js/estudiantes.js"></script>
@@ -960,6 +829,8 @@
 <script src="js/historial.js"></script>
 <script src="js/panel.js"></script>
 <script src="js/importar.js"></script>
+
+<div id="toast-container" aria-live="polite"></div>
 
 </body>
 </html>
