@@ -4,6 +4,7 @@
 
 let sesionActual = null;
 let equiposOperacion = [];
+let equiposPendientes = []; // QR escaneados por prestar (aún sin confirmar)
 let ultimoScanVisto = null;
 let uidPendienteEnrolar = null;
 // Matrícula del estudiante dueño del equipo que se está devolviendo actualmente.
@@ -647,6 +648,7 @@ async function manejarRespuestaRFID(valor, data) {
 
   inicioOperacionRFID = new Date().toISOString();
   equiposOperacion = [];
+  equiposPendientes = [];
 
   const lista = document.getElementById("rfid-flow-equipo-list");
   const equipos = document.getElementById("rfid-flow-equipos");
@@ -707,6 +709,13 @@ function mostrarEstudianteRFID(data) {
     nombre.textContent = data.nombre || "—";
   }
 
+  etiquetarBotonOperacion(equiposPendientes.length);
+
+  const avatar = document.getElementById("rfid-flow-avatar");
+  if (avatar) {
+    avatar.textContent = (data.nombre || "··").trim().substring(0, 2).toUpperCase();
+  }
+
   if (matricula) {
     matricula.textContent = data.matricula || "—";
   }
@@ -748,6 +757,9 @@ function mostrarResultadoRFID(texto) {
   const el = document.getElementById("rfid-flow-resultado");
   if (el) {
     el.innerHTML = ""; // Se deja vacío para eliminar la caja de logs
+  }
+  if (/^error/i.test(String(texto || ""))) {
+    mostrarMensajeEquipos(texto, "danger");
   }
 }
 
@@ -822,18 +834,7 @@ async function manejarRespuestaQR(data) {
     );
 
     if (esSesionActual) {
-      const confirmar = await mostrarConfirmacion(
-        `El equipo ${data.codigo} está disponible.\n\n` +
-        `¿Deseas prestarlo a ${sesionActual.nombre} (${sesionActual.matricula})?`,
-        { titulo: "Confirmar préstamo", textoAceptar: "Prestar equipo" }
-      );
-
-      if (!confirmar) {
-        mostrarResultadoRFID("Préstamo cancelado. No se realizó ningún cambio.");
-        return;
-      }
-
-      await registrarPrestamo(sesionActual.sesion_id, data);
+      agregarEquipoPendiente(data);
       return;
     }
 
@@ -904,6 +905,7 @@ async function confirmarAsignacionAEstudiante(estudiante, dataEquipo) {
   };
 
   equiposOperacion = [];
+  equiposPendientes = [];
   inicioOperacionRFID = new Date().toISOString();
 
   abrirVistaPrestamoRFID();
@@ -1042,46 +1044,112 @@ async function manejarDevolucionQR(data) {
 
 function agregarEquipoOperacion(data) {
   equiposOperacion.push(data);
+  renderEquiposOperacion();
+}
 
-  const contenedor = document.getElementById("rfid-flow-equipos");
-  const lista = document.getElementById("rfid-flow-equipo-list");
-
-  if (!contenedor || !lista) {
+// Equipo escaneado que todavía no se presta: queda "por prestar" en la bandeja.
+function agregarEquipoPendiente(data) {
+  const repetido = equiposPendientes.some(
+    (e) => (e.equipo_id && e.equipo_id === data.equipo_id) || e.codigo === data.codigo
+  );
+  if (repetido) {
+    mostrarMensajeEquipos(`${data.codigo} ya está en la lista.`, "success");
     return;
   }
+  equiposPendientes.push(data);
+  actualizarEstadoRFID(
+    "Equipo agregado",
+    `${data.codigo} agregado. Escanea otro o presiona «Prestar equipos».`
+  );
+  renderEquiposOperacion();
+}
 
-  contenedor.hidden = false;
+function quitarEquipoPendiente(codigo) {
+  equiposPendientes = equiposPendientes.filter((e) => e.codigo !== codigo);
+  renderEquiposOperacion();
+}
 
-  const STATUS_CLASSES_LOCAL = {
+function detallesEquipo(codigo, tipo) {
+  const inv = typeof inventario !== "undefined"
+    ? inventario.datos.find((e) => e.codigo === codigo) : null;
+  const extra = inv ? [inv.marca, inv.modelo].filter(Boolean).join(" ") : "";
+  return [tipo || "—", extra].filter(Boolean).join(" · ");
+}
+
+function renderEquiposOperacion() {
+  const contenedor = document.getElementById("rfid-flow-equipos");
+  const lista = document.getElementById("rfid-flow-equipo-list");
+  if (!contenedor || !lista) return;
+
+  const total = equiposOperacion.length + equiposPendientes.length;
+  contenedor.hidden = total === 0;
+
+  const STATUS = {
     Disponible: "status-available",
     Prestado: "status-loaned",
     "En revisión": "status-review",
   };
 
-  lista.innerHTML = equiposOperacion
-    .map((equipo) => {
-      const statusClass = STATUS_CLASSES_LOCAL[equipo.estado] || "status-available";
+  const pendientes = equiposPendientes.map((e, i) => `
+    <div class="tray-item pending" style="--i:${Math.min(i, 10)}">
+      <div class="tray-ico">${iconoEquipo(e.tipo)}</div>
+      <div class="tray-info">
+        <div class="tray-code">${esc(e.codigo || "—")}</div>
+        <div class="tray-sub">${esc(detallesEquipo(e.codigo, e.tipo))}</div>
+        <span class="status status-loaned"><span class="status-dot"></span>Por prestar</span>
+      </div>
+      <button type="button" class="tray-x" aria-label="Quitar ${esc(e.codigo)}"
+              onclick="quitarEquipoPendiente('${esc(e.codigo)}')">✕</button>
+    </div>`);
 
-      return `
-        <div class="equipo-operacion-row">
-          <div>
-            <div class="info-item-label">Equipo</div>
-            <div class="operation-student-name">${equipo.codigo || "—"}</div>
-          </div>
-          <div>
-            <div class="info-item-label">Tipo</div>
-            <div class="operation-student-data">${equipo.tipo || "—"}</div>
-          </div>
-          <div>
-            <span class="status ${statusClass}">
-              <span class="status-dot"></span>
-              ${equipo.estado || "—"}
-            </span>
-          </div>
-        </div>
-      `;
-    })
-    .join("");
+  const confirmados = equiposOperacion.map((e, i) => `
+    <div class="tray-item" style="--i:${Math.min(i, 10)}">
+      <div class="tray-ico">${iconoEquipo(e.tipo)}</div>
+      <div class="tray-info">
+        <div class="tray-code">${esc(e.codigo || "—")}</div>
+        <div class="tray-sub">${esc(detallesEquipo(e.codigo, e.tipo))}</div>
+        <span class="status ${STATUS[e.estado] || "status-available"}"><span class="status-dot"></span>${esc(e.estado || "—")}</span>
+      </div>
+    </div>`);
+
+  lista.innerHTML = pendientes.concat(confirmados).join("");
+  const conteo = document.getElementById("rfid-flow-conteo");
+  if (conteo) conteo.textContent = total;
+  etiquetarBotonOperacion(equiposPendientes.length);
+}
+
+// Presta de una sola vez lo que se fue agregando (mismos endpoints de siempre).
+async function prestarPendientes() {
+  if (!sesionActual || equiposPendientes.length === 0) return true;
+
+  const lista = equiposPendientes.map((e) => `• ${e.codigo} (${e.tipo || "—"})`).join("\n");
+  const confirmar = await mostrarConfirmacion(
+    `¿Deseas prestar los siguientes equipos a ${sesionActual.nombre} (${sesionActual.matricula})?\n\n${lista}`,
+    { titulo: "Prestar equipos", textoAceptar: "Sí, prestar" }
+  );
+  if (!confirmar) return false;
+
+  const porPrestar = equiposPendientes.slice();
+  equiposPendientes = [];
+  let fallidos = 0;
+  for (const dato of porPrestar) {
+    const ok = await registrarPrestamo(sesionActual.sesion_id, dato);
+    if (!ok) {
+      equiposPendientes.push(dato);
+      fallidos += 1;
+    }
+  }
+  renderEquiposOperacion();
+
+  if (fallidos === 0) {
+    mostrarMensajeEquipos(
+      porPrestar.length === 1
+        ? "Equipo prestado correctamente."
+        : `${porPrestar.length} equipos prestados correctamente.`,
+      "success"
+    );
+  }
+  return fallidos === 0;
 }
 
 // ============================================================
@@ -1097,18 +1165,7 @@ async function seleccionarEstudianteYPrestar(data) {
       (e) => e.matricula === sesionActual.matricula
     )
   ) {
-    const confirmar = await mostrarConfirmacion(
-      `El equipo ${data.codigo} está disponible.\n\n` +
-      `¿Deseas prestarlo a ${sesionActual.nombre} (${sesionActual.matricula})?`,
-      { titulo: "Confirmar préstamo", textoAceptar: "Prestar equipo" }
-    );
-
-    if (!confirmar) {
-      mostrarResultadoRFID("Préstamo cancelado. No se realizó ningún cambio.");
-      return;
-    }
-
-    await registrarPrestamo(sesionActual.sesion_id, data);
+    agregarEquipoPendiente(data);
     return;
   }
 
@@ -1176,10 +1233,12 @@ async function registrarPrestamo(sesionId, dataEquipo) {
     );
 
     await cargarEquiposDesdeAPI();
+    return true;
   } catch (error) {
     mostrarResultadoRFID(
       "Error al registrar el préstamo: " + (error.detail || "No se pudo procesar.")
     );
+    return false;
   }
 }
 
@@ -1211,6 +1270,7 @@ async function cancelarFlujoRFID() {
 
   sesionActual = null;
   equiposOperacion = [];
+  equiposPendientes = [];
   devolucionActual = null;
   inicioOperacionRFID = null;
 
@@ -1399,6 +1459,11 @@ async function revisarUltimoScan() {
 // ============================================================
 
 async function terminarOperacion() {
+  if (equiposPendientes.length > 0) {
+    await prestarPendientes();
+    return;
+  }
+
   const confirmar = await mostrarConfirmacion(
     "¿Deseas dar por terminada la operación? Se cerrará la sesión activa de la interfaz.",
     { titulo: "Terminar operación", textoAceptar: "Terminar" }
@@ -1443,6 +1508,7 @@ async function terminarOperacion() {
   setTimeout(() => {
     sesionActual = null;
     equiposOperacion = [];
+    equiposPendientes = [];
     devolucionActual = null;
     inicioOperacionRFID = null;
 

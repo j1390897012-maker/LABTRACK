@@ -212,7 +212,7 @@ function poblarFiltroTipos() {
   const delInventario = inventario.datos.map((e) => e.tipo);
   const todos = [...new Set([...inventario.tipos, ...delInventario])].sort(COLLATOR.compare);
   select.innerHTML =
-    `<option value="">Todos</option>` +
+    `<option value="">Todos los tipos</option>` +
     todos.map((t) => `<option value="${esc(t)}">${esc(t)}</option>`).join("");
   select.value = inventario.tipo;
 }
@@ -268,6 +268,7 @@ function renderInventario() {
   const tbody = document.getElementById("equipment-table");
   if (!tbody) return;
 
+  if (typeof sincronizarVistaEquipos === "function") sincronizarVistaEquipos();
   document.getElementById("inv-limpiar").hidden = !hayFiltros();
   document.querySelectorAll(".th-sort").forEach((boton) => {
     const th = boton.closest("th");
@@ -284,21 +285,16 @@ function renderInventario() {
   if (inventario.cargando) {
     resumen.textContent = "Cargando inventario…";
     paginacion.hidden = true;
-    tbody.innerHTML = Array.from({ length: 6 }, () =>
-      `<tr class="skeleton-row">${"<td><span class='skeleton'></span></td>".repeat(6)}</tr>`
-    ).join("");
+    tbody.innerHTML = Array.from({ length: 8 }, () => `<div class="skeleton-card"></div>`).join("");
     mostrarEstadoVista("");
     return;
   }
 
   if (inventario.error) {
-    resumen.textContent = "No se pudo cargar el inventario.";
+    resumen.textContent = "Sin datos por el momento.";
     tbody.innerHTML = "";
     paginacion.hidden = true;
-    mostrarEstadoVista(`
-      <p class="state-title">No se pudo cargar el inventario</p>
-      <p class="state-text">${esc(inventario.error)}</p>
-      <button class="button button-primary" type="button" onclick="cargarEquiposDesdeAPI()">Reintentar</button>`);
+    mostrarEstadoVista(htmlErrorConexion("cargarEquiposDesdeAPI()", esc(inventario.error)));
     return;
   }
 
@@ -338,20 +334,18 @@ function renderInventario() {
     `Mostrando ${desde + 1}–${desde + visibles.length} de ${lista.length}` +
     (lista.length !== inventario.datos.length ? ` (${inventario.datos.length} en total)` : " equipos");
 
-  tbody.innerHTML = visibles.map((e) => {
+  tbody.innerHTML = visibles.map((e, i) => {
     const marcaModelo = [e.marca, e.modelo].filter(Boolean).join(" ");
+    const sub = marcaModelo || (e.numero_inventario ? `Inv. ${e.numero_inventario}` : "");
     return `
-      <tr>
-        <td data-label="Código lab"><span class="code">${esc(e.codigo)}</span></td>
-        <td data-label="Tipo">${esc(e.tipo)}</td>
-        <td data-label="N.º de inventario">${e.numero_inventario ? esc(e.numero_inventario) : '<span class="muted-dash">—</span>'}</td>
-        <td data-label="Marca / modelo">${marcaModelo ? esc(marcaModelo) : '<span class="muted-dash">—</span>'}</td>
-        <td data-label="Estado">${badgeEstado(e.estado)}</td>
-        <td class="td-actions">
-          <button class="button button-secondary button-small" type="button"
-                  data-codigo="${esc(e.codigo)}" aria-label="Ver detalle del equipo ${esc(e.codigo)}">Detalle</button>
-        </td>
-      </tr>`;
+      <button type="button" class="equipo-card" style="--i:${Math.min(i, 14)}"
+              data-codigo="${esc(e.codigo)}" aria-label="Ver detalle del equipo ${esc(e.codigo)}">
+        <div class="eq-art">${iconoEquipo(e.tipo)}</div>
+        ${badgeEstado(e.estado)}
+        <div class="eq-code">${esc(e.codigo)}</div>
+        <div class="eq-type">${esc(e.tipo)}</div>
+        <div class="eq-sub">${esc(sub)}</div>
+      </button>`;
   }).join("");
 
   paginacion.hidden = paginas <= 1;
@@ -372,11 +366,13 @@ async function cargarEquiposDesdeAPI() {
     inventario.error = null;
     poblarFiltroTipos();
   } catch (error) {
-    inventario.error = mensajeError(error, "Error al consultar el servidor.");
+    inventario.error = mensajeError(error, "No se pudo consultar el servidor.");
     console.error("Error cargando el inventario:", error);
   }
   inventario.cargando = false;
   renderInventario();
+  // Avisa a la vista de panel para que pinte las categorías.
+  document.dispatchEvent(new Event("labtrack:inventario"));
 }
 
 function aplicarFiltrosInventario(params) {
@@ -458,6 +454,7 @@ async function showEquipment(codigo) {
     const data = await peticionAPI(`/equipos/${codigo}`);
     equipoDetalleActual = data;
 
+    document.getElementById("detalle-ilustracion").innerHTML = iconoEquipo(data.tipo);
     document.getElementById("detalle-codigo").textContent = data.codigo;
     document.getElementById("detalle-tipo").textContent = data.tipo;
     document.getElementById("detalle-inventario").textContent =

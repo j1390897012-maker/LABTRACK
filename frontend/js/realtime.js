@@ -22,7 +22,7 @@
     estadoEl.title = {
       vivo: "Los cambios se reflejan al instante.",
       conectando: "Conectando con el servidor…",
-      caido: "Sin conexión en vivo. Se actualiza cada 30 segundos.",
+      caido: "Reconectando con el servidor. Mientras tanto los datos se actualizan cada 30 segundos.",
     }[estado];
   }
 
@@ -93,7 +93,7 @@
   }
 
   function programarReintento() {
-    mostrar("caido", "Sin conexión en vivo");
+    mostrar("caido", "Reconectando…");
     iniciarRespaldo();
     intentos += 1;
     const espera = Math.min(30000, 1000 * 2 ** Math.min(intentos, 5));

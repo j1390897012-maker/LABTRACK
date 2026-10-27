@@ -1,10 +1,11 @@
+
 services:
   api:
     build: .
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-labtrack}:${POSTGRES_PASSWORD:-secret}@db:5432/${POSTGRES_DB:-labtrack}
     depends_on:
       - db
 

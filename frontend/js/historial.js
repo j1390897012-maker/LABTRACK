@@ -7,7 +7,7 @@ async function cargarHistorialDesdeAPI() {
   
   if (!contenedor) return;
 
-  contenedor.innerHTML = `<p class="card-subtitle">Cargando historial de operaciones...</p>`;
+  contenedor.innerHTML = htmlCargando("Cargando historial…");
 
   try {
     const data = await peticionAPI("/historial");
@@ -16,7 +16,7 @@ async function cargarHistorialDesdeAPI() {
     const registros = data.items || [];
     
     if (registros.length === 0) {
-      contenedor.innerHTML = `<p class="card-subtitle">Aún no hay operaciones registradas en el laboratorio.</p>`;
+      contenedor.innerHTML = `<div class="state-box"><p class="state-title">Aún no hay operaciones</p><p class="state-text">Cuando se preste o devuelva un equipo aparecerá aquí.</p></div>`;
       return;
     }
 
@@ -24,41 +24,28 @@ async function cargarHistorialDesdeAPI() {
 
   } catch (error) {
     console.error("Fallo la consulta real al backend:", error);
-    contenedor.innerHTML = `
-      <p class="card-subtitle" style="color: var(--danger);">
-        No se pudo cargar el historial. Revisa la consola para más detalles.
-      </p>
-    `;
+    contenedor.innerHTML = htmlErrorConexion("cargarHistorialDesdeAPI()", mensajeError(error));
   }
 }
 
 function renderizarHistorial(registros, contenedor) {
-  contenedor.innerHTML = registros.map(registro => {
+  contenedor.innerHTML = registros.map((registro, i) => {
     // Asegurar que JavaScript interprete la hora como UTC y la convierta a hora local
     const fechaFija = registro.fecha.endsWith("Z") ? registro.fecha : registro.fecha + "Z";
     const fechaObj = new Date(fechaFija);
-    const fechaFormat = fechaObj.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
-    const horaFormat = fechaObj.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-    
-    // Capitalizar la primera letra del evento
-    const tipoEvento = registro.tipo_evento ? registro.tipo_evento.charAt(0).toUpperCase() + registro.tipo_evento.slice(1) : "Evento";
-    
-    // Determinar colores del badge
-    let badgeColor = "var(--success)";
-    let colorBg = "var(--success-light, #d1fae5)";
-    
-    if (registro.tipo_evento === "prestamo") {
-      badgeColor = "var(--warning)";
-      colorBg = "var(--warning-light, #fef3c7)";
-    } else if (registro.tipo_evento === "falla") {
-      badgeColor = "var(--danger)";
-      colorBg = "var(--danger-light, #fee2e2)";
-    }
+    const fechaFormat = fechaObj.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
+    const horaFormat = fechaObj.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
 
-    // Manejo inteligente de datos nulos para fallas
+    const tipoEvento = registro.tipo_evento
+      ? registro.tipo_evento.charAt(0).toUpperCase() + registro.tipo_evento.slice(1).replace(/_/g, " ")
+      : "Evento";
+
+    const clase = ["prestamo", "falla", "devolucion"].includes(registro.tipo_evento)
+      ? `tl-${registro.tipo_evento}` : "";
+
     const nombre = registro.estudiante_nombre;
     const matricula = registro.matricula;
-    
+
     let infoUsuario = "";
     if (nombre || matricula) {
       infoUsuario = `${nombre || "Desconocido"} · ${matricula || "Sin matrícula"}`;
@@ -69,28 +56,19 @@ function renderizarHistorial(registros, contenedor) {
     }
 
     return `
-      <div class="history-item" style="display: flex; align-items: flex-start; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border-color, #e2e8f0);">
-        <div class="history-date" style="min-width: 60px; text-align: center; color: var(--muted); font-size: 13px; font-weight: 600;">
-          ${fechaFormat}<br>
-          <span style="font-weight: 400; font-size: 11px;">${horaFormat}</span>
-        </div>
-        
-        <div style="flex: 1;">
-          <div class="history-main" style="color: var(--text); font-weight: 500; font-size: 15px;">
-            ${tipoEvento} de <strong>${registro.codigo_equipo || "N/A"}</strong>
+      <div class="tl-item ${clase}" style="--i:${Math.min(i, 14)}">
+        <span class="tl-dot"></span>
+        <div class="tl-card">
+          <div class="tl-top">
+            <div class="tl-main">${esc(tipoEvento)} de <strong>${esc(registro.codigo_equipo || "N/A")}</strong></div>
+            <span class="tl-badge">${esc(tipoEvento)}</span>
           </div>
-          <div class="history-secondary" style="color: var(--muted); font-size: 13px; margin-top: 4px;">
-            ${infoUsuario}
-          </div>
-          ${registro.detalle ? `<div style="font-size: 12px; color: var(--text); margin-top: 6px; padding: 4px 8px; background-color: var(--bg-secondary, #f1f5f9); border-radius: 4px; display: inline-block;">${registro.detalle}</div>` : ''}
+          <div class="tl-sub">${esc(infoUsuario)}</div>
+          ${registro.detalle ? `<div class="tl-det">${esc(registro.detalle)}</div>` : ""}
+          <time class="tl-time">${esc(fechaFormat)} · ${esc(horaFormat)}</time>
         </div>
-        
-        <span class="history-type" style="background-color: ${colorBg}; color: ${badgeColor}; padding: 4px 8px; border-radius: 99px; font-size: 12px; font-weight: 600;">
-          ${tipoEvento}
-        </span>
-      </div>
-    `;
-  }).join('');
+      </div>`;
+  }).join("");
 }
 
 // Inicializar la carga al interactuar con el DOM
