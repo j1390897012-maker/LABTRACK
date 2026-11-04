@@ -2,7 +2,7 @@
 // en Render) se usa el mismo origen; si se abre el archivo directamente
 // (file://) se usa Render. Para apuntar a otro servidor durante el desarrollo:
 //   localStorage.setItem("labtrack_api_base", "http://192.168.1.10:8000")
-const RENDER_BASE = "https://labtrack-api-pvuh.onrender.com";
+const RENDER_BASE = "https://labtrack-api-dtqq.onrender.com/";
 
 function resolverBaseAPI() {
   try {
