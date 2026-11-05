@@ -13,7 +13,19 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
+<script>
+  // Seguro: si ui.js no carga, la intro no se queda atorada.
+  setTimeout(function () {
+    var s = document.getElementById("splash");
+    if (s) {
+      s.remove();
+      document.body.classList.remove("intro");
+      document.body.classList.add("ready");
+    }
+  }, 6000);
+</script>
 <body class="intro">
+  
 
 <!-- ========================================================= -->
 <!-- INTRO ANIMADA -->
