@@ -13,25 +13,13 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
-<script>
-  // Seguro: si ui.js no carga, la intro no se queda atorada.
-  setTimeout(function () {
-    var s = document.getElementById("splash");
-    if (s) {
-      s.remove();
-      document.body.classList.remove("intro");
-      document.body.classList.add("ready");
-    }
-  }, 6000);
-</script>
 <body class="intro">
-  
 
 <!-- ========================================================= -->
 <!-- INTRO ANIMADA -->
 <!-- ========================================================= -->
 <div id="splash" aria-hidden="true">
-  <div class="splash-inner">
+  <div class="splash-inner">s
     <div class="splash-word" aria-label="LABTRACK">
       <span style="--i:0">L</span><span style="--i:1">A</span><span style="--i:2">B</span><span style="--i:3">T</span><span style="--i:4">R</span><span style="--i:5">A</span><span style="--i:6">C</span><span style="--i:7">K</span>
     </div>
@@ -843,6 +831,18 @@
 <script src="js/importar.js"></script>
 
 <div id="toast-container" aria-live="polite"></div>
+
+<script>
+  // Seguro: si ui.js no carga, la intro no se queda atorada.
+  setTimeout(function () {
+    var s = document.getElementById("splash");
+    if (s) {
+      s.remove();
+      document.body.classList.remove("intro");
+      document.body.classList.add("ready");
+    }
+  }, 6000);
+</script>
 
 </body>
 </html>
