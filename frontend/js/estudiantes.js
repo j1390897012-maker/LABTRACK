@@ -115,6 +115,7 @@ async function cargarEstudiantesDesdeAPI() {
         <div class="student-badges">${rfidBadge}${sesionBadge}</div>`;
       grid.appendChild(tile);
     });
+    filterStudents(); // conserva la búsqueda escrita tras actualizar
   } catch (error) {
     console.error("Error cargando estudiantes:", error);
     const grid = document.getElementById("student-table");
@@ -320,4 +321,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("student-table")) {
     cargarEstudiantesDesdeAPI();
   }
+});
+
+// Actualización en vivo: nuevos estudiantes, vínculos de credencial, sesiones...
+document.addEventListener("labtrack:cambio", () => {
+  if (document.getElementById("student-table")) cargarEstudiantesDesdeAPI();
 });

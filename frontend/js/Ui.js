@@ -81,16 +81,6 @@ const SVG_EQUIPOS = {
     <path d="M13 26v-4h4v4M36 26v-4h4v4" class="a"/>
     <circle cx="18" cy="40" r="4.2" class="s"/><circle cx="35" cy="40" r="4.2" class="s"/>
     <circle cx="50" cy="38" r="2.6" class="r"/><circle cx="50" cy="45" r="2.6" class="s"/>`,
-  cautin: `
-    <g transform="rotate(-35 32 32)">
-      <rect x="4" y="27" width="26" height="10" rx="5" class="f"/>
-      <path d="M11 29.5v5M16 29.5v5M21 29.5v5" class="s"/>
-      <rect x="30" y="29" width="5" height="6" rx="1" class="s"/>
-      <rect x="35" y="30" width="14" height="4" rx="2" class="s"/>
-      <path d="M49 30l9 2-9 2z" class="a"/>
-    </g>
-    <path d="M57 8c-2 3 2 4 0 7M51 5c-2 3 2 4 0 7" class="a"/>
-    <path d="M8 56h24" class="s"/>`,
   generico: `
     <rect x="17" y="17" width="30" height="30" rx="5" class="f"/>
     <rect x="25" y="25" width="14" height="14" rx="2" class="a"/>
@@ -104,7 +94,6 @@ function claveIcono(tipo) {
   if (t.includes("generador")) return "generador";
   if (t.includes("multimetro")) return "multimetro";
   if (t.includes("fuente")) return "fuente";
-  if (t.includes("cautin") || t.includes("soldad")) return "cautin";
   return "generico";
 }
 
@@ -269,5 +258,17 @@ function htmlErrorConexion(reintentar, mensaje) {
   window.addEventListener("online", () => {
     banner.querySelector(".net-msg").textContent = "Problemas de conexión. Reintentando automáticamente…";
     document.dispatchEvent(new CustomEvent("labtrack:cambio", { detail: { origen: "online" } }));
+  });
+})();
+
+
+// En una actualización en vivo las tarjetas se cambian en su lugar:
+// no se repite la animación de entrada (evita el parpadeo).
+(function () {
+  let t = null;
+  document.addEventListener("labtrack:cambio", () => {
+    document.body.classList.add("sin-anim");
+    clearTimeout(t);
+    t = setTimeout(() => document.body.classList.remove("sin-anim"), 1500);
   });
 })();
