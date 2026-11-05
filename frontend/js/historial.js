@@ -7,7 +7,11 @@ async function cargarHistorialDesdeAPI() {
   
   if (!contenedor) return;
 
-  contenedor.innerHTML = htmlCargando("Cargando historial…");
+  // Solo se muestra "cargando" la primera vez; las actualizaciones en vivo
+  // reemplazan la lista sin parpadeo.
+  if (!contenedor.querySelector(".tl-item")) {
+    contenedor.innerHTML = htmlCargando("Cargando historial…");
+  }
 
   try {
     const data = await peticionAPI("/historial");
@@ -83,4 +87,9 @@ document.addEventListener("DOMContentLoaded", () => {
       cargarHistorialDesdeAPI();
     });
   }
+});
+
+// Actualización en vivo: cuando el servidor avisa de un cambio, se vuelve a pedir.
+document.addEventListener("labtrack:cambio", () => {
+  if (document.getElementById("view-historial")) cargarHistorialDesdeAPI();
 });
